@@ -14,6 +14,12 @@ interface AvailableCondition {
   name: string;
 }
 
+interface TokenStatus {
+  status: "connected" | "error" | "loading";
+  message?: string;
+  expiresAt?: string;
+}
+
 export default function SettingsPage() {
   const [registered, setRegistered] = useState<RegisteredCondition[]>([]);
   const [available, setAvailable] = useState<AvailableCondition[]>([]);
@@ -23,6 +29,27 @@ export default function SettingsPage() {
   const [unregisteringSeq, setUnregisteringSeq] = useState<string | null>(null);
   const [justRegistered, setJustRegistered] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tokenStatus, setTokenStatus] = useState<TokenStatus>({ status: "loading" });
+
+  // 키움 API 토큰 상태 확인
+  const checkTokenStatus = useCallback(async () => {
+    setTokenStatus({ status: "loading" });
+    try {
+      const res = await fetch("/api/token-status");
+      const data = await res.json();
+      if (data.status === "connected") {
+        setTokenStatus({ status: "connected", expiresAt: data.expiresAt });
+      } else {
+        setTokenStatus({ status: "error", message: data.message });
+      }
+    } catch {
+      setTokenStatus({ status: "error", message: "API 서버에 연결할 수 없습니다." });
+    }
+  }, []);
+
+  useEffect(() => {
+    checkTokenStatus();
+  }, [checkTokenStatus]);
 
   // 등록된 조건검색식 로드
   const loadRegistered = useCallback(async () => {
@@ -136,6 +163,65 @@ export default function SettingsPage() {
           <p className="text-sm text-gray-500 mt-1">
             매일 자동으로 수집할 조건검색식을 등록하고 관리합니다.
           </p>
+        </div>
+
+        {/* 키움 API 연결 상태 */}
+        <div className={`mb-6 p-4 rounded-xl border flex items-center justify-between ${
+          tokenStatus.status === "connected"
+            ? "bg-green-50 border-green-200"
+            : tokenStatus.status === "error"
+            ? "bg-red-50 border-red-200"
+            : "bg-gray-50 border-gray-200"
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+              tokenStatus.status === "connected"
+                ? "bg-green-100"
+                : tokenStatus.status === "error"
+                ? "bg-red-100"
+                : "bg-gray-100"
+            }`}>
+              {tokenStatus.status === "loading" ? (
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+              ) : tokenStatus.status === "connected" ? (
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">키움 API 연결 상태</p>
+              {tokenStatus.status === "loading" ? (
+                <p className="text-xs text-gray-500 mt-0.5">연결 확인 중...</p>
+              ) : tokenStatus.status === "connected" ? (
+                <p className="text-xs text-green-700 mt-0.5">
+                  연결됨 · 토큰 만료: {tokenStatus.expiresAt ?? "-"}
+                </p>
+              ) : (
+                <p className="text-xs text-red-700 mt-0.5">
+                  {tokenStatus.message?.includes("지정단말기")
+                    ? "연결 실패 · 키움 지정단말기 IP를 확인하세요"
+                    : `연결 실패 · ${tokenStatus.message ?? "알 수 없는 오류"}`}
+                </p>
+              )}
+            </div>
+          </div>
+          {tokenStatus.status !== "loading" && (
+            <button
+              onClick={checkTokenStatus}
+              className={`px-3 py-1.5 text-xs border rounded-lg transition-colors ${
+                tokenStatus.status === "connected"
+                  ? "text-green-700 border-green-300 hover:bg-green-100"
+                  : "text-red-700 border-red-300 hover:bg-red-100"
+              }`}
+            >
+              다시 확인
+            </button>
+          )}
         </div>
 
         {/* 에러 메시지 */}

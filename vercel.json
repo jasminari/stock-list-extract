@@ -1,9 +1,3 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/extract",
-      "schedule": "10 11 * * 1-5"
-    }
-  ],
   "regions": ["icn1"]
 }
