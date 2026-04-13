@@ -100,6 +100,7 @@ async function searchCondition(ws, token, seq) {
         전일대비: item["11"] || "",
         등락율: item["12"] || "",
         누적거래량: Number(item["13"] || "0"),
+        거래대금_천원: Number(item["1043"] || "0"),
         시가: Number((item["16"] || "0").replace(/^[+-]/, "")),
         고가: Number((item["17"] || "0").replace(/^[+-]/, "")),
         저가: Number((item["18"] || "0").replace(/^[+-]/, "")),
@@ -117,7 +118,7 @@ function saveExcel(fileName, sheetName, rows) {
   const ws = XLSX.utils.json_to_sheet(rows);
   ws["!cols"] = [
     { wch: 12 }, { wch: 20 }, { wch: 12 }, { wch: 12 },
-    { wch: 10 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+    { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
   ];
   XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31));
   const filePath = join(DATA_DIR, `${fileName}.xlsx`);
@@ -166,6 +167,7 @@ async function main() {
         code: s.종목코드, name: s.종목명,
         price: String(s.현재가), change_sign: "", change: s.전일대비,
         change_rate: s.등락율, volume: String(s.누적거래량),
+        trading_amount: String(s.거래대금_천원),
         open: String(s.시가), high: String(s.고가), low: String(s.저가),
       }))});
       const path = saveExcel(fileName, cond.name, stocks);

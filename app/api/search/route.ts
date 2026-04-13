@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken, searchByCondition } from "@/lib/kiwoom";
 import { saveResultAsExcel, saveResultAsJson } from "@/lib/storage";
+import { isDbConfigured } from "@/lib/db";
+import { saveSearchResult } from "@/lib/storage-db";
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,13 +25,26 @@ export async function POST(req: NextRequest) {
       .replace(".", "");
 
     const fileName = `${dateStr}_${conditionName || seq}`;
+
+    // 파일 기반 저장 (항상)
     await saveResultAsJson(fileName, { seq, conditionName, date: dateStr, stocks });
     const filePath = await saveResultAsExcel(fileName, conditionName || seq, stocks);
+
+    // DB 저장 (설정된 경우)
+    let searchResultId: number | null = null;
+    if (isDbConfigured()) {
+      try {
+        searchResultId = await saveSearchResult(dateStr, seq, conditionName || seq, stocks);
+      } catch (e) {
+        console.error("DB 저장 실패 (파일 저장은 성공):", e);
+      }
+    }
 
     return NextResponse.json({
       count: stocks.length,
       fileName: `${fileName}.xlsx`,
       filePath,
+      searchResultId,
       stocks,
     });
   } catch (error) {

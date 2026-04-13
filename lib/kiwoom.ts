@@ -1,30 +1,10 @@
 import WebSocket from "ws";
+import type { KiwoomToken, Condition, StockResult } from "./types";
+
+export type { KiwoomToken, Condition, StockResult };
 
 const HTTP_BASE = "https://api.kiwoom.com";
 const WS_URL = "wss://api.kiwoom.com:10000/api/dostk/websocket";
-
-export interface KiwoomToken {
-  token: string;
-  expires_dt: string;
-}
-
-export interface Condition {
-  seq: string;
-  name: string;
-}
-
-export interface StockResult {
-  code: string;
-  name: string;
-  price: string;
-  change_sign: string;
-  change: string;
-  change_rate: string;
-  volume: string;
-  open: string;
-  high: string;
-  low: string;
-}
 
 // 접근토큰 발급
 export async function getAccessToken(): Promise<KiwoomToken> {
@@ -176,6 +156,7 @@ export async function searchByCondition(
           change: item["11"] || "",
           change_rate: item["12"] || "",
           volume: item["13"] || "",
+          trading_amount: item["1043"] || "",
           open: item["16"] || "",
           high: item["17"] || "",
           low: item["18"] || "",

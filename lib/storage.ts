@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs/promises";
 import * as XLSX from "xlsx";
-import { StockResult } from "./kiwoom";
+import type { StockResult } from "./types";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
@@ -23,6 +23,7 @@ export async function saveResultAsExcel(
     전일대비: s.change,
     등락율: s.change_rate,
     누적거래량: Number(s.volume),
+    거래대금_천원: Number(s.trading_amount || "0"),
     시가: Number(s.open.replace(/^[+-]/, "")),
     고가: Number(s.high.replace(/^[+-]/, "")),
     저가: Number(s.low.replace(/^[+-]/, "")),
@@ -39,6 +40,7 @@ export async function saveResultAsExcel(
     { wch: 12 }, // 전일대비
     { wch: 10 }, // 등락율
     { wch: 16 }, // 누적거래량
+    { wch: 16 }, // 거래대금_천원
     { wch: 12 }, // 시가
     { wch: 12 }, // 고가
     { wch: 12 }, // 저가
@@ -60,13 +62,9 @@ export async function saveResultAsJson(
   await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
 }
 
-export interface ResultMeta {
-  fileName: string;
-  date: string;
-  conditionName: string;
-  count: number;
-  createdAt: string;
-}
+import type { ResultMeta } from "./types";
+
+export type { ResultMeta };
 
 export async function listResults(): Promise<ResultMeta[]> {
   await ensureDataDir();

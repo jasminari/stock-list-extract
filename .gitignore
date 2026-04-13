@@ -3,3 +3,6 @@ node_modules/
 .next/
 logs/
 *.xlsx
+data/
+.DS_Store
+tsconfig.tsbuildinfo
