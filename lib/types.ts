@@ -49,6 +49,15 @@ export interface ResultMeta {
   createdAt: string;
 }
 
+// === 등록된 조건검색식 ===
+
+export interface RegisteredCondition {
+  id: number;
+  seq: string;
+  name: string;
+  registeredAt: string;
+}
+
 // === DB 관련 타입 ===
 
 export interface DbResultMeta {

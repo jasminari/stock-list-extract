@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 
-type MenuId = "home" | "history" | "settings";
+type MenuId = "home" | "history" | "data" | "settings";
 
 const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNode }[] = [
   {
@@ -28,6 +28,16 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
     ),
   },
   {
+    id: "data",
+    label: "수집 데이터",
+    href: "/dashboard/data",
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+      </svg>
+    ),
+  },
+  {
     id: "settings",
     label: "설정",
     href: "/dashboard/settings",
@@ -42,6 +52,7 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
 
 function getActiveMenu(pathname: string): MenuId {
   if (pathname.startsWith("/dashboard/history")) return "history";
+  if (pathname.startsWith("/dashboard/data")) return "data";
   if (pathname.startsWith("/dashboard/settings")) return "settings";
   return "home";
 }

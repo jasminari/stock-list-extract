@@ -42,6 +42,13 @@ export const stockEntries = pgTable("stock_entries", {
   low: varchar("low", { length: 20 }).notNull(),
 });
 
+export const registeredConditions = pgTable("registered_conditions", {
+  id: serial("id").primaryKey(),
+  seq: varchar("seq", { length: 10 }).notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  registeredAt: timestamp("registered_at").defaultNow(),
+});
+
 export const stockAnnotations = pgTable(
   "stock_annotations",
   {

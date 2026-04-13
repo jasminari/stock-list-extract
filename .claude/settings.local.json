@@ -5,7 +5,10 @@
       "Bash(pip3 install:*)",
       "Bash(python3 -c ':*)",
       "Bash(npm install:*)",
-      "Bash(pdftotext \"/Users/jangssukmin/Documents/Github/Stock_List_Extract/키움 REST API 문서 \\(1\\).pdf\" -)"
+      "Bash(pdftotext \"/Users/jangssukmin/Documents/Github/Stock_List_Extract/키움 REST API 문서 \\(1\\).pdf\" -)",
+      "Bash(npm run:*)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(grep -E \"\\\\.\\(ts|js|local\\)$\")"
     ]
   }
 }

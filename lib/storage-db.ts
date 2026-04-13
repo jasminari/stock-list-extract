@@ -4,8 +4,9 @@ import {
   searchResults,
   stockEntries,
   stockAnnotations,
+  registeredConditions,
 } from "./db/schema";
-import type { StockResult } from "./types";
+import type { StockResult, RegisteredCondition } from "./types";
 
 export async function saveSearchResult(
   date: string,
@@ -152,4 +153,63 @@ export async function updateAnnotation(
       reason: reason ?? "",
     });
   }
+}
+
+// === 등록된 조건검색식 CRUD ===
+
+export async function listRegisteredConditions(): Promise<RegisteredCondition[]> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(registeredConditions)
+    .orderBy(desc(registeredConditions.registeredAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    seq: r.seq,
+    name: r.name,
+    registeredAt: r.registeredAt?.toISOString() ?? "",
+  }));
+}
+
+export async function registerCondition(
+  seq: string,
+  name: string
+): Promise<RegisteredCondition> {
+  const db = getDb();
+
+  // 중복 등록 방지
+  const existing = await db
+    .select()
+    .from(registeredConditions)
+    .where(eq(registeredConditions.seq, seq))
+    .limit(1);
+
+  if (existing.length > 0) {
+    return {
+      id: existing[0].id,
+      seq: existing[0].seq,
+      name: existing[0].name,
+      registeredAt: existing[0].registeredAt?.toISOString() ?? "",
+    };
+  }
+
+  const [result] = await db
+    .insert(registeredConditions)
+    .values({ seq, name })
+    .returning();
+
+  return {
+    id: result.id,
+    seq: result.seq,
+    name: result.name,
+    registeredAt: result.registeredAt?.toISOString() ?? "",
+  };
+}
+
+export async function unregisterCondition(seq: string): Promise<void> {
+  const db = getDb();
+  await db
+    .delete(registeredConditions)
+    .where(eq(registeredConditions.seq, seq));
 }

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAccessToken, getConditionList, searchByCondition } from "@/lib/kiwoom";
+import { getAccessToken, searchByCondition } from "@/lib/kiwoom";
 import { saveResultAsExcel, saveResultAsJson } from "@/lib/storage";
 import { isDbConfigured } from "@/lib/db";
-import { saveSearchResult } from "@/lib/storage-db";
+import { saveSearchResult, listRegisteredConditions } from "@/lib/storage-db";
 
 export const maxDuration = 60;
 
@@ -16,6 +16,13 @@ export async function GET(req: NextRequest) {
   const results: { condition: string; count: number; error?: string }[] = [];
 
   try {
+    if (!isDbConfigured()) {
+      return NextResponse.json(
+        { error: "DB가 설정되지 않았습니다." },
+        { status: 500 }
+      );
+    }
+
     const dateStr = new Date()
       .toLocaleDateString("ko-KR", {
         year: "numeric",
@@ -26,14 +33,19 @@ export async function GET(req: NextRequest) {
       .replace(/\. /g, "")
       .replace(".", "");
 
-    const { token } = await getAccessToken();
-    const conditions = await getConditionList(token);
+    const registered = await listRegisteredConditions();
 
-    if (conditions.length === 0) {
-      return NextResponse.json({ message: "조건검색식 없음", results });
+    if (registered.length === 0) {
+      return NextResponse.json({
+        message: "등록된 조건검색식 없음",
+        date: dateStr,
+        results,
+      });
     }
 
-    for (const cond of conditions) {
+    const { token } = await getAccessToken();
+
+    for (const cond of registered) {
       try {
         const stocks = await searchByCondition(token, cond.seq);
         const fileName = `${dateStr}_${cond.name}`;
@@ -48,12 +60,10 @@ export async function GET(req: NextRequest) {
         await saveResultAsExcel(fileName, cond.name, stocks);
 
         // DB 저장
-        if (isDbConfigured()) {
-          try {
-            await saveSearchResult(dateStr, cond.seq, cond.name, stocks);
-          } catch (e) {
-            console.error(`DB 저장 실패 [${cond.name}]:`, e);
-          }
+        try {
+          await saveSearchResult(dateStr, cond.seq, cond.name, stocks);
+        } catch (e) {
+          console.error(`DB 저장 실패 [${cond.name}]:`, e);
         }
 
         results.push({ condition: cond.name, count: stocks.length });
