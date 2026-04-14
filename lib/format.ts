@@ -7,10 +7,10 @@ export function parsePrice(raw: string): number {
   return Number(raw.replace(/^[+-]/, "")) || 0;
 }
 
-/** "000007560" → 7.56 */
+/** "000006060" → 6.06 (키움 원본: 실제 등락률% × 1000, 즉 소수점 3자리 포함) */
 export function parseChangeRate(raw: string): number {
   const n = Number(raw.replace(/^[+-]/, "")) || 0;
-  return n / 100;
+  return n / 1000;
 }
 
 /** 거래대금 천원 → 억원 (÷ 100,000) */
