@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 interface CollectedData {
   id: number;
@@ -8,6 +9,13 @@ interface CollectedData {
   conditionName: string;
   count: number;
   createdAt: string;
+}
+
+interface RegisteredCondition {
+  id: number;
+  seq: string;
+  name: string;
+  registeredAt: string;
 }
 
 function formatDate(dateStr: string) {
@@ -35,21 +43,34 @@ function groupByDate(data: CollectedData[]) {
 }
 
 export default function DataPage() {
-  const [data, setData] = useState<CollectedData[]>([]);
+  const router = useRouter();
+  const [allData, setAllData] = useState<CollectedData[]>([]);
+  const [registered, setRegistered] = useState<RegisteredCondition[]>([]);
+  const [subscribed, setSubscribed] = useState<Set<string> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const [togglingSeq, setTogglingSeq] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
-      const res = await fetch("/api/results");
-      const json = await res.json();
-      if (json.error) {
-        setError(json.error);
-        return;
+      const [resultsRes, conditionsRes, subRes] = await Promise.all([
+        fetch("/api/results"),
+        fetch("/api/registered-conditions"),
+        fetch("/api/user-subscriptions"),
+      ]);
+      const resultsJson = await resultsRes.json();
+      const conditionsJson = await conditionsRes.json();
+      const subJson = await subRes.json();
+
+      if (resultsJson.error) {
+        setError(resultsJson.error);
+      } else {
+        setAllData(resultsJson.results ?? []);
       }
-      setData(json.results ?? []);
+      setRegistered(conditionsJson.conditions ?? []);
+      setSubscribed(new Set(subJson.subscriptions ?? []));
     } catch {
       setError("수집 데이터를 불러오지 못했습니다.");
     } finally {
@@ -60,6 +81,17 @@ export default function DataPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // 드롭다운 바깥 클릭 시 닫기
+  useEffect(() => {
+    if (openDropdown === null) return;
+    const handleClick = () => setOpenDropdown(null);
+    const timer = setTimeout(() => document.addEventListener("click", handleClick), 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("click", handleClick);
+    };
+  }, [openDropdown]);
 
   const handleDownload = async (item: CollectedData) => {
     setDownloadingId(item.id);
@@ -84,19 +116,191 @@ export default function DataPage() {
     }
   };
 
+  const handleViewResult = (item: CollectedData) => {
+    router.push(`/dashboard/history?resultId=${item.id}`);
+  };
+
+  const handleSubscribe = async (seq: string) => {
+    setTogglingSeq(seq);
+    try {
+      const res = await fetch("/api/user-subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conditionSeq: seq }),
+      });
+      const data = await res.json();
+      if (!data.error) {
+        setSubscribed((prev) => {
+          const next = new Set(prev);
+          next.add(seq);
+          return next;
+        });
+      }
+    } catch {
+      setError("선택에 실패했습니다.");
+    } finally {
+      setTogglingSeq(null);
+      setOpenDropdown(null);
+    }
+  };
+
+  const handleUnsubscribe = async (seq: string) => {
+    setTogglingSeq(seq);
+    try {
+      const res = await fetch("/api/user-subscriptions", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conditionSeq: seq }),
+      });
+      const data = await res.json();
+      if (!data.error) {
+        setSubscribed((prev) => {
+          const next = new Set(prev);
+          next.delete(seq);
+          return next;
+        });
+      }
+    } catch {
+      setError("해제에 실패했습니다.");
+    } finally {
+      setTogglingSeq(null);
+    }
+  };
+
+  // 내 수집 현황 카드에만 구독 필터 적용
+  const myRegistered = subscribed
+    ? registered.filter((c) => subscribed.has(c.seq))
+    : [];
+
+  // 선택 안 된 조건검색식 (드롭다운용)
+  const unsubscribedConditions = registered.filter(
+    (c) => !subscribed || !subscribed.has(c.seq)
+  );
+
+  // 요약 카드 + 데이터 리스트는 전체 데이터
+  const data = allData;
+
+  // 각 등록 조건의 최신 수집 상태
+  const getConditionStatus = (condName: string) => {
+    const latest = allData.find((d) => d.conditionName === condName);
+    if (!latest) return { status: "waiting" as const, date: "" };
+    return {
+      status: latest.count > 0 ? ("success" as const) : ("error" as const),
+      date: latest.date,
+      count: latest.count,
+    };
+  };
+
   const groups = groupByDate(data);
   const totalCount = data.length;
   const successCount = data.filter((d) => d.count > 0).length;
 
   return (
     <div className="flex-1 overflow-auto">
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">수집 데이터</h1>
           <p className="text-sm text-gray-500 mt-1">
             매일 자동으로 수집된 조건검색 결과 목록입니다.
           </p>
+        </div>
+
+        {/* 내 수집 현황 — 항상 3칸 표시 */}
+        <div className="mb-6">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">내 수집 현황</h2>
+          <div className="grid grid-cols-3 gap-3">
+            {Array.from({ length: 3 }).map((_, i) => {
+              const cond = myRegistered[i];
+
+              // 선택된 조건검색식 카드
+              if (cond) {
+                const condStatus = getConditionStatus(cond.name);
+                return (
+                  <div
+                    key={cond.seq}
+                    className={`relative p-4 border rounded-xl ${
+                      condStatus.status === "success"
+                        ? "border-green-200 bg-green-50"
+                        : condStatus.status === "error"
+                        ? "border-red-200 bg-red-50"
+                        : "border-gray-200 bg-white"
+                    }`}
+                  >
+                    <button
+                      onClick={() => handleUnsubscribe(cond.seq)}
+                      disabled={togglingSeq === cond.seq}
+                      className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gray-200 hover:bg-red-200 flex items-center justify-center transition-colors disabled:opacity-40"
+                      title="선택 해제"
+                    >
+                      <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                    <div className="flex items-center gap-2 mb-2 pr-5">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                        condStatus.status === "success"
+                          ? "bg-green-500"
+                          : condStatus.status === "error"
+                          ? "bg-red-500"
+                          : "bg-gray-300"
+                      }`} />
+                      <p className="text-sm font-medium text-gray-900 truncate">{cond.name}</p>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {condStatus.status === "success"
+                        ? `${formatDate(condStatus.date)} · ${condStatus.count}종목`
+                        : condStatus.status === "error"
+                        ? `${formatDate(condStatus.date)} · 수집 실패`
+                        : "수집 대기 중"}
+                    </p>
+                  </div>
+                );
+              }
+
+              // 미선택 카드 — 클릭 시 드롭다운
+              return (
+                <div key={`empty-${i}`} className="relative">
+                  <button
+                    onClick={() => setOpenDropdown(openDropdown === i ? null : i)}
+                    disabled={unsubscribedConditions.length === 0}
+                    className="w-full p-4 border border-dashed border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 hover:border-gray-400 transition-colors text-left disabled:hover:bg-gray-50 disabled:hover:border-gray-300 disabled:cursor-default"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        {unsubscribedConditions.length > 0 ? (
+                          <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        ) : (
+                          <span className="text-xs text-gray-400">{i + 1}</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400">
+                        {unsubscribedConditions.length > 0 ? "클릭하여 선택" : "미선택"}
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* 드롭다운 */}
+                  {openDropdown === i && unsubscribedConditions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 overflow-hidden">
+                      {unsubscribedConditions.map((uc) => (
+                        <button
+                          key={uc.seq}
+                          onClick={() => handleSubscribe(uc.seq)}
+                          disabled={togglingSeq === uc.seq}
+                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors border-b border-gray-100 last:border-b-0 disabled:opacity-40"
+                        >
+                          {togglingSeq === uc.seq ? "추가 중..." : uc.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* 에러 메시지 */}
@@ -146,8 +350,8 @@ export default function DataPage() {
             </div>
 
             {/* 데이터 리스트 */}
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
+              <table className="w-full text-sm whitespace-nowrap">
                 <thead>
                   <tr className="bg-gray-50 text-gray-500 text-xs border-b border-gray-200">
                     <th className="px-4 py-3 text-left font-medium">날짜</th>
@@ -155,7 +359,8 @@ export default function DataPage() {
                     <th className="px-4 py-3 text-right font-medium">종목수</th>
                     <th className="px-4 py-3 text-center font-medium">상태</th>
                     <th className="px-4 py-3 text-right font-medium">수집 시각</th>
-                    <th className="px-4 py-3 text-center font-medium">다운로드</th>
+                    <th className="px-4 py-3 text-center font-medium">가공데이터</th>
+                    <th className="px-4 py-3 text-center font-medium">원본데이터</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -163,9 +368,11 @@ export default function DataPage() {
                     group.items.map((item, idx) => (
                       <tr
                         key={item.id}
-                        onClick={() => setSelectedId(selectedId === item.id ? null : item.id)}
-                        className={`border-b border-gray-100 cursor-pointer transition-colors ${
-                          selectedId === item.id ? "bg-blue-50" : "hover:bg-gray-50"
+                        onClick={() => item.count > 0 && handleViewResult(item)}
+                        className={`border-b border-gray-100 transition-colors ${
+                          item.count > 0
+                            ? "cursor-pointer hover:bg-blue-50"
+                            : "hover:bg-gray-50"
                         }`}
                       >
                         <td className="px-4 py-3">
@@ -202,6 +409,23 @@ export default function DataPage() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                handleViewResult(item);
+                              }}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-blue-300 rounded-md hover:bg-blue-50 transition-colors text-blue-600"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              보기
+                            </button>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {item.count > 0 && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 handleDownload(item);
                               }}
                               disabled={downloadingId === item.id}
@@ -229,7 +453,7 @@ export default function DataPage() {
 
         {/* 안내 */}
         <p className="text-xs text-gray-400 mt-4 text-center">
-          데이터는 매일 평일 20:10(KST)에 자동 수집됩니다. 설정에서 조건검색식을 관리할 수 있습니다.
+          데이터는 매일 평일 20:10(KST)에 자동 수집됩니다. 행을 클릭하면 데이터 보기 탭에서 상세 종목을 확인할 수 있습니다.
         </p>
       </div>
     </div>

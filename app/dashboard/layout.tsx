@@ -4,9 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 
-type MenuId = "home" | "history" | "data" | "settings";
+type MenuId = "home" | "history" | "data" | "settings" | "admin";
 
-const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNode }[] = [
+const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
   {
     id: "home",
     label: "홈",
@@ -19,7 +19,7 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
   },
   {
     id: "history",
-    label: "저장 이력",
+    label: "데이터 보기",
     href: "/dashboard/history",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,12 +48,24 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
       </svg>
     ),
   },
+  {
+    id: "admin",
+    label: "관리",
+    href: "/dashboard/admin",
+    adminOnly: true,
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    ),
+  },
 ];
 
 function getActiveMenu(pathname: string): MenuId {
   if (pathname.startsWith("/dashboard/history")) return "history";
   if (pathname.startsWith("/dashboard/data")) return "data";
   if (pathname.startsWith("/dashboard/settings")) return "settings";
+  if (pathname.startsWith("/dashboard/admin")) return "admin";
   return "home";
 }
 
@@ -130,7 +142,9 @@ export default function DashboardLayout({
         {/* Left Sidebar */}
         <aside className="w-60 border-r border-gray-200 flex flex-col flex-shrink-0">
           <nav className="flex-1 px-3 pt-3 space-y-0.5">
-            {menuItems.map((item) => (
+            {menuItems
+              .filter((item) => !item.adminOnly || session?.user?.role === "admin")
+              .map((item) => (
               <button
                 key={item.id}
                 onClick={() => router.push(item.href)}
@@ -147,7 +161,7 @@ export default function DashboardLayout({
           </nav>
 
           <div className="p-4 border-t border-gray-100">
-            <div className="text-xs text-gray-400 mb-1">저장 이력</div>
+            <div className="text-xs text-gray-400 mb-1">데이터 보기</div>
             <div className="text-sm text-gray-600">{resultsCount}개 결과 저장됨</div>
             <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
               <div

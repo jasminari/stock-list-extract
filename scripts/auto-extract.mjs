@@ -93,6 +93,15 @@ async function saveToDb(dateStr, seq, conditionName, stocks) {
   log(`[DB] ${conditionName}: ${stocks.length}종목 저장 완료 (id: ${result.id})`);
 }
 
+async function saveExtractionLog(dateStr, seq, conditionName, stockCount, status, errorMessage) {
+  const db = getDb();
+  if (!db) return;
+  await db`
+    INSERT INTO extraction_logs (date, condition_seq, condition_name, stock_count, status, error_message)
+    VALUES (${dateStr}, ${seq}, ${conditionName}, ${stockCount}, ${status}, ${errorMessage || null})
+  `;
+}
+
 // === 키움 API ===
 
 async function getToken() {
@@ -227,8 +236,9 @@ async function main() {
   const args = process.argv.slice(2);
   const runAll = args.includes("--all");
   const seqArg = args.includes("--seq") ? args[args.indexOf("--seq") + 1] : null;
+  const dateArg = args.includes("--date") ? args[args.indexOf("--date") + 1] : null;
 
-  const dateStr = new Date()
+  const dateStr = dateArg || new Date()
     .toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Seoul" })
     .replace(/\. /g, "").replace(".", "");
 
@@ -298,8 +308,21 @@ async function main() {
       } catch (dbErr) {
         log(`[${cond.name}] DB 저장 실패: ${dbErr.message}`);
       }
+
+      // 수집 로그 기록 (성공)
+      try {
+        await saveExtractionLog(dateStr, cond.seq, cond.name, stocks.length, "success");
+      } catch (logErr) {
+        log(`[${cond.name}] 로그 기록 실패: ${logErr.message}`);
+      }
     } catch (err) {
       log(`[${cond.name}] 오류: ${err.message}`);
+      // 수집 로그 기록 (실패)
+      try {
+        await saveExtractionLog(dateStr, cond.seq, cond.name, 0, "error", err.message);
+      } catch (logErr) {
+        log(`[${cond.name}] 로그 기록 실패: ${logErr.message}`);
+      }
     }
   }
 

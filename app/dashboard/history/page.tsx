@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { formatDbStocks } from "@/lib/format";
 import { toDateStr, parseDate } from "@/lib/date";
 import ProcessedResultTable from "@/components/ProcessedResultTable";
@@ -8,6 +9,9 @@ import Calendar from "@/components/Calendar";
 import type { ResultMeta, ProcessedStock } from "@/lib/types";
 
 export default function HistoryPage() {
+  const searchParams = useSearchParams();
+  const resultIdParam = searchParams.get("resultId");
+
   const [results, setResults] = useState<ResultMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState("");
@@ -48,9 +52,28 @@ export default function HistoryPage() {
     return Array.from(set).sort((a, b) => b - a);
   }, [results, now]);
 
+  // resultId 파라미터가 있으면 해당 결과로 이동
+  const [initialResultHandled, setInitialResultHandled] = useState(false);
+
+  useEffect(() => {
+    if (initialResultHandled || results.length === 0 || !resultIdParam) return;
+    const targetId = Number(resultIdParam);
+    const target = results.find((r) => r.id === targetId);
+    if (target) {
+      setSelectedDate(target.date);
+      setSelectedResult(target);
+      const d = parseDate(target.date);
+      setSelectedYear(d.getFullYear());
+      setSelectedMonth(d.getMonth());
+      setInitialResultHandled(true);
+      return;
+    }
+    setInitialResultHandled(true);
+  }, [results, resultIdParam, initialResultHandled]);
+
   // 디폴트로 오늘 또는 가장 최신 날짜 선택
   useEffect(() => {
-    if (selectedDate) return;
+    if (selectedDate || resultIdParam) return;
     if (datesWithData.has(todayStr)) {
       setSelectedDate(todayStr);
     } else {
@@ -62,7 +85,7 @@ export default function HistoryPage() {
         setSelectedMonth(d.getMonth());
       }
     }
-  }, [datesWithData, selectedDate, todayStr]);
+  }, [datesWithData, selectedDate, todayStr, resultIdParam]);
 
   const dateResults = results.filter((r) => r.date === selectedDate);
 
@@ -134,7 +157,7 @@ export default function HistoryPage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-900 font-medium">저장 이력</span>
+          <span className="text-gray-900 font-medium">데이터 보기</span>
         </div>
 
         <Calendar

@@ -1,10 +1,12 @@
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   searchResults,
   stockEntries,
   stockAnnotations,
   registeredConditions,
+  extractionLogs,
+  userSubscriptions,
 } from "./db/schema";
 import type { StockResult, RegisteredCondition } from "./types";
 
@@ -212,4 +214,93 @@ export async function unregisterCondition(seq: string): Promise<void> {
   await db
     .delete(registeredConditions)
     .where(eq(registeredConditions.seq, seq));
+}
+
+// === 수집 로그 ===
+
+export interface ExtractionLog {
+  id: number;
+  date: string;
+  conditionSeq: string;
+  conditionName: string;
+  stockCount: number;
+  status: string;
+  errorMessage: string | null;
+  createdAt: string;
+}
+
+export async function saveExtractionLog(
+  date: string,
+  conditionSeq: string,
+  conditionName: string,
+  stockCount: number,
+  status: "success" | "error",
+  errorMessage?: string
+): Promise<void> {
+  const db = getDb();
+  await db.insert(extractionLogs).values({
+    date,
+    conditionSeq,
+    conditionName,
+    stockCount,
+    status,
+    errorMessage: errorMessage ?? null,
+  });
+}
+
+export async function listExtractionLogs(limit = 50): Promise<ExtractionLog[]> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(extractionLogs)
+    .orderBy(desc(extractionLogs.createdAt))
+    .limit(limit);
+
+  return rows.map((r) => ({
+    id: r.id,
+    date: r.date,
+    conditionSeq: r.conditionSeq,
+    conditionName: r.conditionName,
+    stockCount: r.stockCount,
+    status: r.status,
+    errorMessage: r.errorMessage,
+    createdAt: r.createdAt?.toISOString() ?? "",
+  }));
+}
+
+// === 유저 구독 (조건검색식 선택) ===
+
+export async function getUserSubscriptions(userId: number): Promise<string[]> {
+  const db = getDb();
+  const rows = await db
+    .select({ conditionSeq: userSubscriptions.conditionSeq })
+    .from(userSubscriptions)
+    .where(eq(userSubscriptions.userId, userId));
+  return rows.map((r) => r.conditionSeq);
+}
+
+export async function subscribeCondition(
+  userId: number,
+  conditionSeq: string
+): Promise<void> {
+  const db = getDb();
+  await db
+    .insert(userSubscriptions)
+    .values({ userId, conditionSeq })
+    .onConflictDoNothing();
+}
+
+export async function unsubscribeCondition(
+  userId: number,
+  conditionSeq: string
+): Promise<void> {
+  const db = getDb();
+  await db
+    .delete(userSubscriptions)
+    .where(
+      and(
+        eq(userSubscriptions.userId, userId),
+        eq(userSubscriptions.conditionSeq, conditionSeq)
+      )
+    );
 }

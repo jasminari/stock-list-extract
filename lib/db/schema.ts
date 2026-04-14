@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   username: varchar("username", { length: 50 }).unique().notNull(),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   displayName: varchar("display_name", { length: 100 }),
+  role: varchar("role", { length: 20 }).default("user").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -48,6 +49,30 @@ export const registeredConditions = pgTable("registered_conditions", {
   name: varchar("name", { length: 200 }).notNull(),
   registeredAt: timestamp("registered_at").defaultNow(),
 });
+
+export const extractionLogs = pgTable("extraction_logs", {
+  id: serial("id").primaryKey(),
+  date: varchar("date", { length: 8 }).notNull(),
+  conditionSeq: varchar("condition_seq", { length: 10 }).notNull(),
+  conditionName: varchar("condition_name", { length: 200 }).notNull(),
+  stockCount: integer("stock_count").notNull().default(0),
+  status: varchar("status", { length: 10 }).notNull(),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const userSubscriptions = pgTable(
+  "user_subscriptions",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    conditionSeq: varchar("condition_seq", { length: 10 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.conditionSeq)]
+);
 
 export const stockAnnotations = pgTable(
   "stock_annotations",
