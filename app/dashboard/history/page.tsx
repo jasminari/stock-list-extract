@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { Suspense, useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { formatDbStocks } from "@/lib/format";
 import { toDateStr, parseDate } from "@/lib/date";
@@ -9,6 +9,18 @@ import Calendar from "@/components/Calendar";
 import type { ResultMeta, ProcessedStock } from "@/lib/types";
 
 export default function HistoryPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <HistoryContent />
+    </Suspense>
+  );
+}
+
+function HistoryContent() {
   const searchParams = useSearchParams();
   const resultIdParam = searchParams.get("resultId");
 
