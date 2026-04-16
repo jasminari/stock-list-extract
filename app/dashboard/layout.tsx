@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -93,20 +93,24 @@ export default function DashboardLayout({
   const userName = session?.user?.name ?? session?.user?.email ?? "사용자";
   const userInitial = userName.charAt(0).toUpperCase();
 
+  const visibleMenuItems = menuItems.filter(
+    (item) => !item.adminOnly || session?.user?.role === "admin"
+  );
+
   return (
     <div className="h-screen flex flex-col bg-white">
       {/* Top Header */}
-      <header className="h-16 border-b border-gray-200 flex items-center justify-between px-4 flex-shrink-0">
-        <div className="flex items-center gap-4 flex-1">
+      <header className="h-14 md:h-16 border-b border-gray-200 flex items-center justify-between px-3 md:px-4 flex-shrink-0">
+        <div className="flex items-center gap-3 md:gap-4 flex-1">
           <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-600 flex items-center justify-center text-white">
+              <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <span className="text-lg text-gray-700 font-medium hidden sm:block">주식 조건검색</span>
+            <span className="text-lg text-gray-700 font-medium hidden md:block">주식 조건검색</span>
           </div>
-          <div className="flex-1 max-w-2xl">
+          <div className="flex-1 max-w-2xl hidden sm:block">
             <div className="relative">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -120,17 +124,17 @@ export default function DashboardLayout({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 ml-4">
+        <div className="flex items-center gap-2 ml-2 md:ml-4">
           {session?.user && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               <span className="text-sm text-gray-600 hidden md:block">{userName}</span>
               <button
                 onClick={() => signOut()}
-                className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+                className="px-2 md:px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
               >
                 로그아웃
               </button>
-              <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
+              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
                 {userInitial}
               </div>
             </div>
@@ -139,12 +143,10 @@ export default function DashboardLayout({
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar */}
-        <aside className="w-60 border-r border-gray-200 flex flex-col flex-shrink-0">
+        {/* Left Sidebar — Desktop only */}
+        <aside className="hidden md:flex w-60 border-r border-gray-200 flex-col flex-shrink-0">
           <nav className="flex-1 px-3 pt-3 space-y-0.5">
-            {menuItems
-              .filter((item) => !item.adminOnly || session?.user?.role === "admin")
-              .map((item) => (
+            {visibleMenuItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => router.push(item.href)}
@@ -163,20 +165,34 @@ export default function DashboardLayout({
           <div className="p-4 border-t border-gray-100">
             <div className="text-xs text-gray-400 mb-1">데이터 보기</div>
             <div className="text-sm text-gray-600">{resultsCount}개 결과 저장됨</div>
-            <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-blue-600 rounded-full transition-all"
-                style={{ width: `${Math.min((resultsCount / 50) * 100, 100)}%` }}
-              />
-            </div>
           </div>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
           {children}
         </main>
       </div>
+
+      {/* Bottom Tab Bar — Mobile only */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex items-center justify-around px-1 py-1 z-50 safe-area-bottom">
+        {visibleMenuItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => router.push(item.href)}
+            className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[56px] transition-colors ${
+              activeMenu === item.id
+                ? "text-blue-600"
+                : "text-gray-400"
+            }`}
+          >
+            <span className={activeMenu === item.id ? "text-blue-600" : "text-gray-400"}>
+              {item.icon}
+            </span>
+            <span className="text-[10px] font-medium leading-tight">{item.label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }

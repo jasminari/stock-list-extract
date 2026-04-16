@@ -76,4 +76,9 @@
   scrollbar-width: none;
 }
 
+/* Safe area for iPhone home indicator */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 

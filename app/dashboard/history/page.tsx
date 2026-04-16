@@ -34,7 +34,6 @@ function HistoryContent() {
   const now = useMemo(() => new Date(), []);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
-  const [calendarCollapsed, setCalendarCollapsed] = useState(false);
 
   const todayStr = toDateStr(now);
 
@@ -66,6 +65,11 @@ function HistoryContent() {
 
   // resultId 파라미터가 있으면 해당 결과로 이동
   const [initialResultHandled, setInitialResultHandled] = useState(false);
+
+  // resultIdParam이 변경되면 리셋 (같은 라우트에서 다른 resultId로 재방문 시)
+  useEffect(() => {
+    setInitialResultHandled(false);
+  }, [resultIdParam]);
 
   useEffect(() => {
     if (initialResultHandled || results.length === 0 || !resultIdParam) return;
@@ -102,7 +106,7 @@ function HistoryContent() {
   const dateResults = results.filter((r) => r.date === selectedDate);
 
   useEffect(() => {
-    if (dateResults.length > 0 && (!selectedResult || selectedResult.date !== selectedDate)) {
+    if (dateResults.length > 0 && !selectedResult) {
       setSelectedResult(dateResults[0]);
     }
     if (dateResults.length === 0) {
@@ -163,8 +167,8 @@ function HistoryContent() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="border-b border-gray-200 px-6 py-3 flex-shrink-0">
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+      <div className="border-b border-gray-200 px-3 md:px-6 py-2 md:py-3 flex-shrink-0">
+        <div className="hidden md:flex items-center gap-2 text-sm text-gray-500 mb-3">
           <span>내 검색</span>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -172,23 +176,41 @@ function HistoryContent() {
           <span className="text-gray-900 font-medium">데이터 보기</span>
         </div>
 
-        <Calendar
-          selectedDate={selectedDate}
-          datesWithData={datesWithData}
-          dateCountMap={dateCountMap}
-          years={years}
-          selectedYear={selectedYear}
-          selectedMonth={selectedMonth}
-          collapsed={calendarCollapsed}
-          onSelectDate={handleSelectDate}
-          onSelectYear={handleSelectYear}
-          onSelectMonth={setSelectedMonth}
-          onToggleCollapse={() => setCalendarCollapsed((prev) => !prev)}
-        />
+        <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+          <Calendar
+            selectedDate={selectedDate}
+            datesWithData={datesWithData}
+            dateCountMap={dateCountMap}
+            years={years}
+            selectedYear={selectedYear}
+            selectedMonth={selectedMonth}
+            onSelectDate={handleSelectDate}
+            onSelectYear={handleSelectYear}
+            onSelectMonth={setSelectedMonth}
+          />
+
+          {dateResults.length > 1 && (
+            <div className="flex gap-1.5 md:gap-2 overflow-x-auto hide-scrollbar">
+              {dateResults.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => setSelectedResult(r)}
+                  className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg text-[11px] md:text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                    selectedResult?.id === r.id
+                      ? "bg-blue-600 text-white"
+                      : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  {r.conditionName}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Stock Table */}
-      <div className="flex-1 overflow-auto px-6 py-4">
+      <div className="flex-1 overflow-auto px-2 md:px-6 py-2 md:py-4">
         {stocksLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />

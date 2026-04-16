@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 interface CollectedData {
   id: number;
@@ -43,6 +44,7 @@ function groupByDate(data: CollectedData[]) {
 }
 
 export default function DataPage() {
+  const { data: session } = useSession();
   const router = useRouter();
   const [allData, setAllData] = useState<CollectedData[]>([]);
   const [registered, setRegistered] = useState<RegisteredCondition[]>([]);
@@ -52,6 +54,8 @@ export default function DataPage() {
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const [togglingSeq, setTogglingSeq] = useState<string | null>(null);
+  const [extracting, setExtracting] = useState(false);
+  const [extractResult, setExtractResult] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -167,6 +171,38 @@ export default function DataPage() {
     }
   };
 
+  // 수동 수집
+  const handleExtractNow = async () => {
+    setExtracting(true);
+    setExtractResult(null);
+    setError(null);
+    try {
+      const todayStr = new Date()
+        .toLocaleDateString("ko-KR", {
+          year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Seoul",
+        })
+        .replace(/\. /g, "").replace(".", "");
+
+      const res = await fetch("/api/extract-now", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: todayStr }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+        return;
+      }
+      const total = data.results?.reduce((s: number, r: { count: number }) => s + r.count, 0) ?? 0;
+      setExtractResult(`${data.results?.length}개 조건검색 완료 (총 ${total}종목)`);
+      loadData();
+    } catch {
+      setError("수집에 실패했습니다. 로컬 서버에서 실행해주세요.");
+    } finally {
+      setExtracting(false);
+    }
+  };
+
   // 내 수집 현황 카드에만 구독 필터 적용
   const myRegistered = subscribed
     ? registered.filter((c) => subscribed.has(c.seq))
@@ -208,7 +244,43 @@ export default function DataPage() {
 
         {/* 내 수집 현황 — 항상 3칸 표시 */}
         <div className="mb-6">
-          <h2 className="text-sm font-semibold text-gray-900 mb-3">내 수집 현황</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-900">내 수집 현황</h2>
+            {session?.user?.role === "admin" && (
+              <button
+                onClick={handleExtractNow}
+                disabled={extracting}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {extracting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    수집 중...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    지금 수집
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+          {extractResult && (
+            <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+              <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <p className="text-xs text-green-800">{extractResult}</p>
+              <button onClick={() => setExtractResult(null)} className="ml-auto text-green-400 hover:text-green-600">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
           <div className="grid grid-cols-3 gap-3">
             {Array.from({ length: 3 }).map((_, i) => {
               const cond = myRegistered[i];

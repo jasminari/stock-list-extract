@@ -106,31 +106,31 @@ export default function ProcessedResultTable({
       animate={{ opacity: 1, y: 0 }}
       className="bg-white rounded-xl border border-gray-200 overflow-hidden"
     >
-      <div className="px-6 py-4 border-b border-gray-100">
+      <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-800">
+          <h2 className="text-sm md:text-base font-semibold text-gray-800">
             가공 데이터{" "}
             <span className="text-blue-600 font-bold">{stocks.length}</span>
             종목
           </h2>
-          <span className="text-xs text-gray-400">{conditionName}</span>
+          <span className="text-[10px] md:text-xs text-gray-400">{conditionName}</span>
         </div>
         {formattedDate && (
-          <p className="text-xs text-gray-400 mt-1">{formattedDate}</p>
+          <p className="text-[10px] md:text-xs text-gray-400 mt-0.5 md:mt-1">{formattedDate}</p>
         )}
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-xs md:text-sm">
           <thead>
-            <tr className="bg-gray-50 text-gray-500 text-xs">
-              <th className="px-3 py-3 text-center font-medium w-12">번호</th>
-              <th className="px-3 py-3 text-left font-medium">종목명</th>
-              <th className="px-3 py-3 text-left font-medium w-28">키워드</th>
-              <th className="px-3 py-3 text-right font-medium">거래대금(억)</th>
-              <th className="px-3 py-3 text-right font-medium">종가</th>
-              <th className="px-3 py-3 text-right font-medium">등락률</th>
-              <th className="px-3 py-3 text-left font-medium min-w-[200px]">
+            <tr className="bg-gray-50 text-gray-500 text-[10px] md:text-xs">
+              <th className="px-2 md:px-3 py-2 md:py-3 text-center font-medium w-8 md:w-12">번호</th>
+              <th className="px-2 md:px-3 py-2 md:py-3 text-left font-medium">종목명</th>
+              <th className="px-2 md:px-3 py-2 md:py-3 text-left font-medium w-20 md:w-28 hidden sm:table-cell">키워드</th>
+              <th className="px-2 md:px-3 py-2 md:py-3 text-right font-medium whitespace-nowrap">거래대금</th>
+              <th className="px-2 md:px-3 py-2 md:py-3 text-right font-medium">종가</th>
+              <th className="px-2 md:px-3 py-2 md:py-3 text-right font-medium">등락률</th>
+              <th className="px-2 md:px-3 py-2 md:py-3 text-left font-medium min-w-[120px] md:min-w-[200px] hidden sm:table-cell">
                 상승이유
               </th>
             </tr>
@@ -142,13 +142,13 @@ export default function ProcessedResultTable({
 
               return (
                 <tr key={s.index} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-3 py-3 text-center text-gray-500">
+                  <td className="px-2 md:px-3 py-1.5 md:py-3 text-center text-gray-500">
                     {s.index}
                   </td>
-                  <td className="px-3 py-3 font-medium text-gray-900">
+                  <td className="px-2 md:px-3 py-1.5 md:py-3 font-medium text-gray-900 whitespace-nowrap">
                     {s.name}
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-2 md:px-3 py-1.5 md:py-3 hidden sm:table-cell">
                     <EditableCell
                       value={s.keyword}
                       entryId={s.entryId}
@@ -157,7 +157,7 @@ export default function ProcessedResultTable({
                     />
                   </td>
                   <td
-                    className={`px-3 py-3 text-right font-medium ${
+                    className={`px-2 md:px-3 py-1.5 md:py-3 text-right font-medium whitespace-nowrap ${
                       isHighVolume
                         ? "bg-orange-100 text-orange-800"
                         : "text-gray-700"
@@ -165,17 +165,17 @@ export default function ProcessedResultTable({
                   >
                     {s.tradingAmountBil.toLocaleString()}억
                   </td>
-                  <td className="px-3 py-3 text-right text-gray-700">
+                  <td className="px-2 md:px-3 py-1.5 md:py-3 text-right text-gray-700 whitespace-nowrap">
                     {s.closingPrice.toLocaleString()}
                   </td>
                   <td
-                    className={`px-3 py-3 text-right font-medium ${
+                    className={`px-2 md:px-3 py-1.5 md:py-3 text-right font-medium whitespace-nowrap ${
                       isHighRate ? "text-red-600" : "text-gray-700"
                     }`}
                   >
                     {s.changeRate.toFixed(2)}%
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-2 md:px-3 py-1.5 md:py-3 hidden sm:table-cell">
                     <EditableCell
                       value={s.reason}
                       entryId={s.entryId}
