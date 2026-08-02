@@ -133,10 +133,11 @@
 - [x] 모바일 스레드 UI (종목 행 아래 키워드/상승이유/기사 링크 서브 행)
 
 ### Phase 2 — AI 요약
-- [ ] 기사 본문 추출 (n.news.naver.com)
-- [ ] Claude Haiku 요약 → `keyword` + `reason` 자동 작성
-- [ ] 프롬프트에 엑셀 실제 사례 few-shot 반영 (말투/밀도 맞추기)
-- [ ] auto-extract 뒤에 자동 실행 연결, Oracle 배포 + env 추가
+- [x] 기사 본문 추출 (`lib/article.ts` / enrich 내장 로직)
+- [x] LLM 요약 → `keyword` + `reason` 자동 작성 (OpenRouter, nemotron-3-super free)
+- [x] 프롬프트에 엑셀 실제 사례 few-shot 반영 (개조식 말투)
+- [x] auto-extract 뒤에 enrich 자동 실행 연결 (`runEnrich`, 별도 프로세스 격리)
+- [ ] Oracle 배포 + env 추가 (NAVER_CLIENT_ID/SECRET, OPENROUTER_API_KEY)
 
 ### Phase 3 — 고도화 (선택)
 - [ ] UI에서 실패/빈 종목 개별 "재시도" 버튼 (admin)

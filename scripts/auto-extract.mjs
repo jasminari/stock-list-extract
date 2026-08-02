@@ -14,6 +14,7 @@
 import { readFileSync, mkdirSync, writeFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { spawn } from "child_process";
 import WebSocket from "ws";
 import * as XLSX from "xlsx";
 import postgres from "postgres";
@@ -355,7 +356,40 @@ async function main() {
 
   ws.close();
   if (sql) await sql.end();
+  log("수집 완료");
+
+  // 수집 직후 상승이유 자동 수집 (기사 링크 + AI 요약)
+  await runEnrich(dateStr);
+
   log("완료");
+}
+
+/**
+ * enrich-reasons.mjs 를 별도 프로세스로 실행.
+ * 실패해도 수집 결과에는 영향 없도록 격리 (throw 하지 않음).
+ */
+function runEnrich(dateStr) {
+  if (!process.env.NAVER_CLIENT_ID || !process.env.NAVER_CLIENT_SECRET) {
+    log("NAVER 키가 없어 상승이유 수집을 건너뜁니다.");
+    return Promise.resolve();
+  }
+  const script = join(__dirname, "enrich-reasons.mjs");
+  log("상승이유 수집 시작...");
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [script, "--date", dateStr], {
+      cwd: ROOT,
+      env: process.env,
+      stdio: "inherit",
+    });
+    child.on("exit", (code) => {
+      log(`상승이유 수집 종료 (exit ${code})`);
+      resolve();
+    });
+    child.on("error", (err) => {
+      log(`상승이유 수집 실행 실패: ${err.message}`);
+      resolve();
+    });
+  });
 }
 
 main().catch((err) => {
