@@ -28,7 +28,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("아이디 또는 비밀번호가 올바르지 않습니다");
       } else {
-        router.push("/dashboard");
+        router.push("/dashboard/history");
         router.refresh();
       }
     } catch {
@@ -131,7 +131,7 @@ export default function LoginPage() {
               </div>
               <button
                 type="button"
-                onClick={() => signIn("kakao", { callbackUrl: "/dashboard" })}
+                onClick={() => signIn("kakao", { callbackUrl: "/dashboard/history" })}
                 className="w-full py-3 bg-[#FEE500] text-[#191919] font-medium rounded-lg hover:brightness-95 transition-all flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">

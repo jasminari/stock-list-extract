@@ -44,7 +44,7 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push("/dashboard");
+      router.push("/dashboard/history");
       router.refresh();
     } catch {
       setError("회원가입 중 오류가 발생했습니다");
