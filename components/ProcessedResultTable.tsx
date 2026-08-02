@@ -3,6 +3,7 @@
 import { Fragment, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import type { ProcessedStock } from "@/lib/types";
+import ArticleModal from "./ArticleModal";
 
 interface ProcessedResultTableProps {
   stocks: ProcessedStock[];
@@ -94,6 +95,11 @@ export default function ProcessedResultTable({
   date,
   onAnnotationUpdate,
 }: ProcessedResultTableProps) {
+  const [viewArticle, setViewArticle] = useState<{
+    url: string;
+    title: string;
+  } | null>(null);
+
   if (stocks.length === 0) return null;
 
   const formattedDate = date
@@ -185,15 +191,18 @@ export default function ProcessedResultTable({
                       onSave={onAnnotationUpdate}
                     />
                     {s.sourceUrl && (
-                      <a
-                        href={s.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() =>
+                          setViewArticle({
+                            url: s.sourceUrl,
+                            title: s.sourceTitle,
+                          })
+                        }
                         title={s.sourceTitle || s.sourceUrl}
-                        className="block text-[10px] md:text-xs text-blue-500 hover:underline truncate max-w-[200px] md:max-w-[280px] mt-0.5"
+                        className="block text-left text-[10px] md:text-xs text-blue-500 hover:underline truncate max-w-[200px] md:max-w-[280px] mt-0.5"
                       >
                         🔗 {s.sourceTitle || "기사 보기"}
-                      </a>
+                      </button>
                     )}
                   </td>
                 </tr>
@@ -213,14 +222,17 @@ export default function ProcessedResultTable({
                           </p>
                         )}
                         {s.sourceUrl && (
-                          <a
-                            href={s.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block text-[11px] text-blue-500 hover:underline truncate"
+                          <button
+                            onClick={() =>
+                              setViewArticle({
+                                url: s.sourceUrl,
+                                title: s.sourceTitle,
+                              })
+                            }
+                            className="block w-full text-left text-[11px] text-blue-500 hover:underline truncate"
                           >
                             🔗 {s.sourceTitle || "기사 보기"}
-                          </a>
+                          </button>
                         )}
                       </div>
                     </td>
@@ -232,6 +244,14 @@ export default function ProcessedResultTable({
           </tbody>
         </table>
       </div>
+
+      {viewArticle && (
+        <ArticleModal
+          url={viewArticle.url}
+          fallbackTitle={viewArticle.title}
+          onClose={() => setViewArticle(null)}
+        />
+      )}
     </motion.div>
   );
 }
