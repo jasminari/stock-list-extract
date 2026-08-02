@@ -125,11 +125,12 @@
 - [ ] Oracle VM에 최신 코드 반영 (tarball 재배포)
 
 ### Phase 1 — 기사 링크 찾기
-- [ ] 네이버 개발자센터 앱 등록, env 키 발급 ← **사용자 작업 필요**
+- [x] 네이버 개발자센터 앱 등록, env 키 발급 (`.env.local`에 NAVER_CLIENT_ID/SECRET)
 - [x] DB 마이그레이션 (`source_url`, `source_title`, `auto_filled`, `enriched_at`) — 라이브 DB 적용 완료
 - [x] `enrich-reasons.mjs`: 뉴스 검색 + 날짜 필터 + `source_url` 저장까지 (AI 요약 없이)
 - [x] UI에 기사 링크 표시 (`ProcessedResultTable.tsx` 상승이유 셀 하단에 🔗 기사제목 링크)
-- [ ] `--dry`로 최근 수집일 기준 매칭률 확인 (몇 % 종목에서 기사를 찾는지)
+- [x] `--dry`로 최근 수집일 기준 매칭률 확인 — 2026-07-31: 118종목 중 24종목 매칭(~20%), 오류 0건
+- [x] 모바일 스레드 UI (종목 행 아래 키워드/상승이유/기사 링크 서브 행)
 
 ### Phase 2 — AI 요약
 - [ ] 기사 본문 추출 (n.news.naver.com)
