@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { Fragment, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import type { ProcessedStock } from "@/lib/types";
 
@@ -139,9 +139,11 @@ export default function ProcessedResultTable({
             {stocks.map((s) => {
               const isHighVolume = s.tradingAmountBil >= 2000;
               const isHighRate = s.changeRate >= 15;
+              const hasThread = !!(s.keyword || s.reason || s.sourceUrl);
 
               return (
-                <tr key={s.index} className="hover:bg-gray-50 transition-colors">
+                <Fragment key={s.index}>
+                <tr className="hover:bg-gray-50 transition-colors">
                   <td className="px-2 md:px-3 py-1.5 md:py-3 text-center text-gray-500">
                     {s.index}
                   </td>
@@ -182,8 +184,49 @@ export default function ProcessedResultTable({
                       field="reason"
                       onSave={onAnnotationUpdate}
                     />
+                    {s.sourceUrl && (
+                      <a
+                        href={s.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={s.sourceTitle || s.sourceUrl}
+                        className="block text-[10px] md:text-xs text-blue-500 hover:underline truncate max-w-[200px] md:max-w-[280px] mt-0.5"
+                      >
+                        🔗 {s.sourceTitle || "기사 보기"}
+                      </a>
+                    )}
                   </td>
                 </tr>
+                {/* 모바일 전용: 종목 아래 스레드형 서브 행 (키워드/상승이유/기사 링크) */}
+                {hasThread && (
+                  <tr className="sm:hidden !border-t-0">
+                    <td colSpan={7} className="px-2 pb-2 pt-0">
+                      <div className="ml-6 pl-2.5 border-l-2 border-blue-200 space-y-1">
+                        {s.keyword && (
+                          <span className="inline-block text-[10px] font-medium bg-blue-50 text-blue-600 rounded-full px-2 py-0.5">
+                            {s.keyword}
+                          </span>
+                        )}
+                        {s.reason && (
+                          <p className="text-[11px] text-gray-600 leading-snug whitespace-pre-line">
+                            {s.reason}
+                          </p>
+                        )}
+                        {s.sourceUrl && (
+                          <a
+                            href={s.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block text-[11px] text-blue-500 hover:underline truncate"
+                          >
+                            🔗 {s.sourceTitle || "기사 보기"}
+                          </a>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               );
             })}
           </tbody>

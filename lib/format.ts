@@ -43,6 +43,8 @@ export function formatProcessedStocks(stocks: StockResult[]): ProcessedStock[] {
         closingPrice: parsePrice(s.price),
         changeRate: parseChangeRate(s.change_rate),
         reason: "",
+        sourceUrl: "",
+        sourceTitle: "",
       };
     })
     .sort((a, b) => b.tradingAmountBil - a.tradingAmountBil)
@@ -61,6 +63,8 @@ export function formatDbStocks(
     tradingAmount: string;
     keyword: string;
     reason: string;
+    sourceUrl?: string;
+    sourceTitle?: string;
   }[]
 ): ProcessedStock[] {
   return stocks
@@ -78,6 +82,8 @@ export function formatDbStocks(
         closingPrice: parsePrice(s.price),
         changeRate: parseChangeRate(s.changeRate),
         reason: s.reason || "",
+        sourceUrl: s.sourceUrl || "",
+        sourceTitle: s.sourceTitle || "",
       };
     })
     .sort((a, b) => b.tradingAmountBil - a.tradingAmountBil)

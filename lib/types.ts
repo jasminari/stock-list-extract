@@ -36,6 +36,8 @@ export interface ProcessedStock {
   closingPrice: number;
   changeRate: number;
   reason: string;
+  sourceUrl: string;
+  sourceTitle: string;
 }
 
 // === 검색 결과 메타 ===
@@ -83,4 +85,6 @@ export interface StockEntryWithAnnotation {
   low: string;
   keyword: string;
   reason: string;
+  sourceUrl: string;
+  sourceTitle: string;
 }

@@ -6,6 +6,7 @@ import {
   timestamp,
   integer,
   unique,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -84,6 +85,10 @@ export const stockAnnotations = pgTable(
     userId: integer("user_id").references(() => users.id),
     keyword: text("keyword").default(""),
     reason: text("reason").default(""),
+    sourceUrl: text("source_url").default(""),
+    sourceTitle: text("source_title").default(""),
+    autoFilled: boolean("auto_filled").default(false),
+    enrichedAt: timestamp("enriched_at"),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (t) => [unique().on(t.stockEntryId)]

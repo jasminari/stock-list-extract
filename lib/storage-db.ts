@@ -97,6 +97,8 @@ export async function getSearchResultStocks(
       low: stockEntries.low,
       keyword: stockAnnotations.keyword,
       reason: stockAnnotations.reason,
+      sourceUrl: stockAnnotations.sourceUrl,
+      sourceTitle: stockAnnotations.sourceTitle,
     })
     .from(stockEntries)
     .leftJoin(
@@ -120,6 +122,8 @@ export async function getSearchResultStocks(
     low: r.low,
     keyword: r.keyword ?? "",
     reason: r.reason ?? "",
+    sourceUrl: r.sourceUrl ?? "",
+    sourceTitle: r.sourceTitle ?? "",
   }));
 }
 
@@ -138,7 +142,11 @@ export async function updateAnnotation(
     .limit(1);
 
   if (existing.length > 0) {
-    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    // 수동 편집이므로 자동 작성 플래그 해제 (자동 갱신이 덮어쓰지 않도록)
+    const updates: Record<string, unknown> = {
+      updatedAt: new Date(),
+      autoFilled: false,
+    };
     if (keyword !== undefined) updates.keyword = keyword;
     if (reason !== undefined) updates.reason = reason;
     if (userId !== null) updates.userId = userId;
