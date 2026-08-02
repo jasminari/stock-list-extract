@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken, searchByCondition } from "@/lib/kiwoom";
 import { saveResultAsExcel, saveResultAsJson } from "@/lib/storage";
 import { isDbConfigured } from "@/lib/db";
+import { getCollectionDateStr } from "@/lib/date";
 import { saveSearchResult, listRegisteredConditions } from "@/lib/storage-db";
 
 export const maxDuration = 60;
@@ -23,15 +24,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const dateStr = new Date()
-      .toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        timeZone: "Asia/Seoul",
-      })
-      .replace(/\. /g, "")
-      .replace(".", "");
+    const dateStr = getCollectionDateStr();
 
     const registered = await listRegisteredConditions();
 

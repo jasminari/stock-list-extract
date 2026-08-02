@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getAccessToken, searchByCondition } from "@/lib/kiwoom";
 import { isDbConfigured } from "@/lib/db";
+import { getCollectionDateStr } from "@/lib/date";
 import {
   saveSearchResult,
   listRegisteredConditions,
@@ -29,15 +30,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!dateStr) {
-    dateStr = new Date()
-      .toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        timeZone: "Asia/Seoul",
-      })
-      .replace(/\. /g, "")
-      .replace(".", "");
+    dateStr = getCollectionDateStr();
   }
 
   const results: { condition: string; count: number; error?: string }[] = [];

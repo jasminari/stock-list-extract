@@ -177,16 +177,8 @@ export default function DataPage() {
     setExtractResult(null);
     setError(null);
     try {
-      const todayStr = new Date()
-        .toLocaleDateString("ko-KR", {
-          year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Seoul",
-        })
-        .replace(/\. /g, "").replace(".", "");
-
       const res = await fetch("/api/extract-now", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: todayStr }),
       });
       const data = await res.json();
       if (data.error) {

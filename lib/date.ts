@@ -11,6 +11,41 @@ export function getTodayStr(): string {
     .replace(".", "");
 }
 
+/**
+ * 수집 기준 날짜를 YYYYMMDD 형식으로 반환 (Asia/Seoul 기준).
+ * - 오전 8시 이전에 수집 시 전일로 간주 (장 마감 후 새벽 수집은 전일 데이터)
+ * - 결과가 토/일이면 직전 금요일로 롤백
+ */
+export function getCollectionDateStr(now: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const get = (type: string) =>
+    parts.find((p) => p.type === type)?.value ?? "0";
+  const year = Number(get("year"));
+  const month = Number(get("month"));
+  const day = Number(get("day"));
+  const hour = Number(get("hour"));
+
+  const target = new Date(Date.UTC(year, month - 1, day));
+  if (hour < 8) {
+    target.setUTCDate(target.getUTCDate() - 1);
+  }
+  const weekday = target.getUTCDay();
+  if (weekday === 6) target.setUTCDate(target.getUTCDate() - 1);
+  else if (weekday === 0) target.setUTCDate(target.getUTCDate() - 2);
+
+  const y = target.getUTCFullYear();
+  const m = String(target.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(target.getUTCDate()).padStart(2, "0");
+  return `${y}${m}${d}`;
+}
+
 /** YYYYMMDD 문자열 → Date 객체 */
 export function parseDate(s: string): Date {
   return new Date(`${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`);

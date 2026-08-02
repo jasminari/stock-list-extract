@@ -40,6 +40,35 @@ function log(msg) {
   console.log(`[${ts}] ${msg}`);
 }
 
+/**
+ * 수집 기준 날짜 YYYYMMDD (KST).
+ * - 오전 8시 이전이면 전일로 간주
+ * - 결과가 토/일이면 직전 금요일로 롤백
+ */
+function getCollectionDateStr(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Seoul",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", hour12: false,
+  }).formatToParts(now);
+  const get = (type) => parts.find((p) => p.type === type)?.value ?? "0";
+  const year = Number(get("year"));
+  const month = Number(get("month"));
+  const day = Number(get("day"));
+  const hour = Number(get("hour"));
+
+  const target = new Date(Date.UTC(year, month - 1, day));
+  if (hour < 8) target.setUTCDate(target.getUTCDate() - 1);
+  const weekday = target.getUTCDay();
+  if (weekday === 6) target.setUTCDate(target.getUTCDate() - 1);
+  else if (weekday === 0) target.setUTCDate(target.getUTCDate() - 2);
+
+  const y = target.getUTCFullYear();
+  const m = String(target.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(target.getUTCDate()).padStart(2, "0");
+  return `${y}${m}${d}`;
+}
+
 // === DB 관련 ===
 
 let sql = null;
@@ -238,9 +267,7 @@ async function main() {
   const seqArg = args.includes("--seq") ? args[args.indexOf("--seq") + 1] : null;
   const dateArg = args.includes("--date") ? args[args.indexOf("--date") + 1] : null;
 
-  const dateStr = dateArg || new Date()
-    .toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Seoul" })
-    .replace(/\. /g, "").replace(".", "");
+  const dateStr = dateArg || getCollectionDateStr();
 
   log("자동 추출 시작");
 
