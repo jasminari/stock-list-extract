@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_LABELS = ["", "Mon", "", "Wed", "", "Fri", ""];
@@ -14,40 +14,31 @@ function getContributionFill(count: number): string {
   return "#216e39";
 }
 
-function generateYearContributions(year: number): { date: string; count: number }[] {
-  const data: { date: string; count: number }[] = [];
-  const today = new Date();
-  const start = new Date(year, 0, 1);
-  const end = year === today.getFullYear() ? today : new Date(year, 11, 31);
-
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-    const rand = Math.random();
-    let count = 0;
-
-    if (isWeekend) {
-      if (rand > 0.7) count = Math.floor(Math.random() * 3) + 1;
-    } else {
-      if (rand > 0.3) count = Math.floor(Math.random() * 8) + 1;
-      if (rand > 0.85) count = Math.floor(Math.random() * 5) + 8;
-    }
-
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    data.push({ date: dateStr, count });
-  }
-  return data;
-}
-
 interface ContributionGraphProps {
   year: number;
 }
 
 export default function ContributionGraph({ year }: ContributionGraphProps) {
-  const contributions = useMemo(() => generateYearContributions(year), [year]);
+  // 실제 등록 건수 (date "YYYY-MM-DD" → count). 서버/클라이언트 첫 렌더는
+  // 동일하게 빈 상태로 그려 hydration 불일치를 피하고, 이후 fetch로 채운다.
+  const [counts, setCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/contributions?year=${year}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled && data.counts) setCounts(data.counts);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [year]);
 
   const totalContributions = useMemo(
-    () => contributions.reduce((sum, c) => sum + c.count, 0),
-    [contributions]
+    () => Object.values(counts).reduce((sum, c) => sum + c, 0),
+    [counts]
   );
 
   const weeks = useMemo(() => {
@@ -55,10 +46,7 @@ export default function ContributionGraph({ year }: ContributionGraphProps) {
     const result: { date: string; count: number }[][] = [];
     let currentWeek: { date: string; count: number }[] = [];
 
-    const dataMap = new Map<string, number>();
-    for (const c of contributions) {
-      dataMap.set(c.date, c.count);
-    }
+    const dataMap = new Map<string, number>(Object.entries(counts));
 
     const start = new Date(year, 0, 1);
     const end = new Date(year, 11, 31);
@@ -93,7 +81,7 @@ export default function ContributionGraph({ year }: ContributionGraphProps) {
     }
 
     return result;
-  }, [contributions, year]);
+  }, [counts, year]);
 
   const monthLabels = useMemo(() => {
     const labels: { label: string; col: number }[] = [];
