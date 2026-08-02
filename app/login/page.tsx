@@ -121,6 +121,25 @@ export default function LoginPage() {
                 {loading ? "로그인 중..." : "로그인"}
               </button>
             </form>
+
+            {/* 소셜 로그인 */}
+            <div className="mt-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-xs text-gray-400">또는</span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+              <button
+                type="button"
+                onClick={() => signIn("kakao", { callbackUrl: "/dashboard" })}
+                className="w-full py-3 bg-[#FEE500] text-[#191919] font-medium rounded-lg hover:brightness-95 transition-all flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 3C6.477 3 2 6.463 2 10.735c0 2.76 1.86 5.18 4.65 6.545-.15.522-.966 3.36-.998 3.585 0 0-.02.166.088.23.108.063.235.014.235.014.31-.043 3.593-2.35 4.161-2.752.606.086 1.23.131 1.864.131 5.523 0 10-3.463 10-7.753C22 6.463 17.523 3 12 3z" />
+                </svg>
+                카카오로 시작하기
+              </button>
+            </div>
           </div>
         </div>
       </div>

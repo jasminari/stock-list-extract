@@ -9,14 +9,21 @@ import {
   boolean,
 } from "drizzle-orm/pg-core";
 
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: varchar("username", { length: 50 }).unique().notNull(),
-  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
-  displayName: varchar("display_name", { length: 100 }),
-  role: varchar("role", { length: 20 }).default("user").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+export const users = pgTable(
+  "users",
+  {
+    id: serial("id").primaryKey(),
+    username: varchar("username", { length: 50 }).unique().notNull(),
+    // OAuth(카카오 등) 가입 유저는 비밀번호 없음
+    passwordHash: varchar("password_hash", { length: 255 }),
+    displayName: varchar("display_name", { length: 100 }),
+    role: varchar("role", { length: 20 }).default("user").notNull(),
+    provider: varchar("provider", { length: 20 }).default("credentials").notNull(),
+    providerId: varchar("provider_id", { length: 100 }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (t) => [unique().on(t.provider, t.providerId)]
+);
 
 export const searchResults = pgTable("search_results", {
   id: serial("id").primaryKey(),

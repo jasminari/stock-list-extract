@@ -1,7 +1,8 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Kakao from "next-auth/providers/kakao";
 import { compare } from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { isDbConfigured, getDb } from "./db";
 import { users } from "./db/schema";
 
@@ -49,6 +50,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .limit(1);
 
         if (!user) return null;
+        // OAuth 가입 유저는 비밀번호 로그인 불가
+        if (!user.passwordHash) return null;
 
         const valid = await compare(password, user.passwordHash);
         if (!valid) return null;
@@ -60,12 +63,48 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
+    Kakao,
   ],
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
   },
   callbacks: {
+    async signIn({ user, account }) {
+      // 카카오 로그인: DB 유저 찾거나 새로 생성 후 우리 쪽 id/role로 교체
+      if (account?.provider === "kakao") {
+        if (!isDbConfigured()) return false;
+
+        const db = getDb();
+        const providerId = account.providerAccountId;
+
+        let [dbUser] = await db
+          .select()
+          .from(users)
+          .where(
+            and(eq(users.provider, "kakao"), eq(users.providerId, providerId))
+          )
+          .limit(1);
+
+        if (!dbUser) {
+          [dbUser] = await db
+            .insert(users)
+            .values({
+              username: `kakao_${providerId}`,
+              passwordHash: null,
+              displayName: user.name ?? "카카오 사용자",
+              provider: "kakao",
+              providerId,
+            })
+            .returning();
+        }
+
+        user.id = String(dbUser.id);
+        user.name = dbUser.displayName || user.name;
+        user.role = dbUser.role;
+      }
+      return true;
+    },
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
