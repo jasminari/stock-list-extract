@@ -137,7 +137,7 @@
 - [x] LLM 요약 → `keyword` + `reason` 자동 작성 (OpenRouter, nemotron-3-super free)
 - [x] 프롬프트에 엑셀 실제 사례 few-shot 반영 (개조식 말투)
 - [x] auto-extract 뒤에 enrich 자동 실행 연결 (`runEnrich`, 별도 프로세스 격리)
-- [ ] Oracle 배포 + env 추가 (NAVER_CLIENT_ID/SECRET, OPENROUTER_API_KEY)
+- [x] Oracle 배포 완료 (2026-08-02): 스크립트 2개 전송 + env 3키 추가, VM에서 DB/네이버/OpenRouter 인증 검증 → 다음 평일 15:40 KST부터 수집+AI요약 무인 운영
 
 ### Phase 3 — 고도화 (선택)
 - [ ] UI에서 실패/빈 종목 개별 "재시도" 버튼 (admin)

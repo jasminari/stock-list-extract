@@ -2,6 +2,14 @@
 
 키움 OpenAPI가 **고정 IP에서만 토큰 발급·호출**을 허용하므로, 맥북 대신 Oracle Cloud Free Tier VM에서 `scripts/auto-extract.mjs`를 상시 스케줄링한다.
 
+## 2026-08-02 업데이트 — 상승이유 자동화 배포 완료
+
+- [x] `scripts/enrich-reasons.mjs` 신규 전송 + `auto-extract.mjs` 갱신 (수집 후 `runEnrich` 자동 실행)
+- [x] `/etc/stock-extract.env`에 `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` / `OPENROUTER_API_KEY` 추가 (총 7키)
+- [x] VM에서 DB 연결 / 네이버(200) / OpenRouter(200) 인증 검증 완료
+- 새 npm 의존성 없음 (기존 `postgres` + 내장 `fetch`). AI 모델: `nvidia/nemotron-3-super-120b-a12b:free` (`ENRICH_MODEL`로 교체 가능)
+- **⚠️ 교훈**: env 파일 마지막 줄에 trailing newline 없으면 `tee -a` append 시 첫 키가 앞줄에 접착됨 → append 전 `printf '\n'` 필수. 백업은 `/etc/stock-extract.env.bak.<ts>`
+
 ## 현재 상태 (2026-04-26 기준) — **이관 완료**
 
 - [x] Oracle Cloud VM 생성 (`stock-server`, Always Free, Oracle Linux 9.7, **x86_64**, ap-chuncheon-1)
