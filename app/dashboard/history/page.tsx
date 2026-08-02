@@ -173,7 +173,7 @@ function HistoryContent() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-900 font-medium">데이터 보기</span>
+          <span className="text-gray-900 font-medium">시장 공부하기</span>
         </div>
 
         <div className="flex items-center gap-2 md:gap-3 flex-wrap">

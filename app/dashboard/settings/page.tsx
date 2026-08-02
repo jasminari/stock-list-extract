@@ -160,7 +160,7 @@ export default function SettingsPage() {
                               수집 데이터 표시 중
                             </span>
                           ) : (
-                            "선택하면 수집 데이터와 데이터 보기에 표시됩니다"
+                            "선택하면 수집 데이터와 시장 공부하기에 표시됩니다"
                           )}
                         </p>
                       </div>
@@ -199,7 +199,7 @@ export default function SettingsPage() {
             <p className="text-sm text-blue-800 mt-1">
               선택한 조건검색식의 수집 결과가
               <span className="font-semibold"> &apos;수집 데이터&apos;</span>와
-              <span className="font-semibold"> &apos;데이터 보기&apos;</span> 탭에 표시됩니다.
+              <span className="font-semibold"> &apos;시장 공부하기&apos;</span> 탭에 표시됩니다.
               조건검색식은 매일 평일 20:10(KST)에 서버에서 자동으로 수집됩니다.
             </p>
           </div>

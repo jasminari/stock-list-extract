@@ -19,7 +19,7 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
   },
   {
     id: "history",
-    label: "데이터 보기",
+    label: "시장 공부하기",
     href: "/dashboard/history",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,7 +164,7 @@ export default function DashboardLayout({
           </nav>
 
           <div className="p-4 border-t border-gray-100">
-            <div className="text-xs text-gray-400 mb-1">데이터 보기</div>
+            <div className="text-xs text-gray-400 mb-1">시장 공부하기</div>
             <div className="text-sm text-gray-600">{resultsCount}개 결과 저장됨</div>
           </div>
         </aside>
