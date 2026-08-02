@@ -44,7 +44,7 @@ function groupByDate(data: CollectedData[]) {
 }
 
 export default function DataPage() {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const [allData, setAllData] = useState<CollectedData[]>([]);
   const [registered, setRegistered] = useState<RegisteredCondition[]>([]);
@@ -81,6 +81,13 @@ export default function DataPage() {
       setLoading(false);
     }
   }, []);
+
+  // 관리자 전용 페이지: 일반 유저는 홈으로
+  useEffect(() => {
+    if (sessionStatus === "authenticated" && session?.user?.role !== "admin") {
+      router.replace("/dashboard");
+    }
+  }, [sessionStatus, session, router]);
 
   useEffect(() => {
     loadData();
@@ -222,6 +229,8 @@ export default function DataPage() {
   const groups = groupByDate(data);
   const totalCount = data.length;
   const successCount = data.filter((d) => d.count > 0).length;
+
+  if (session?.user?.role !== "admin") return null;
 
   return (
     <div className="flex-1 overflow-auto">
