@@ -28,6 +28,60 @@ export async function getAccessToken(): Promise<KiwoomToken> {
   return { token: data.token, expires_dt: data.expires_dt };
 }
 
+/**
+ * 거래대금상위요청(ka10032)으로 종목코드 → 거래대금(백만원) 맵을 만든다.
+ *
+ * 조건검색(CNSRREQ) 응답에는 거래대금 필드가 아예 없어서(9001/302/10/25/11/12/13/16/17/18이 전부)
+ * 별도 TR로 채워야 한다. 한 페이지 100건이며 연속조회로 상위권을 훑는다.
+ * 조건검색식이 "거래대금 상위 N" 계열이라 대상 종목은 대부분 이 범위 안에 들어온다.
+ */
+export async function fetchTradingValueMap(
+  token: string,
+  maxPages = 10
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  let contYn = "N";
+  let nextKey = "";
+
+  for (let page = 0; page < maxPages; page++) {
+    const res = await fetch(`${HTTP_BASE}/api/dostk/rkinfo`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json;charset=UTF-8",
+        "api-id": "ka10032",
+        authorization: `Bearer ${token}`,
+        "cont-yn": contYn,
+        "next-key": nextKey,
+      },
+      body: JSON.stringify({
+        mrkt_tp: "000", // 전체
+        mang_stk_incls: "1", // 관리종목 포함
+        stex_tp: "1", // KRX
+      }),
+    });
+
+    const data = await res.json();
+    if (data.return_code !== 0) {
+      throw new Error(`거래대금 조회 실패: ${data.return_msg}`);
+    }
+
+    for (const row of data.trde_prica_upper || []) {
+      // stk_cd는 거래소 접미사가 붙을 수 있다 (039490_NX, 039490_AL)
+      const code = String(row.stk_cd || "").replace(/^A/, "").split("_")[0];
+      if (code && row.trde_prica != null) {
+        map.set(code, String(row.trde_prica).replace(/^[+-]/, ""));
+      }
+    }
+
+    contYn = res.headers.get("cont-yn") || "N";
+    nextKey = res.headers.get("next-key") || "";
+    if (contYn !== "Y") break;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+
+  return map;
+}
+
 // WebSocket 연결 + 로그인 (LOGIN 패킷 전송 후 응답 확인)
 function connectWebSocket(token: string): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
@@ -118,6 +172,14 @@ export async function searchByCondition(
   const ws = await connectWebSocket(token);
   const results: StockResult[] = [];
 
+  // 조건검색 응답에 거래대금이 없으므로 별도 TR로 보충 (실패해도 검색 자체는 진행)
+  let tradingValues = new Map<string, string>();
+  try {
+    tradingValues = await fetchTradingValueMap(token);
+  } catch (e) {
+    console.warn("거래대금 조회 실패, 종가×거래량 추정치로 대체:", e);
+  }
+
   try {
     // CNSRLST 먼저 호출 (서버 세션 초기화 목적)
     await sendAndReceive(ws, { trnm: "CNSRLST" }, 10000);
@@ -148,15 +210,17 @@ export async function searchByCondition(
       }
 
       for (const item of res.data || []) {
+        const code = (item["9001"] || "").replace(/^A/, "");
         results.push({
-          code: (item["9001"] || "").replace(/^A/, ""),
+          code,
           name: item["302"] || "",
           price: item["10"] || "",
           change_sign: item["25"] || "",
           change: item["11"] || "",
           change_rate: item["12"] || "",
           volume: item["13"] || "",
-          trading_amount: item["1043"] || "",
+          // 단위: 백만원 (ka10032). 상위권 밖 종목은 빈 값 → 종가×거래량으로 추정
+          trading_amount: tradingValues.get(code) || "",
           open: item["16"] || "",
           high: item["17"] || "",
           low: item["18"] || "",

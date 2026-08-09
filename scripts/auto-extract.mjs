@@ -111,7 +111,7 @@ async function saveToDb(dateStr, seq, conditionName, stocks) {
       change: s.전일대비,
       change_rate: s.등락율,
       volume: String(s.누적거래량),
-      trading_amount: String(s.거래대금_천원),
+      trading_amount: String(s.거래대금_백만원),
       open: String(s.시가),
       high: String(s.고가),
       low: String(s.저가),
@@ -147,6 +147,48 @@ async function getToken() {
   const data = await res.json();
   if (data.return_code !== 0) throw new Error(`토큰 발급 실패: ${data.return_msg}`);
   return data.token;
+}
+
+/**
+ * 거래대금상위요청(ka10032) → 종목코드별 거래대금(백만원) 맵.
+ * 조건검색(CNSRREQ) 응답에는 거래대금 필드가 없어서 별도 TR로 채운다.
+ * 한 페이지 100건, 연속조회로 상위권을 훑는다.
+ */
+async function getTradingValueMap(token, maxPages = 10) {
+  const map = new Map();
+  let contYn = "N", nextKey = "";
+
+  for (let page = 0; page < maxPages; page++) {
+    const res = await fetch("https://api.kiwoom.com/api/dostk/rkinfo", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json;charset=UTF-8",
+        "api-id": "ka10032",
+        authorization: `Bearer ${token}`,
+        "cont-yn": contYn,
+        "next-key": nextKey,
+      },
+      body: JSON.stringify({ mrkt_tp: "000", mang_stk_incls: "1", stex_tp: "1" }),
+    });
+
+    const data = await res.json();
+    if (data.return_code !== 0) throw new Error(`거래대금 조회 실패: ${data.return_msg}`);
+
+    for (const row of data.trde_prica_upper || []) {
+      // stk_cd에 거래소 접미사가 붙을 수 있다 (039490_NX, 039490_AL)
+      const code = String(row.stk_cd || "").replace(/^A/, "").split("_")[0];
+      if (code && row.trde_prica != null) {
+        map.set(code, String(row.trde_prica).replace(/^[+-]/, ""));
+      }
+    }
+
+    contYn = res.headers.get("cont-yn") || "N";
+    nextKey = res.headers.get("next-key") || "";
+    if (contYn !== "Y") break;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+
+  return map;
 }
 
 // WebSocket 연결 + LOGIN 패킷 전송
@@ -203,7 +245,7 @@ async function getConditions(ws) {
   return (res.data || []).map(([seq, name]) => ({ seq, name }));
 }
 
-async function searchCondition(ws, seq) {
+async function searchCondition(ws, seq, tradingValues = new Map()) {
   const stocks = [];
   let contYn = "N", nextKey = "";
 
@@ -218,14 +260,16 @@ async function searchCondition(ws, seq) {
     );
     if (res.return_code !== 0) throw new Error(`조건검색 실패: ${res.return_msg}`);
     for (const item of res.data || []) {
+      const code = (item["9001"] || "").replace(/^A/, "");
       stocks.push({
-        종목코드: (item["9001"] || "").replace(/^A/, ""),
+        종목코드: code,
         종목명: item["302"] || "",
         현재가: Number((item["10"] || "0").replace(/^[+-]/, "")),
         전일대비: item["11"] || "",
         등락율: item["12"] || "",
         누적거래량: Number(item["13"] || "0"),
-        거래대금_천원: Number(item["1043"] || "0"),
+        // 상위권 밖 종목은 0 → 화면에서 종가×거래량 추정치로 폴백
+        거래대금_백만원: Number(tradingValues.get(code) || "0"),
         시가: Number((item["16"] || "0").replace(/^[+-]/, "")),
         고가: Number((item["17"] || "0").replace(/^[+-]/, "")),
         저가: Number((item["18"] || "0").replace(/^[+-]/, "")),
@@ -275,6 +319,15 @@ async function main() {
   const token = await getToken();
   log("토큰 발급 완료");
 
+  // 조건검색 응답에 거래대금이 없어 별도 TR로 보충 (실패해도 수집은 계속)
+  let tradingValues = new Map();
+  try {
+    tradingValues = await getTradingValueMap(token);
+    log(`거래대금 조회 완료: ${tradingValues.size}종목`);
+  } catch (e) {
+    log(`거래대금 조회 실패, 종가×거래량 추정치로 대체: ${e.message}`);
+  }
+
   const ws = await wsConnect(token);
   log("WebSocket 로그인 완료");
   const allConditions = await getConditions(ws);
@@ -311,7 +364,7 @@ async function main() {
   for (const cond of targets) {
     try {
       log(`[${cond.name}] 조건검색 실행 중...`);
-      const stocks = await searchCondition(ws, cond.seq);
+      const stocks = await searchCondition(ws, cond.seq, tradingValues);
       const fileName = `${dateStr}_${cond.name}`;
 
       // JSON 저장
@@ -321,7 +374,7 @@ async function main() {
           code: s.종목코드, name: s.종목명,
           price: String(s.현재가), change_sign: "", change: s.전일대비,
           change_rate: s.등락율, volume: String(s.누적거래량),
-          trading_amount: String(s.거래대금_천원),
+          trading_amount: String(s.거래대금_백만원),
           open: String(s.시가), high: String(s.고가), low: String(s.저가),
         })),
       });

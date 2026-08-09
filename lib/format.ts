@@ -26,10 +26,10 @@ export function parseChangeRate(raw: string): number {
   return (sign * n) / (s.length >= 9 ? 1000 : 100);
 }
 
-/** 거래대금 천원 → 억원 (÷ 100,000) */
+/** 거래대금 백만원(키움 ka10032 trde_prica) → 억원 (÷ 100) */
 export function parseTradingAmountBil(raw: string): number {
   const n = Number(raw) || 0;
-  return Math.round(n / 100000);
+  return Math.round(n / 100);
 }
 
 /** 거래대금이 없을 때 종가 × 거래량으로 근사 계산 (원 → 억원) */
