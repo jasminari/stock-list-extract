@@ -7,10 +7,23 @@ export function parsePrice(raw: string): number {
   return Number(raw.replace(/^[+-]/, "")) || 0;
 }
 
-/** "000006060" → 6.06 (키움 원본: 실제 등락률% × 1000, 즉 소수점 3자리 포함) */
+/**
+ * 키움 실시간 등락률(필드 12)은 소수점 없는 zero-padding 문자열로 온다.
+ * 부호 자리를 포함한 고정폭이며, 폭이 곧 소수 자릿수를 결정한다.
+ * 2026-07-17부터 포맷이 바뀌어 DB에 두 형태가 섞여 있으므로 폭으로 분기한다.
+ *   ~2026-07-16: 9칸 / 소수 3자리 → "000006060" = 6.06,  "-00004980" = -4.98
+ *   2026-07-17~: 8칸 / 소수 2자리 → "00001151"  = 11.51
+ */
 export function parseChangeRate(raw: string): number {
-  const n = Number(raw.replace(/^[+-]/, "")) || 0;
-  return n / 1000;
+  const s = (raw ?? "").trim();
+  if (!s) return 0;
+  // REST 응답("+11.51")처럼 소수점이 있으면 그대로 사용
+  if (s.includes(".")) return Number(s) || 0;
+  const sign = s.startsWith("-") ? -1 : 1;
+  const digits = s.replace(/^[+-]/, "");
+  const n = Number(digits) || 0;
+  // 폭 판정은 부호를 포함한 원본 길이 기준 (부호가 패딩 한 칸을 차지)
+  return (sign * n) / (s.length >= 9 ? 1000 : 100);
 }
 
 /** 거래대금 천원 → 억원 (÷ 100,000) */
