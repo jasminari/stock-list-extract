@@ -1,6 +1,7 @@
 import { eq, and, desc, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import {
+  users,
   searchResults,
   stockEntries,
   stockAnnotations,
@@ -311,4 +312,63 @@ export async function unsubscribeCondition(
         eq(userSubscriptions.conditionSeq, conditionSeq)
       )
     );
+}
+
+// === 가입자 관리 (관리자 전용) ===
+
+export interface UserSummary {
+  id: number;
+  username: string;
+  displayName: string | null;
+  role: string;
+  provider: string;
+  subscriptionCount: number;
+  createdAt: string;
+}
+
+export async function listUsers(): Promise<UserSummary[]> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: users.id,
+      username: users.username,
+      displayName: users.displayName,
+      role: users.role,
+      provider: users.provider,
+      createdAt: users.createdAt,
+      subscriptionCount: sql<number>`(
+        select count(*)::int from ${userSubscriptions}
+        where ${userSubscriptions.userId} = ${users.id}
+      )`,
+    })
+    .from(users)
+    .orderBy(desc(users.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    username: r.username,
+    displayName: r.displayName,
+    role: r.role,
+    provider: r.provider,
+    subscriptionCount: r.subscriptionCount,
+    createdAt: r.createdAt?.toISOString() ?? "",
+  }));
+}
+
+export async function updateUserRole(
+  userId: number,
+  role: "user" | "admin"
+): Promise<void> {
+  const db = getDb();
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+}
+
+/** 마지막 관리자가 스스로를 강등해 잠기는 것을 막기 위한 카운트 */
+export async function countAdmins(): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(users)
+    .where(eq(users.role, "admin"));
+  return row?.count ?? 0;
 }
