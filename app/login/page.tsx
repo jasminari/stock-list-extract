@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { track } from "@/lib/analytics";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,12 +27,15 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
+        track("Login Failed", { method: "credentials", reason: "invalid_credentials" });
         setError("아이디 또는 비밀번호가 올바르지 않습니다");
       } else {
+        track("Login Completed", { method: "credentials" });
         router.push("/dashboard/history");
         router.refresh();
       }
     } catch {
+      track("Login Failed", { method: "credentials", reason: "exception" });
       setError("로그인 중 오류가 발생했습니다");
     } finally {
       setLoading(false);
@@ -131,7 +135,10 @@ export default function LoginPage() {
               </div>
               <button
                 type="button"
-                onClick={() => signIn("kakao", { callbackUrl: "/dashboard/history" })}
+                onClick={() => {
+                  track("Login Started", { method: "kakao" });
+                  signIn("kakao", { callbackUrl: "/dashboard/history" });
+                }}
                 className="w-full py-3 bg-[#FEE500] text-[#191919] font-medium rounded-lg hover:brightness-95 transition-all flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">

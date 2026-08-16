@@ -5,6 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import { useConditions } from "@/hooks/useConditions";
 import { useSearch } from "@/hooks/useSearch";
 import { getTodayStr } from "@/lib/date";
+import { track } from "@/lib/analytics";
 import ProcessedResultTable from "@/components/ProcessedResultTable";
 import RawResultTable from "@/components/RawResultTable";
 
@@ -16,11 +17,24 @@ export default function SearchPage() {
   const search = useSearch();
   const todayStr = getTodayStr();
 
-  const handleSearch = () => {
-    search.runSearch(cond.selectedSeq, cond.selectedName);
+  const handleSearch = async () => {
+    if (!cond.selectedSeq) return;
+
+    track("Condition Search Started", { conditionName: cond.selectedName });
+    const data = await search.runSearch(cond.selectedSeq, cond.selectedName);
+
+    if (data) {
+      track("Condition Search Completed", {
+        conditionName: cond.selectedName,
+        stockCount: data.stocks?.length ?? 0,
+      });
+    } else {
+      track("Condition Search Failed", { conditionName: cond.selectedName });
+    }
   };
 
   const handleSelectCondition = (seq: string, name: string) => {
+    track("Condition Selected", { conditionName: name });
     cond.select(seq, name);
     setShowInfoBanner(true);
   };
@@ -120,7 +134,13 @@ export default function SearchPage() {
           </button>
           {search.lastFileName && (
             <button
-              onClick={() => search.downloadFile(search.lastFileName)}
+              onClick={() => {
+                track("Result File Downloaded", {
+                  conditionName: cond.selectedName,
+                  fileName: search.lastFileName,
+                });
+                search.downloadFile(search.lastFileName);
+              }}
               className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

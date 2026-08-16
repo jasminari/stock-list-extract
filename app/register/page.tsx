@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { track } from "@/lib/analytics";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -29,9 +30,12 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        track("Sign Up Failed", { method: "credentials", reason: data.error ?? "unknown" });
         setError(data.error || "회원가입에 실패했습니다");
         return;
       }
+
+      track("Sign Up Completed", { method: "credentials" });
 
       const signInResult = await signIn("credentials", {
         username,

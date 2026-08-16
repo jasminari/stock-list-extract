@@ -6,6 +6,8 @@ import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
+
 export const metadata: Metadata = {
   title: "Stock List Extract",
   description: "Stock List Extract Application",
@@ -29,6 +31,24 @@ export default function RootLayout({
             })(window, document, "clarity", "script", "xvwtu0mu17");
           `}
         </Script>
+
+        {/* Google Analytics 4 (측정 ID가 설정된 환경에서만 로드) */}
+        {GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_ID}');
+              `}
+            </Script>
+          </>
+        )}
       </head>
       <body className={`${inter.className} h-full`}>
         <Providers>{children}</Providers>
