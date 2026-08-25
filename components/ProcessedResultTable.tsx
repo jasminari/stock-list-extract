@@ -1,9 +1,17 @@
 "use client";
 
-import { Fragment, useState, useCallback } from "react";
+import { Fragment, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import type { ProcessedStock } from "@/lib/types";
 import ArticleModal from "./ArticleModal";
+
+/** 정렬 가능한 숫자 컬럼 */
+type SortKey =
+  | "tradingAmountBil"
+  | "turnoverRate"
+  | "closingPrice"
+  | "changeRate";
+type SortState = { key: SortKey; dir: "desc" | "asc" };
 
 interface ProcessedResultTableProps {
   stocks: ProcessedStock[];
@@ -89,6 +97,46 @@ function EditableCell({
   );
 }
 
+function SortHeader({
+  label,
+  sortKey,
+  sort,
+  onSort,
+  title,
+}: {
+  label: string;
+  sortKey: SortKey;
+  sort: SortState | null;
+  onSort: (key: SortKey) => void;
+  title?: string;
+}) {
+  const activeDir = sort?.key === sortKey ? sort.dir : null;
+
+  return (
+    <th className="px-2 md:px-3 py-2 md:py-3 text-right font-medium whitespace-nowrap">
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        title={title}
+        aria-label={`${label} 정렬`}
+        className={`inline-flex items-center gap-1 hover:text-gray-700 transition-colors ${
+          activeDir ? "text-blue-600" : ""
+        }`}
+      >
+        {label}
+        <span className="flex flex-col leading-[0.6] text-[7px] md:text-[8px]">
+          <span className={activeDir === "asc" ? "text-blue-600" : "text-gray-300"}>
+            ▲
+          </span>
+          <span className={activeDir === "desc" ? "text-blue-600" : "text-gray-300"}>
+            ▼
+          </span>
+        </span>
+      </button>
+    </th>
+  );
+}
+
 export default function ProcessedResultTable({
   stocks,
   conditionName,
@@ -99,6 +147,30 @@ export default function ProcessedResultTable({
     url: string;
     title: string;
   } | null>(null);
+  // null = 수집된 원본 순서 유지
+  const [sort, setSort] = useState<SortState | null>(null);
+
+  const toggleSort = useCallback((key: SortKey) => {
+    setSort((prev) =>
+      prev?.key === key
+        ? { key, dir: prev.dir === "desc" ? "asc" : "desc" }
+        : { key, dir: "desc" }
+    );
+  }, []);
+
+  const sortedStocks = useMemo(() => {
+    if (!sort) return stocks;
+    const factor = sort.dir === "desc" ? -1 : 1;
+    // 회전율은 상장주식수가 없으면 null → 방향과 무관하게 항상 뒤로 보낸다
+    return [...stocks].sort((a, b) => {
+      const av = a[sort.key];
+      const bv = b[sort.key];
+      if (av === null && bv === null) return 0;
+      if (av === null) return 1;
+      if (bv === null) return -1;
+      return (av - bv) * factor;
+    });
+  }, [stocks, sort]);
 
   if (stocks.length === 0) return null;
 
@@ -130,29 +202,49 @@ export default function ProcessedResultTable({
         <table className="w-full text-xs md:text-sm">
           <thead>
             <tr className="bg-gray-50 text-gray-500 text-[10px] md:text-xs">
-              <th className="px-2 md:px-3 py-2 md:py-3 text-center font-medium w-8 md:w-12">번호</th>
               <th className="px-2 md:px-3 py-2 md:py-3 text-left font-medium">종목명</th>
               <th className="px-2 md:px-3 py-2 md:py-3 text-left font-medium w-20 md:w-28 hidden sm:table-cell">키워드</th>
-              <th className="px-2 md:px-3 py-2 md:py-3 text-right font-medium whitespace-nowrap">거래대금</th>
-              <th className="px-2 md:px-3 py-2 md:py-3 text-right font-medium">종가</th>
-              <th className="px-2 md:px-3 py-2 md:py-3 text-right font-medium">등락률</th>
+              <SortHeader
+                label="거래대금"
+                sortKey="tradingAmountBil"
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label="회전율"
+                sortKey="turnoverRate"
+                sort={sort}
+                onSort={toggleSort}
+                title="거래대금 ÷ 시가총액 (그날 상장주식의 손바뀜 비율)"
+              />
+              <SortHeader
+                label="종가"
+                sortKey="closingPrice"
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label="등락률"
+                sortKey="changeRate"
+                sort={sort}
+                onSort={toggleSort}
+              />
               <th className="px-2 md:px-3 py-2 md:py-3 text-left font-medium min-w-[120px] md:min-w-[200px] hidden sm:table-cell">
                 상승이유
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {stocks.map((s) => {
+            {sortedStocks.map((s) => {
               const isHighVolume = s.tradingAmountBil >= 2000;
               const isHighRate = s.changeRate >= 15;
+              // 하루에 상장주식의 20% 이상 손바뀜 = 단기 과열 신호
+              const isHighTurnover = (s.turnoverRate ?? 0) >= 20;
               const hasThread = !!(s.keyword || s.reason || s.sourceUrl);
 
               return (
                 <Fragment key={s.index}>
                 <tr className="hover:bg-gray-50 transition-colors">
-                  <td className="px-2 md:px-3 py-1.5 md:py-3 text-center text-gray-500">
-                    {s.index}
-                  </td>
                   <td className="px-2 md:px-3 py-1.5 md:py-3 font-medium text-gray-900 whitespace-nowrap">
                     {s.name}
                   </td>
@@ -172,6 +264,22 @@ export default function ProcessedResultTable({
                     }`}
                   >
                     {s.tradingAmountBil.toLocaleString()}억
+                  </td>
+                  <td
+                    className={`px-2 md:px-3 py-1.5 md:py-3 text-right whitespace-nowrap ${
+                      isHighTurnover
+                        ? "bg-purple-100 text-purple-800 font-medium"
+                        : "text-gray-700"
+                    }`}
+                    title={
+                      s.marketCapBil
+                        ? `시가총액 ${s.marketCapBil.toLocaleString()}억`
+                        : "상장주식수 미수집"
+                    }
+                  >
+                    {s.turnoverRate === null
+                      ? "-"
+                      : `${s.turnoverRate.toFixed(s.turnoverRate < 1 ? 2 : 1)}%`}
                   </td>
                   <td className="px-2 md:px-3 py-1.5 md:py-3 text-right text-gray-700 whitespace-nowrap">
                     {s.closingPrice.toLocaleString()}
@@ -210,7 +318,7 @@ export default function ProcessedResultTable({
                 {hasThread && (
                   <tr className="sm:hidden !border-t-0">
                     <td colSpan={7} className="px-2 pb-2 pt-0">
-                      <div className="ml-6 pl-2.5 border-l-2 border-blue-200 space-y-1">
+                      <div className="ml-1 pl-2.5 border-l-2 border-blue-200 space-y-1">
                         {s.keyword && (
                           <span className="inline-block text-[10px] font-medium bg-blue-50 text-blue-600 rounded-full px-2 py-0.5">
                             {s.keyword}

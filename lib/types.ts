@@ -19,6 +19,8 @@ export interface StockResult {
   change_rate: string;
   volume: string;
   trading_amount: string;
+  /** 상장주식수(주). 키움 ka10099 listCount. 시가총액 계산용 */
+  list_count: string;
   open: string;
   high: string;
   low: string;
@@ -35,6 +37,10 @@ export interface ProcessedStock {
   tradingAmountBil: number;
   closingPrice: number;
   changeRate: number;
+  /** 시가총액(억원). 상장주식수 미확보 시 null */
+  marketCapBil: number | null;
+  /** 거래대금 ÷ 시가총액 × 100 (%). 상장주식수 미확보 시 null */
+  turnoverRate: number | null;
   reason: string;
   sourceUrl: string;
   sourceTitle: string;
@@ -80,6 +86,7 @@ export interface StockEntryWithAnnotation {
   changeRate: string;
   volume: string;
   tradingAmount: string;
+  listCount: string;
   open: string;
   high: string;
   low: string;

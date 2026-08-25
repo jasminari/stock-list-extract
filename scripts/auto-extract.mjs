@@ -112,12 +112,13 @@ async function saveToDb(dateStr, seq, conditionName, stocks) {
       change_rate: s.등락율,
       volume: String(s.누적거래량),
       trading_amount: String(s.거래대금_백만원),
+      list_count: String(s.상장주식수 ?? 0),
       open: String(s.시가),
       high: String(s.고가),
       low: String(s.저가),
     }));
 
-    await db`INSERT INTO stock_entries ${db(entries, "search_result_id", "code", "name", "price", "change_sign", "change", "change_rate", "volume", "trading_amount", "open", "high", "low")}`;
+    await db`INSERT INTO stock_entries ${db(entries, "search_result_id", "code", "name", "price", "change_sign", "change", "change_rate", "volume", "trading_amount", "list_count", "open", "high", "low")}`;
   }
 
   log(`[DB] ${conditionName}: ${stocks.length}종목 저장 완료 (id: ${result.id})`);
@@ -191,6 +192,41 @@ async function getTradingValueMap(token, maxPages = 10) {
   return map;
 }
 
+/**
+ * 종목정보 리스트(ka10099) → 종목코드별 상장주식수(주) 맵.
+ * 시가총액 = 상장주식수 × 종가. 시장당 전 종목이 한 응답에 담겨 총 2회 호출.
+ * mrkt_tp: 0=거래소(ETF/ETN/리츠 포함), 10=코스닥
+ */
+async function getListCountMap(token) {
+  const map = new Map();
+
+  for (const mrktTp of ["0", "10"]) {
+    const res = await fetch("https://api.kiwoom.com/api/dostk/stkinfo", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json;charset=UTF-8",
+        "api-id": "ka10099",
+        authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ mrkt_tp: mrktTp }),
+    });
+
+    const data = await res.json();
+    if (data.return_code !== 0) throw new Error(`상장주식수 조회 실패: ${data.return_msg}`);
+
+    for (const row of data.list || []) {
+      const code = String(row.code || "").replace(/^A/, "").split("_")[0];
+      // listCount는 zero-padding 문자열 ("0000000027931470")
+      const listCount = Number(row.listCount);
+      if (code && listCount > 0) map.set(code, String(listCount));
+    }
+
+    await new Promise((r) => setTimeout(r, 250));
+  }
+
+  return map;
+}
+
 // WebSocket 연결 + LOGIN 패킷 전송
 function wsConnect(token) {
   return new Promise((resolve, reject) => {
@@ -245,7 +281,7 @@ async function getConditions(ws) {
   return (res.data || []).map(([seq, name]) => ({ seq, name }));
 }
 
-async function searchCondition(ws, seq, tradingValues = new Map()) {
+async function searchCondition(ws, seq, tradingValues = new Map(), listCounts = new Map()) {
   const stocks = [];
   let contYn = "N", nextKey = "";
 
@@ -270,6 +306,8 @@ async function searchCondition(ws, seq, tradingValues = new Map()) {
         누적거래량: Number(item["13"] || "0"),
         // 상위권 밖 종목은 0 → 화면에서 종가×거래량 추정치로 폴백
         거래대금_백만원: Number(tradingValues.get(code) || "0"),
+        // 시가총액 계산용. 미확보 시 0 → 화면에서 회전율 "-" 표시
+        상장주식수: Number(listCounts.get(code) || "0"),
         시가: Number((item["16"] || "0").replace(/^[+-]/, "")),
         고가: Number((item["17"] || "0").replace(/^[+-]/, "")),
         저가: Number((item["18"] || "0").replace(/^[+-]/, "")),
@@ -289,7 +327,7 @@ function saveExcel(fileName, sheetName, rows) {
   const ws = XLSX.utils.json_to_sheet(rows);
   ws["!cols"] = [
     { wch: 12 }, { wch: 20 }, { wch: 12 }, { wch: 12 },
-    { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+    { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
   ];
   XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31));
   const filePath = join(DATA_DIR, `${fileName}.xlsx`);
@@ -328,6 +366,15 @@ async function main() {
     log(`거래대금 조회 실패, 종가×거래량 추정치로 대체: ${e.message}`);
   }
 
+  // 시가총액(회전율) 계산용 상장주식수 (실패해도 수집은 계속)
+  let listCounts = new Map();
+  try {
+    listCounts = await getListCountMap(token);
+    log(`상장주식수 조회 완료: ${listCounts.size}종목`);
+  } catch (e) {
+    log(`상장주식수 조회 실패, 회전율 생략: ${e.message}`);
+  }
+
   const ws = await wsConnect(token);
   log("WebSocket 로그인 완료");
   const allConditions = await getConditions(ws);
@@ -364,7 +411,7 @@ async function main() {
   for (const cond of targets) {
     try {
       log(`[${cond.name}] 조건검색 실행 중...`);
-      const stocks = await searchCondition(ws, cond.seq, tradingValues);
+      const stocks = await searchCondition(ws, cond.seq, tradingValues, listCounts);
       const fileName = `${dateStr}_${cond.name}`;
 
       // JSON 저장
@@ -375,6 +422,7 @@ async function main() {
           price: String(s.현재가), change_sign: "", change: s.전일대비,
           change_rate: s.등락율, volume: String(s.누적거래량),
           trading_amount: String(s.거래대금_백만원),
+          list_count: String(s.상장주식수 ?? 0),
           open: String(s.시가), high: String(s.고가), low: String(s.저가),
         })),
       });

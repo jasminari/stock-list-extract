@@ -39,22 +39,68 @@ function estimateTradingAmountBil(price: string, volume: string): number {
   return Math.round((p * v) / 100000000);
 }
 
+/**
+ * 거래대금(억원)을 확정한다. ka10032 상위권 밖 종목은 값이 비어 오므로
+ * 종가 × 거래량 추정치로 폴백한다. 화면/엑셀이 같은 값을 쓰도록 여기로 모은다.
+ */
+export function resolveTradingAmountBil(
+  tradingAmount: string,
+  price: string,
+  volume: string
+): number {
+  return tradingAmount && Number(tradingAmount) > 0
+    ? parseTradingAmountBil(tradingAmount)
+    : estimateTradingAmountBil(price, volume);
+}
+
+/**
+ * 상장주식수(주) × 종가(원) → 시가총액(억원).
+ * 상장주식수가 없으면(과거 데이터/미상장 종목) null.
+ */
+export function calcMarketCapBil(
+  listCount: string,
+  closingPrice: number
+): number | null {
+  const shares = Number(listCount) || 0;
+  if (shares <= 0 || closingPrice <= 0) return null;
+  return Math.round((shares * closingPrice) / 100000000);
+}
+
+/**
+ * 거래회전율(%) = 거래대금 ÷ 시가총액 × 100.
+ * "그날 발행 주식의 몇 %가 손바뀜했나"를 뜻하며 시총 규모와 무관하게 비교 가능하다.
+ * 두 값 모두 억원 단위라 그대로 나눈다.
+ */
+export function calcTurnoverRate(
+  tradingAmountBil: number,
+  marketCapBil: number | null
+): number | null {
+  if (!marketCapBil || marketCapBil <= 0) return null;
+  return (tradingAmountBil / marketCapBil) * 100;
+}
+
 /** raw StockResult[] → 가공된 ProcessedStock[] (거래대금 내림차순) */
 export function formatProcessedStocks(stocks: StockResult[]): ProcessedStock[] {
   return stocks
     .map((s) => {
-      const hasTradingAmount = s.trading_amount && Number(s.trading_amount) > 0;
+      const tradingAmountBil = resolveTradingAmountBil(
+        s.trading_amount,
+        s.price,
+        s.volume
+      );
+      const closingPrice = parsePrice(s.price);
+      const marketCapBil = calcMarketCapBil(s.list_count, closingPrice);
       return {
         index: 0,
         entryId: null,
         name: s.name,
         code: s.code,
         keyword: "",
-        tradingAmountBil: hasTradingAmount
-          ? parseTradingAmountBil(s.trading_amount)
-          : estimateTradingAmountBil(s.price, s.volume),
-        closingPrice: parsePrice(s.price),
+        tradingAmountBil,
+        closingPrice,
         changeRate: parseChangeRate(s.change_rate),
+        marketCapBil,
+        turnoverRate: calcTurnoverRate(tradingAmountBil, marketCapBil),
         reason: "",
         sourceUrl: "",
         sourceTitle: "",
@@ -74,6 +120,7 @@ export function formatDbStocks(
     changeRate: string;
     volume: string;
     tradingAmount: string;
+    listCount?: string;
     keyword: string;
     reason: string;
     sourceUrl?: string;
@@ -82,18 +129,24 @@ export function formatDbStocks(
 ): ProcessedStock[] {
   return stocks
     .map((s) => {
-      const hasTradingAmount = s.tradingAmount && Number(s.tradingAmount) > 0;
+      const tradingAmountBil = resolveTradingAmountBil(
+        s.tradingAmount,
+        s.price,
+        s.volume
+      );
+      const closingPrice = parsePrice(s.price);
+      const marketCapBil = calcMarketCapBil(s.listCount ?? "", closingPrice);
       return {
         index: 0,
         entryId: s.id,
         name: s.name,
         code: s.code,
         keyword: s.keyword || "",
-        tradingAmountBil: hasTradingAmount
-          ? parseTradingAmountBil(s.tradingAmount)
-          : estimateTradingAmountBil(s.price, s.volume),
-        closingPrice: parsePrice(s.price),
+        tradingAmountBil,
+        closingPrice,
         changeRate: parseChangeRate(s.changeRate),
+        marketCapBil,
+        turnoverRate: calcTurnoverRate(tradingAmountBil, marketCapBil),
         reason: s.reason || "",
         sourceUrl: s.sourceUrl || "",
         sourceTitle: s.sourceTitle || "",

@@ -46,6 +46,8 @@ export const stockEntries = pgTable("stock_entries", {
   changeRate: varchar("change_rate", { length: 20 }).notNull(),
   volume: varchar("volume", { length: 20 }).notNull(),
   tradingAmount: varchar("trading_amount", { length: 20 }).default(""),
+  // 수집 시점의 상장주식수(주). 증자/분할로 변하므로 시점값을 그대로 보존한다
+  listCount: varchar("list_count", { length: 20 }).default(""),
   open: varchar("open", { length: 20 }).notNull(),
   high: varchar("high", { length: 20 }).notNull(),
   low: varchar("low", { length: 20 }).notNull(),

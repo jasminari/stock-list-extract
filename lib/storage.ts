@@ -24,6 +24,7 @@ export async function saveResultAsExcel(
     등락율: s.change_rate,
     누적거래량: Number(s.volume),
     거래대금_천원: Number(s.trading_amount || "0"),
+    상장주식수: Number(s.list_count || "0"),
     시가: Number(s.open.replace(/^[+-]/, "")),
     고가: Number(s.high.replace(/^[+-]/, "")),
     저가: Number(s.low.replace(/^[+-]/, "")),
@@ -41,6 +42,7 @@ export async function saveResultAsExcel(
     { wch: 10 }, // 등락율
     { wch: 16 }, // 누적거래량
     { wch: 16 }, // 거래대금_천원
+    { wch: 16 }, // 상장주식수
     { wch: 12 }, // 시가
     { wch: 12 }, // 고가
     { wch: 12 }, // 저가

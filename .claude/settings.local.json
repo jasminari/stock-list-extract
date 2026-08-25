@@ -8,7 +8,8 @@
       "Bash(pdftotext \"/Users/jangssukmin/Documents/Github/Stock_List_Extract/키움 REST API 문서 \\(1\\).pdf\" -)",
       "Bash(npm run:*)",
       "Bash(curl -s http://localhost:3000)",
-      "Bash(grep -E \"\\\\.\\(ts|js|local\\)$\")"
+      "Bash(grep -E \"\\\\.\\(ts|js|local\\)$\")",
+      "Bash(git commit:*)"
     ]
   }
 }

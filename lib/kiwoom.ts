@@ -82,6 +82,68 @@ export async function fetchTradingValueMap(
   return map;
 }
 
+/** 상장주식수 응답은 시장 전체(약 4300종목, 1.2MB)라 왕복 5초쯤 걸린다 → 당일 캐시 */
+let listCountCache: { date: string; map: Map<string, string> } | null = null;
+
+/** KST 기준 YYYYMMDD */
+function kstDateKey(): string {
+  return new Date(Date.now() + 9 * 3600 * 1000)
+    .toISOString()
+    .slice(0, 10)
+    .replace(/-/g, "");
+}
+
+/**
+ * 종목정보 리스트(ka10099)로 종목코드 → 상장주식수(주) 맵을 만든다.
+ *
+ * 시가총액 = 상장주식수 × 종가 이므로, 종목당 1회 호출이 필요한
+ * 주식기본정보요청(ka10001, mac 필드) 대신 이쪽을 쓴다.
+ * 시장당 전 종목이 한 응답에 담겨 오므로(연속조회 없음) 총 2회 호출로 끝난다.
+ * mrkt_tp: 0=거래소(ETF/ETN/리츠 포함), 10=코스닥
+ *
+ * 조건검색을 여러 개 돌리면 그때마다 재조회하게 되므로 날짜 단위로 캐시한다.
+ * 상장주식수는 증자/분할이 반영되는 날 하루 한 번만 바뀌어 당일 캐시로 충분하다.
+ */
+export async function fetchListCountMap(
+  token: string
+): Promise<Map<string, string>> {
+  const today = kstDateKey();
+  if (listCountCache?.date === today) return listCountCache.map;
+
+  const map = new Map<string, string>();
+
+  for (const mrktTp of ["0", "10"]) {
+    const res = await fetch(`${HTTP_BASE}/api/dostk/stkinfo`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json;charset=UTF-8",
+        "api-id": "ka10099",
+        authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ mrkt_tp: mrktTp }),
+    });
+
+    const data = await res.json();
+    if (data.return_code !== 0) {
+      throw new Error(`종목정보 리스트 조회 실패: ${data.return_msg}`);
+    }
+
+    for (const row of data.list || []) {
+      const code = String(row.code || "").replace(/^A/, "").split("_")[0];
+      // listCount는 zero-padding 문자열 ("0000000027931470")
+      const listCount = Number(row.listCount);
+      if (code && listCount > 0) {
+        map.set(code, String(listCount));
+      }
+    }
+
+    await new Promise((r) => setTimeout(r, 250));
+  }
+
+  listCountCache = { date: today, map };
+  return map;
+}
+
 // WebSocket 연결 + 로그인 (LOGIN 패킷 전송 후 응답 확인)
 function connectWebSocket(token: string): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
@@ -180,6 +242,14 @@ export async function searchByCondition(
     console.warn("거래대금 조회 실패, 종가×거래량 추정치로 대체:", e);
   }
 
+  // 시가총액 계산용 상장주식수 (실패해도 회전율만 빈칸이 되고 검색은 진행)
+  let listCounts = new Map<string, string>();
+  try {
+    listCounts = await fetchListCountMap(token);
+  } catch (e) {
+    console.warn("상장주식수 조회 실패, 시가총액/회전율 생략:", e);
+  }
+
   try {
     // CNSRLST 먼저 호출 (서버 세션 초기화 목적)
     await sendAndReceive(ws, { trnm: "CNSRLST" }, 10000);
@@ -221,6 +291,7 @@ export async function searchByCondition(
           volume: item["13"] || "",
           // 단위: 백만원 (ka10032). 상위권 밖 종목은 빈 값 → 종가×거래량으로 추정
           trading_amount: tradingValues.get(code) || "",
+          list_count: listCounts.get(code) || "",
           open: item["16"] || "",
           high: item["17"] || "",
           low: item["18"] || "",

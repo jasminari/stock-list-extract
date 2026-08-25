@@ -4,6 +4,12 @@ import fs from "fs/promises";
 import * as XLSX from "xlsx";
 import { isDbConfigured } from "@/lib/db";
 import { getSearchResultStocks } from "@/lib/storage-db";
+import {
+  calcMarketCapBil,
+  calcTurnoverRate,
+  parsePrice,
+  resolveTradingAmountBil,
+} from "@/lib/format";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -30,6 +36,11 @@ export async function GET(req: NextRequest) {
       등락율: s.changeRate,
       누적거래량: Number(s.volume),
       거래대금_천원: Number(s.tradingAmount || "0"),
+      상장주식수: Number(s.listCount || "0"),
+      회전율_퍼센트: calcTurnoverRate(
+        resolveTradingAmountBil(s.tradingAmount, s.price, s.volume),
+        calcMarketCapBil(s.listCount, parsePrice(s.price))
+      ),
       시가: Number(s.open.replace(/^[+-]/, "")),
       고가: Number(s.high.replace(/^[+-]/, "")),
       저가: Number(s.low.replace(/^[+-]/, "")),
