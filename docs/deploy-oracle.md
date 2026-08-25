@@ -2,6 +2,16 @@
 
 키움 OpenAPI가 **고정 IP에서만 토큰 발급·호출**을 허용하므로, 맥북 대신 Oracle Cloud Free Tier VM에서 `scripts/auto-extract.mjs`를 상시 스케줄링한다.
 
+## 2026-08-25 업데이트 — 거래회전율(상장주식수 수집) 배포 완료
+
+- [x] `scripts/auto-extract.mjs` 갱신 전송 (ka10099로 상장주식수 수집 → `list_count` 저장)
+- [x] VM에서 ka10099 호출 검증: 4,305종목 / **877ms** / RSS 72MB (맥북에선 4.8초 — 춘천 리전이라 VM이 5배 빠름)
+- [x] 운영 DB에 `list_count` 컬럼 추가 (migration 0002) + 기존 6,572행 소급 백필
+- [x] 타이머 정상 (다음 실행 2026-08-26 15:40 KST)
+- 새 npm 의존성 없음 (내장 `fetch`만). 백업: `scripts/auto-extract.mjs.bak.<ts>`
+- **⚠️ 교훈**: 웹 화면(`lib/kiwoom.ts`)은 조건검색마다 ka10099를 재조회해 요청당 4.8초가 붙었다 → KST 날짜 단위 캐시로 해결. VM 스크립트는 프로세스당 1회라 무관.
+- **배포 누락 주의**: `scripts/auto-extract.mjs`를 고쳤는데 VM에 안 보내면 웹 수집분만 값이 채워지고 자동수집분은 조용히 빈 채로 쌓인다. 실제로 8/17~8/25 데이터가 이 상태였다.
+
 ## 2026-08-02 업데이트 — 상승이유 자동화 배포 완료
 
 - [x] `scripts/enrich-reasons.mjs` 신규 전송 + `auto-extract.mjs` 갱신 (수집 후 `runEnrich` 자동 실행)
