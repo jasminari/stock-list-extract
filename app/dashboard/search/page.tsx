@@ -97,8 +97,8 @@ export default function SearchPage() {
                 onClick={() => handleSelectCondition(c.seq, c.name)}
                 className={`px-3 py-1 rounded-full text-xs border transition-all ${
                   cond.selectedSeq === c.seq
-                    ? "bg-blue-600 border-blue-600 text-white"
-                    : "bg-white border-gray-300 text-gray-600 hover:border-blue-400"
+                    ? "bg-emerald-600 border-emerald-600 text-white"
+                    : "bg-white border-gray-300 text-gray-600 hover:border-emerald-400"
                 }`}
               >
                 {c.name}
@@ -124,7 +124,7 @@ export default function SearchPage() {
           <button
             onClick={handleSearch}
             disabled={!cond.selectedSeq || search.searching}
-            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -154,17 +154,17 @@ export default function SearchPage() {
 
       {/* Info Banner */}
       {cond.selectedName && showInfoBanner && (
-        <div className="mx-6 mt-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3 flex-shrink-0">
-          <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <div className="mx-6 mt-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3 flex-shrink-0">
+          <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5">
             <span className="text-white text-xs font-bold">i</span>
           </div>
-          <p className="flex-1 text-sm text-blue-900">
+          <p className="flex-1 text-sm text-emerald-900">
             선택한 조건검색식 <span className="font-semibold">&apos;{cond.selectedName}&apos;</span>에 대한 결과를 표시합니다.
             키움증권 REST API를 통해 실시간으로 종목을 추출합니다.
           </p>
           <button
             onClick={() => setShowInfoBanner(false)}
-            className="text-blue-400 hover:text-blue-600 transition-colors flex-shrink-0"
+            className="text-emerald-400 hover:text-emerald-600 transition-colors flex-shrink-0"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -210,7 +210,7 @@ export default function SearchPage() {
           </div>
         ) : search.searching ? (
           <div className="h-full flex flex-col items-center justify-center">
-            <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
+            <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mb-4" />
             <p className="text-sm text-gray-500">종목을 검색하는 중입니다...</p>
           </div>
         ) : (

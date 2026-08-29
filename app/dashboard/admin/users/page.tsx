@@ -141,7 +141,7 @@ export default function AdminUsersPage() {
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
             { label: "전체 가입자", value: users.length, color: "text-gray-900" },
-            { label: "관리자", value: adminCount, color: "text-blue-600" },
+            { label: "관리자", value: adminCount, color: "text-emerald-600" },
             { label: "카카오 가입", value: kakaoCount, color: "text-yellow-600" },
           ].map((stat) => (
             <div key={stat.label} className="p-4 bg-white border border-gray-200 rounded-xl">
@@ -177,7 +177,7 @@ export default function AdminUsersPage() {
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               placeholder="아이디 또는 이름 검색"
-              className="w-52 px-3 py-1.5 bg-gray-100 border-0 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
+              className="w-52 px-3 py-1.5 bg-gray-100 border-0 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-colors"
             />
           </div>
 
@@ -235,7 +235,7 @@ export default function AdminUsersPage() {
                             <span
                               className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                                 user.role === "admin"
-                                  ? "bg-blue-100 text-blue-700"
+                                  ? "bg-emerald-100 text-emerald-700"
                                   : "bg-gray-100 text-gray-600"
                               }`}
                             >

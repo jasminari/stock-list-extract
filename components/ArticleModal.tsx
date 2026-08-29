@@ -80,7 +80,7 @@ export default function ArticleModal({
           {/* 헤더 */}
           <div className="flex items-start justify-between gap-3 px-4 sm:px-6 pt-4 pb-3 border-b border-gray-100">
             <div className="min-w-0">
-              <p className="text-[10px] font-medium text-blue-500 mb-1">
+              <p className="text-[10px] font-medium text-emerald-500 mb-1">
                 기사 미리보기
               </p>
               <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug">
@@ -131,7 +131,7 @@ export default function ArticleModal({
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg px-3 py-1.5 transition-colors"
+              className="shrink-0 text-xs font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg px-3 py-1.5 transition-colors"
             >
               원문 보기 ↗
             </a>

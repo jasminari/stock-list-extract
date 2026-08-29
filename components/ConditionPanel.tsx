@@ -37,7 +37,7 @@ export default function ConditionPanel({
         <button
           onClick={onRefresh}
           disabled={condLoading}
-          className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-40"
+          className="text-xs text-emerald-600 hover:text-emerald-700 disabled:opacity-40"
         >
           {condLoading ? "불러오는 중..." : "새로고침"}
         </button>
@@ -57,8 +57,8 @@ export default function ConditionPanel({
               onClick={() => onSelectCondition(c.seq, c.name)}
               className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
                 selectedSeq === c.seq
-                  ? "bg-blue-600 border-blue-600 text-white"
-                  : "bg-white border-gray-300 text-gray-700 hover:border-blue-400"
+                  ? "bg-emerald-600 border-emerald-600 text-white"
+                  : "bg-white border-gray-300 text-gray-700 hover:border-emerald-400"
               }`}
             >
               {c.name}
@@ -77,7 +77,7 @@ export default function ConditionPanel({
         <button
           onClick={onSearch}
           disabled={!selectedSeq || searching}
-          className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="px-5 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           {searching ? "검색 중..." : "조건검색 실행"}
         </button>

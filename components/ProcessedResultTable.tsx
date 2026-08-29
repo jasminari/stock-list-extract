@@ -80,7 +80,7 @@ function EditableCell({
             setEditing(false);
           }
         }}
-        className="w-full px-1 py-0.5 text-sm border border-blue-400 rounded outline-none bg-blue-50"
+        className="w-full px-1 py-0.5 text-sm border border-emerald-400 rounded outline-none bg-emerald-50"
       />
     );
   }
@@ -120,15 +120,15 @@ function SortHeader({
         title={title}
         aria-label={`${label} 정렬`}
         className={`inline-flex items-center gap-1 hover:text-gray-700 transition-colors ${
-          activeDir ? "text-blue-600" : ""
+          activeDir ? "text-emerald-600" : ""
         }`}
       >
         {label}
         <span className="flex flex-col leading-[0.6] text-[7px] md:text-[8px]">
-          <span className={activeDir === "asc" ? "text-blue-600" : "text-gray-300"}>
+          <span className={activeDir === "asc" ? "text-emerald-600" : "text-gray-300"}>
             ▲
           </span>
-          <span className={activeDir === "desc" ? "text-blue-600" : "text-gray-300"}>
+          <span className={activeDir === "desc" ? "text-emerald-600" : "text-gray-300"}>
             ▼
           </span>
         </span>
@@ -188,7 +188,7 @@ export default function ProcessedResultTable({
         <div className="flex items-center justify-between">
           <h2 className="text-sm md:text-base font-semibold text-gray-800">
             가공 데이터{" "}
-            <span className="text-blue-600 font-bold">{stocks.length}</span>
+            <span className="text-emerald-600 font-bold">{stocks.length}</span>
             종목
           </h2>
           <span className="text-[10px] md:text-xs text-gray-400">{conditionName}</span>
@@ -307,7 +307,7 @@ export default function ProcessedResultTable({
                           })
                         }
                         title={s.sourceTitle || s.sourceUrl}
-                        className="block text-left text-[10px] md:text-xs text-blue-500 hover:underline truncate max-w-[200px] md:max-w-[280px] mt-0.5"
+                        className="block text-left text-[10px] md:text-xs text-emerald-500 hover:underline truncate max-w-[200px] md:max-w-[280px] mt-0.5"
                       >
                         🔗 {s.sourceTitle || "기사 보기"}
                       </button>
@@ -318,9 +318,9 @@ export default function ProcessedResultTable({
                 {hasThread && (
                   <tr className="sm:hidden !border-t-0">
                     <td colSpan={7} className="px-2 pb-2 pt-0">
-                      <div className="ml-1 pl-2.5 border-l-2 border-blue-200 space-y-1">
+                      <div className="ml-1 pl-2.5 border-l-2 border-emerald-200 space-y-1">
                         {s.keyword && (
-                          <span className="inline-block text-[10px] font-medium bg-blue-50 text-blue-600 rounded-full px-2 py-0.5">
+                          <span className="inline-block text-[10px] font-medium bg-emerald-50 text-emerald-600 rounded-full px-2 py-0.5">
                             {s.keyword}
                           </span>
                         )}
@@ -337,7 +337,7 @@ export default function ProcessedResultTable({
                                 title: s.sourceTitle,
                               })
                             }
-                            className="block w-full text-left text-[11px] text-blue-500 hover:underline truncate"
+                            className="block w-full text-left text-[11px] text-emerald-500 hover:underline truncate"
                           >
                             🔗 {s.sourceTitle || "기사 보기"}
                           </button>

@@ -68,7 +68,7 @@ export default function FeaturesSection() {
             <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
               공부는 당신이,
               <br />
-              <span className="text-blue-600">정리는 우리가.</span>
+              <span className="text-emerald-600">정리는 우리가.</span>
             </h2>
           </div>
         </Reveal>
@@ -76,14 +76,14 @@ export default function FeaturesSection() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {features.map((f, i) => (
             <Reveal key={i} delay={(i % 3) * 0.1}>
-              <div className="h-full p-7 rounded-2xl border border-gray-100 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100/50 transition-all">
-                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-5">
+              <div className="h-full p-7 rounded-2xl border border-gray-100 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-100/50 transition-all">
+                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-5">
                   {f.icon}
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-lg font-bold text-gray-900">{f.title}</h3>
                   {f.badge && (
-                    <span className="text-[10px] font-bold bg-blue-600 text-white rounded px-1.5 py-0.5">
+                    <span className="text-[10px] font-bold bg-emerald-600 text-white rounded px-1.5 py-0.5">
                       {f.badge}
                     </span>
                   )}

@@ -35,7 +35,7 @@ export default function RawResultTable({ stocks, conditionName }: RawResultTable
       <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
         <h2 className="text-base font-semibold text-gray-800">
           원본 데이터{" "}
-          <span className="text-blue-600 font-bold">{stocks.length}</span>
+          <span className="text-emerald-600 font-bold">{stocks.length}</span>
           종목
         </h2>
         <span className="text-xs text-gray-400">{conditionName}</span>

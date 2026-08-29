@@ -105,14 +105,14 @@ export default function SettingsPage() {
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <h2 className="text-base font-semibold text-gray-900">수집 중인 조건검색식</h2>
-            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
               {subscribed.size}개 선택
             </span>
           </div>
 
           {loading ? (
             <div className="border border-gray-200 rounded-xl p-8 text-center">
-              <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+              <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-emerald-600 rounded-full animate-spin" />
               <p className="text-sm text-gray-400 mt-2">불러오는 중...</p>
             </div>
           ) : registered.length === 0 ? (
@@ -133,16 +133,16 @@ export default function SettingsPage() {
                     key={cond.seq}
                     className={`flex items-center justify-between p-4 border rounded-xl transition-colors ${
                       isActive
-                        ? "bg-blue-50 border-blue-200"
+                        ? "bg-emerald-50 border-emerald-200"
                         : "bg-white border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        isActive ? "bg-blue-100" : "bg-gray-100"
+                        isActive ? "bg-emerald-100" : "bg-gray-100"
                       }`}>
                         {isActive ? (
-                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         ) : (
@@ -155,8 +155,8 @@ export default function SettingsPage() {
                         <p className="text-sm font-medium text-gray-900">{cond.name}</p>
                         <p className="text-xs text-gray-500 mt-0.5">
                           {isActive ? (
-                            <span className="flex items-center gap-1 text-blue-600">
-                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            <span className="flex items-center gap-1 text-emerald-600">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                               수집 데이터 표시 중
                             </span>
                           ) : (
@@ -171,7 +171,7 @@ export default function SettingsPage() {
                       className={`px-4 py-1.5 text-xs font-medium border rounded-lg transition-colors disabled:opacity-40 ${
                         isActive
                           ? "text-gray-500 border-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-                          : "text-blue-600 border-blue-300 hover:bg-blue-100"
+                          : "text-emerald-600 border-emerald-300 hover:bg-emerald-100"
                       }`}
                     >
                       {isToggling
@@ -188,15 +188,15 @@ export default function SettingsPage() {
         </section>
 
         {/* 안내 배너 */}
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3">
-          <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
+          <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5">
             <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
-            <p className="text-sm font-medium text-blue-900">안내</p>
-            <p className="text-sm text-blue-800 mt-1">
+            <p className="text-sm font-medium text-emerald-900">안내</p>
+            <p className="text-sm text-emerald-800 mt-1">
               선택한 조건검색식의 수집 결과가
               <span className="font-semibold"> &apos;수집 데이터&apos;</span>와
               <span className="font-semibold"> &apos;시장 공부하기&apos;</span> 탭에 표시됩니다.
