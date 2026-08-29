@@ -101,13 +101,28 @@ function pubDateToKstStr(pubDate) {
   return `${get("year")}${get("month")}${get("day")}`;
 }
 
+/** 제목에 나타나는 상승 신호 — 이유가 담긴 기사를 고를 때 쓴다 */
+const RISE_WORDS =
+  /급등|강세|상한가|신고가|훈풍|랠리|폭등|치솟|들썩|수혜|기대감|호조/;
+
 /**
- * 「특징주 <종목명>」 검색 → 수집일에 나온 기사 중 가장 적합한 1건 반환
- * @returns {{ title: string, link: string } | null}
+ * 시세 자동생성 기사 판별.
+ * "금호건설 주가, 8월 28일 17,020원 12.34% 상승 마감" 같은 기사는
+ * 얼마나 올랐는지만 있고 왜 올랐는지가 없다. 요약해도 "상승 마감함"이 되어
+ * 빈칸보다 나쁘므로(채워진 것처럼 보인다) 후보에서 제외한다.
  */
-async function findFeatureArticle(stockName, dateStr) {
-  const query = encodeURIComponent(`특징주 ${stockName}`);
-  const url = `https://openapi.naver.com/v1/search/news.json?query=${query}&display=30&sort=date`;
+function isQuoteBotArticle(title) {
+  return (
+    /\d+월\s*\d+일/.test(title) &&
+    /[\d,]+원/.test(title) &&
+    /(상승|하락|보합)/.test(title)
+  );
+}
+
+async function searchNews(query) {
+  const url = `https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(
+    query
+  )}&display=30&sort=date`;
 
   const res = await fetch(url, {
     headers: {
@@ -122,33 +137,56 @@ async function findFeatureArticle(stockName, dateStr) {
   }
 
   const data = await res.json();
-  const items = (data.items || [])
-    .map((it) => ({
-      title: cleanTitle(it.title),
-      link: it.link || it.originallink || "",
-      originallink: it.originallink || "",
-      dateStr: pubDateToKstStr(it.pubDate),
-    }))
-    .filter((it) => it.dateStr === dateStr && it.link);
+  return (data.items || []).map((it) => ({
+    title: cleanTitle(it.title),
+    link: it.link || it.originallink || "",
+    originallink: it.originallink || "",
+    dateStr: pubDateToKstStr(it.pubDate),
+  }));
+}
 
-  if (items.length === 0) return null;
-
-  // 우선순위: 제목에 "특징주"+종목명 > 제목에 종목명 > 최신순 첫 기사
+/** 후보 중 가장 적합한 1건 */
+function pickBest(items, stockName) {
   const score = (it) => {
     let s = 0;
     if (it.title.includes(stockName)) s += 2;
     if (it.title.includes("특징주")) s += 1;
-    // 네이버 뉴스 링크면 가산 (본문 추출 안정적 — Phase 2 대비)
+    if (RISE_WORDS.test(it.title)) s += 0.5;
+    // 네이버 뉴스 링크면 가산 (본문 추출이 안정적)
     if (it.link.includes("n.news.naver.com")) s += 0.5;
     return s;
   };
-  items.sort((a, b) => score(b) - score(a));
+  return [...items].sort((a, b) => score(b) - score(a))[0];
+}
 
-  const best = items[0];
-  // 제목에 종목명이 아예 없으면 오매칭 가능성이 높아 버림
-  if (!best.title.includes(stockName)) return null;
+/**
+ * 수집일에 나온 기사 중 상승 이유가 담긴 1건을 찾는다.
+ *   1순위 「특징주 <종목명>」 — 상승 이유 기사의 관용 제목
+ *   2순위 「<종목명> 주가」 중 상승 신호가 있고 시세 자동기사가 아닌 것
+ * 네이버 검색은 두 단어를 느슨하게 매칭해 남의 종목 기사도 섞여 오므로,
+ * 제목에 종목명이 없으면 무조건 버린다 (오매칭 방지).
+ * @returns {{ title: string, link: string } | null}
+ */
+async function findFeatureArticle(stockName, dateStr) {
+  const sameDay = (it) =>
+    it.dateStr === dateStr && it.link && it.title.includes(stockName);
 
-  return { title: best.title, link: best.link };
+  const featured = (await searchNews(`특징주 ${stockName}`)).filter(sameDay);
+  if (featured.length > 0) {
+    const best = pickBest(featured, stockName);
+    return { title: best.title, link: best.link };
+  }
+
+  await sleep(200); // API throttle
+  const fallback = (await searchNews(`${stockName} 주가`)).filter(
+    (it) => sameDay(it) && RISE_WORDS.test(it.title) && !isQuoteBotArticle(it.title)
+  );
+  if (fallback.length > 0) {
+    const best = pickBest(fallback, stockName);
+    return { title: best.title, link: best.link };
+  }
+
+  return null;
 }
 
 // === 기사 본문 추출 (lib/article.ts와 동일 로직) ===
