@@ -1,4 +1,4 @@
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, lte, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   users,
@@ -8,6 +8,7 @@ import {
   registeredConditions,
   extractionLogs,
   userSubscriptions,
+  quizAttempts,
 } from "./db/schema";
 import type { StockResult, RegisteredCondition } from "./types";
 
@@ -374,4 +375,164 @@ export async function countAdmins(): Promise<number> {
     .from(users)
     .where(eq(users.role, "admin"));
   return row?.count ?? 0;
+}
+
+// === 매일 퀴즈 ===
+
+/**
+ * 기준일 이하에서 종목이 실제로 들어있는 가장 최근 수집 날짜.
+ * 주말·휴장일에도 직전 거래일 데이터로 문제를 낼 수 있게 한다.
+ */
+export async function getLatestDataDate(
+  onOrBefore: string
+): Promise<string | null> {
+  const db = getDb();
+  const [row] = await db
+    .select({ date: searchResults.date })
+    .from(searchResults)
+    .innerJoin(stockEntries, eq(stockEntries.searchResultId, searchResults.id))
+    .where(lte(searchResults.date, onOrBefore))
+    .groupBy(searchResults.date)
+    .orderBy(desc(searchResults.date))
+    .limit(1);
+
+  return row?.date ?? null;
+}
+
+/** 특정 날짜의 모든 조건검색 결과를 합친 종목 목록 (종목코드 기준 중복 제거) */
+export async function getStocksByDate(
+  date: string
+): Promise<StockEntryWithAnnotation[]> {
+  const db = getDb();
+
+  const rows = await db
+    .select({
+      id: stockEntries.id,
+      code: stockEntries.code,
+      name: stockEntries.name,
+      price: stockEntries.price,
+      changeSign: stockEntries.changeSign,
+      change: stockEntries.change,
+      changeRate: stockEntries.changeRate,
+      volume: stockEntries.volume,
+      tradingAmount: stockEntries.tradingAmount,
+      listCount: stockEntries.listCount,
+      open: stockEntries.open,
+      high: stockEntries.high,
+      low: stockEntries.low,
+      keyword: stockAnnotations.keyword,
+      reason: stockAnnotations.reason,
+      sourceUrl: stockAnnotations.sourceUrl,
+      sourceTitle: stockAnnotations.sourceTitle,
+    })
+    .from(stockEntries)
+    .innerJoin(
+      searchResults,
+      eq(stockEntries.searchResultId, searchResults.id)
+    )
+    .leftJoin(
+      stockAnnotations,
+      eq(stockAnnotations.stockEntryId, stockEntries.id)
+    )
+    .where(eq(searchResults.date, date));
+
+  const byCode = new Map<string, StockEntryWithAnnotation>();
+  for (const r of rows) {
+    const entry: StockEntryWithAnnotation = {
+      id: r.id,
+      code: r.code,
+      name: r.name,
+      price: r.price,
+      changeSign: r.changeSign,
+      change: r.change,
+      changeRate: r.changeRate,
+      volume: r.volume,
+      tradingAmount: r.tradingAmount ?? "",
+      listCount: r.listCount ?? "",
+      open: r.open,
+      high: r.high,
+      low: r.low,
+      keyword: r.keyword ?? "",
+      reason: r.reason ?? "",
+      sourceUrl: r.sourceUrl ?? "",
+      sourceTitle: r.sourceTitle ?? "",
+    };
+    // 같은 종목이 여러 조건식에 걸렸다면 상승이유가 채워진 행을 남긴다
+    const prev = byCode.get(r.code);
+    if (!prev || (!prev.reason && entry.reason)) byCode.set(r.code, entry);
+  }
+
+  return Array.from(byCode.values());
+}
+
+export interface QuizAttemptRecord {
+  quizDate: string;
+  dataDate: string;
+  score: number;
+  total: number;
+  completedAt: string;
+}
+
+export async function getQuizAttempt(
+  userId: number,
+  quizDate: string
+): Promise<QuizAttemptRecord | null> {
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(quizAttempts)
+    .where(
+      and(eq(quizAttempts.userId, userId), eq(quizAttempts.quizDate, quizDate))
+    )
+    .limit(1);
+
+  if (!row) return null;
+  return {
+    quizDate: row.quizDate,
+    dataDate: row.dataDate ?? "",
+    score: row.score,
+    total: row.total,
+    completedAt: row.completedAt?.toISOString() ?? "",
+  };
+}
+
+export async function listQuizAttempts(
+  userId: number,
+  limit = 60
+): Promise<QuizAttemptRecord[]> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(quizAttempts)
+    .where(eq(quizAttempts.userId, userId))
+    .orderBy(desc(quizAttempts.quizDate))
+    .limit(limit);
+
+  return rows.map((r) => ({
+    quizDate: r.quizDate,
+    dataDate: r.dataDate ?? "",
+    score: r.score,
+    total: r.total,
+    completedAt: r.completedAt?.toISOString() ?? "",
+  }));
+}
+
+/** 하루 한 번만 기록. 이미 푼 날이면 false를 돌려주고 기존 기록을 유지한다 */
+export async function saveQuizAttempt(
+  userId: number,
+  quizDate: string,
+  dataDate: string,
+  score: number,
+  total: number
+): Promise<boolean> {
+  const db = getDb();
+  const inserted = await db
+    .insert(quizAttempts)
+    .values({ userId, quizDate, dataDate, score, total })
+    .onConflictDoNothing({
+      target: [quizAttempts.userId, quizAttempts.quizDate],
+    })
+    .returning({ id: quizAttempts.id });
+
+  return inserted.length > 0;
 }

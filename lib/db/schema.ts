@@ -102,3 +102,21 @@ export const stockAnnotations = pgTable(
   },
   (t) => [unique().on(t.stockEntryId)]
 );
+
+export const quizAttempts = pgTable(
+  "quiz_attempts",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    /** 퀴즈를 푼 날짜(KST, YYYYMMDD). 하루 한 번만 기록된다 */
+    quizDate: varchar("quiz_date", { length: 8 }).notNull(),
+    /** 출제에 쓰인 시장 데이터 날짜. 개념 문제만 나온 날은 빈 문자열 */
+    dataDate: varchar("data_date", { length: 8 }).default(""),
+    score: integer("score").notNull(),
+    total: integer("total").notNull(),
+    completedAt: timestamp("completed_at").defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.quizDate)]
+);

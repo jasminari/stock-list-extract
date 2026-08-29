@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 
-type MenuId = "home" | "history" | "data" | "settings" | "admin";
+type MenuId = "home" | "history" | "quiz" | "data" | "settings" | "admin";
 
 const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
   {
@@ -24,6 +24,16 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+      </svg>
+    ),
+  },
+  {
+    id: "quiz",
+    label: "매일 퀴즈",
+    href: "/dashboard/quiz",
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
   },
@@ -64,6 +74,7 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
 
 function getActiveMenu(pathname: string): MenuId {
   if (pathname.startsWith("/dashboard/history")) return "history";
+  if (pathname.startsWith("/dashboard/quiz")) return "quiz";
   if (pathname.startsWith("/dashboard/data")) return "data";
   if (pathname.startsWith("/dashboard/settings")) return "settings";
   if (pathname.startsWith("/dashboard/admin")) return "admin";

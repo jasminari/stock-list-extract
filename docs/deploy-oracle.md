@@ -2,6 +2,13 @@
 
 키움 OpenAPI가 **고정 IP에서만 토큰 발급·호출**을 허용하므로, 맥북 대신 Oracle Cloud Free Tier VM에서 `scripts/auto-extract.mjs`를 상시 스케줄링한다.
 
+## 2026-08-29 업데이트 — 매일 퀴즈 탭 (DB 마이그레이션만 해당)
+
+- [x] 운영 DB에 `quiz_attempts` 테이블 생성 (migration 0003) — 컬럼/제약(PK, users FK CASCADE, `(user_id, quiz_date)` UNIQUE) 검증 완료
+- VM 배포 대상 **아님**: 수집 스크립트는 그대로이고, 퀴즈는 이미 쌓인 데이터를 읽기만 한다
+- 문제는 `(user_id + 날짜)` 시드로 매번 다시 생성하므로 문제·정답을 DB에 저장하지 않는다. 이 테이블에는 점수만 남는다
+- 롤백: `DROP TABLE quiz_attempts;` (기존 테이블 영향 없음, 잃는 건 퀴즈 점수 기록뿐)
+
 ## 2026-08-25 업데이트 — 거래회전율(상장주식수 수집) 배포 완료
 
 - [x] `scripts/auto-extract.mjs` 갱신 전송 (ka10099로 상장주식수 수집 → `list_count` 저장)
