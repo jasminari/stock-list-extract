@@ -3,10 +3,17 @@
 import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
+import { getTodayStr } from "@/lib/date";
+
+/**
+ * 새 메뉴 강조 배지. 이 날짜(KST)까지는 눌러봤든 아니든 계속 떠 있고, 지나면 사라진다.
+ * 기간을 두는 이유: 몇 달 지난 기능에 "NEW"가 계속 붙어 있으면 배지 자체를 무시하게 된다.
+ */
+const NEW_BADGE_UNTIL = "20260930";
 
 type MenuId = "home" | "history" | "quiz" | "data" | "settings" | "admin";
 
-const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
+const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNode; adminOnly?: boolean; isNew?: boolean }[] = [
   {
     id: "home",
     label: "홈",
@@ -31,6 +38,7 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
     id: "quiz",
     label: "매일 퀴즈",
     href: "/dashboard/quiz",
+    isNew: true,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -92,6 +100,15 @@ export default function DashboardLayout({
   const activeMenu = getActiveMenu(pathname);
 
   const [resultsCount, setResultsCount] = useState(0);
+  // 날짜 판정은 마운트 후에 한다 — 서버와 브라우저의 시각이 갈리는 순간에도 hydration이 어긋나지 않는다
+  const [newBadges, setNewBadges] = useState<MenuId[]>([]);
+
+  useEffect(() => {
+    if (getTodayStr() > NEW_BADGE_UNTIL) return;
+    setNewBadges(
+      menuItems.filter((item) => item.isNew).map((item) => item.id)
+    );
+  }, []);
 
   useEffect(() => {
     fetch("/api/results")
@@ -170,6 +187,11 @@ export default function DashboardLayout({
               >
                 {item.icon}
                 {item.label}
+                {newBadges.includes(item.id) && (
+                  <span className="ml-auto px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold leading-none tracking-wide">
+                    NEW
+                  </span>
+                )}
               </button>
             ))}
           </nav>
@@ -192,7 +214,7 @@ export default function DashboardLayout({
           <button
             key={item.id}
             onClick={() => router.push(item.href)}
-            className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[56px] transition-colors ${
+            className={`relative flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[56px] transition-colors ${
               activeMenu === item.id
                 ? "text-emerald-600"
                 : "text-gray-400"
@@ -201,6 +223,9 @@ export default function DashboardLayout({
             <span className={activeMenu === item.id ? "text-emerald-600" : "text-gray-400"}>
               {item.icon}
             </span>
+            {newBadges.includes(item.id) && (
+              <span className="absolute top-1 right-3 w-2 h-2 rounded-full bg-emerald-600 ring-2 ring-white" />
+            )}
             <span className="text-[10px] font-medium leading-tight">{item.label}</span>
           </button>
         ))}
