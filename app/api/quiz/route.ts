@@ -4,13 +4,23 @@ import { isDbConfigured } from "@/lib/db";
 import {
   getLatestDataDate,
   getStocksByDate,
+  getStocksWithReasonBetween,
   getQuizAttempt,
   listQuizAttempts,
   saveQuizAttempt,
 } from "@/lib/storage-db";
 import { formatDbStocks } from "@/lib/format";
 import { getTodayStr } from "@/lib/date";
-import { buildDailyQuiz, calcStreak, type QuizQuestion } from "@/lib/quiz";
+import {
+  buildDailyQuiz,
+  calcStreak,
+  reasonPoolStartDate,
+  type DatedStock,
+  type QuizQuestion,
+} from "@/lib/quiz";
+
+/** 이유 문제를 매일 채우려면 하루치로는 모자라서 최근 구간까지 함께 본다 */
+const REASON_POOL_DAYS = 30;
 
 /**
  * 문제는 (유저 id + 날짜) 시드로 결정적으로 생성된다.
@@ -19,15 +29,38 @@ import { buildDailyQuiz, calcStreak, type QuizQuestion } from "@/lib/quiz";
 async function loadQuiz(userId: number, quizDate: string) {
   let dataDate: string | null = null;
   let stocks: ReturnType<typeof formatDbStocks> = [];
+  let reasonPool: DatedStock[] = [];
 
   if (isDbConfigured()) {
     dataDate = await getLatestDataDate(quizDate);
-    if (dataDate) stocks = formatDbStocks(await getStocksByDate(dataDate));
+    if (dataDate) {
+      const [dayEntries, reasonEntries] = await Promise.all([
+        getStocksByDate(dataDate),
+        getStocksWithReasonBetween(
+          reasonPoolStartDate(dataDate, REASON_POOL_DAYS),
+          dataDate
+        ),
+      ]);
+
+      stocks = formatDbStocks(dayEntries);
+
+      // 날짜별로 묶어 포맷해야 거래대금/시총 계산이 그날 기준으로 맞는다
+      const byDate = new Map<string, typeof reasonEntries>();
+      for (const e of reasonEntries) {
+        const list = byDate.get(e.date) ?? [];
+        list.push(e);
+        byDate.set(e.date, list);
+      }
+      reasonPool = Array.from(byDate.entries()).flatMap(([date, entries]) =>
+        formatDbStocks(entries).map((s) => ({ ...s, date }))
+      );
+    }
   }
 
   const questions = buildDailyQuiz({
     seedKey: `${userId}:${quizDate}`,
     stocks,
+    reasonPool,
     dataDate,
   });
 

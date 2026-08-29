@@ -6,6 +6,16 @@ import { formatDateKorean } from "@/lib/date";
 import { track } from "@/lib/analytics";
 import type { QuizQuestion } from "@/lib/quiz";
 
+/**
+ * 상승 이유를 고르는 문제는 보기가 한 문장이라 "정답은 ○○" 자리에 그대로 넣으면 너무 길다.
+ * 그럴 땐 재료 키워드 같은 짧은 라벨을 대신 쓰고, 없으면 앞부분만 보여준다.
+ */
+function answerHeadline(q: QuizQuestion): string {
+  const answer = q.choices[q.answerIndex] ?? "";
+  if (answer.length <= 24) return answer;
+  return q.answerLabel || `${answer.slice(0, 22).trimEnd()}…`;
+}
+
 interface AttemptRecord {
   quizDate: string;
   dataDate: string;
@@ -307,9 +317,9 @@ export default function QuizPage() {
                 >
                   {selected === current.answerIndex
                     ? "정답이에요!"
-                    : `아쉬워요 · 정답은 ${current.choices[current.answerIndex]}`}
+                    : `아쉬워요 · 정답은 ${answerHeadline(current)}`}
                 </div>
-                <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
+                <p className="text-xs md:text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                   {current.explanation}
                 </p>
               </div>
@@ -463,12 +473,12 @@ function QuestionCard({
               key={`${choice}-${i}`}
               onClick={() => !checked && onSelect(i)}
               disabled={checked}
-              className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 border-b-4 text-left text-sm md:text-base font-medium transition-colors ${style} ${
+              className={`w-full flex items-start gap-3 px-4 py-3.5 rounded-2xl border-2 border-b-4 text-left text-sm md:text-base font-medium leading-relaxed transition-colors ${style} ${
                 checked ? "cursor-default" : ""
               }`}
             >
               <span
-                className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                className={`w-6 h-6 mt-0.5 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                   isSelected || (checked && isAnswer)
                     ? "bg-white/70 text-current"
                     : "bg-gray-100 text-gray-400"
@@ -478,12 +488,12 @@ function QuestionCard({
               </span>
               <span className="flex-1">{choice}</span>
               {checked && isAnswer && (
-                <svg className="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mt-0.5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               )}
               {checked && isSelected && !isAnswer && (
-                <svg className="w-5 h-5 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mt-0.5 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               )}
@@ -585,16 +595,16 @@ function ResultCard({
                       {q.prompt}
                     </p>
                     <p className="text-sm text-emerald-700 mt-1">
-                      정답 · {q.choices[q.answerIndex]}
+                      정답 · {answerHeadline(q)}
                     </p>
                     {!ok && mine >= 0 && mine !== undefined && (
-                      <p className="text-xs text-rose-500 mt-0.5">
+                      <p className="text-xs text-rose-500 mt-0.5 line-clamp-2">
                         내 답 · {q.choices[mine]}
                       </p>
                     )}
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 leading-relaxed pl-8">
+                <p className="text-xs text-gray-500 leading-relaxed pl-8 whitespace-pre-line">
                   {q.explanation}
                 </p>
               </div>

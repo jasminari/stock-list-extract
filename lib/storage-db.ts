@@ -1,4 +1,4 @@
-import { eq, and, desc, lte, sql } from "drizzle-orm";
+import { eq, and, desc, lte, gte, ne, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   users,
@@ -463,6 +463,82 @@ export async function getStocksByDate(
   }
 
   return Array.from(byCode.values());
+}
+
+/**
+ * 최근 구간에서 상승이유가 채워진 종목들 (퀴즈 복습 풀).
+ * 하루치 수집분 중 이유가 붙는 종목은 5~20개뿐이라, 이유 기반 문제를 매일 4개씩
+ * 뽑으려면 최근 며칠을 함께 봐야 한다. 같은 날 같은 종목은 한 번만 담는다.
+ */
+export async function getStocksWithReasonBetween(
+  from: string,
+  to: string
+): Promise<(StockEntryWithAnnotation & { date: string })[]> {
+  const db = getDb();
+
+  const rows = await db
+    .select({
+      date: searchResults.date,
+      id: stockEntries.id,
+      code: stockEntries.code,
+      name: stockEntries.name,
+      price: stockEntries.price,
+      changeSign: stockEntries.changeSign,
+      change: stockEntries.change,
+      changeRate: stockEntries.changeRate,
+      volume: stockEntries.volume,
+      tradingAmount: stockEntries.tradingAmount,
+      listCount: stockEntries.listCount,
+      open: stockEntries.open,
+      high: stockEntries.high,
+      low: stockEntries.low,
+      keyword: stockAnnotations.keyword,
+      reason: stockAnnotations.reason,
+      sourceUrl: stockAnnotations.sourceUrl,
+      sourceTitle: stockAnnotations.sourceTitle,
+    })
+    .from(stockEntries)
+    .innerJoin(searchResults, eq(stockEntries.searchResultId, searchResults.id))
+    .innerJoin(
+      stockAnnotations,
+      eq(stockAnnotations.stockEntryId, stockEntries.id)
+    )
+    .where(
+      and(
+        gte(searchResults.date, from),
+        lte(searchResults.date, to),
+        ne(stockAnnotations.reason, "")
+      )
+    )
+    .orderBy(desc(searchResults.date));
+
+  const byKey = new Map<string, StockEntryWithAnnotation & { date: string }>();
+  for (const r of rows) {
+    const key = `${r.date}:${r.code}`;
+    if (byKey.has(key)) continue;
+    byKey.set(key, {
+      date: r.date,
+      id: r.id,
+      code: r.code,
+      name: r.name,
+      price: r.price,
+      changeSign: r.changeSign,
+      change: r.change,
+      changeRate: r.changeRate,
+      volume: r.volume,
+      tradingAmount: r.tradingAmount ?? "",
+      listCount: r.listCount ?? "",
+      open: r.open,
+      high: r.high,
+      low: r.low,
+      keyword: r.keyword ?? "",
+      reason: r.reason ?? "",
+      sourceUrl: r.sourceUrl ?? "",
+      sourceTitle: r.sourceTitle ?? "",
+    });
+  }
+
+  return Array.from(byKey.values());
 }
 
 export interface QuizAttemptRecord {
