@@ -80,6 +80,30 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
   },
 ];
 
+/**
+ * 신규 기능 안내 말풍선. 메뉴 위에 떠서 아래를 가리킨다.
+ * 배지는 메뉴 안에 묻혀 잘 안 보여서, 바깥으로 띄우고 문구를 붙였다.
+ * pointer-events-none — 어떤 경우에도 탭을 가로막지 않는다.
+ */
+function NewFeatureTip({ align }: { align: "center" | "right" }) {
+  return (
+    <span
+      className={`pointer-events-none absolute bottom-full z-20 mb-1.5 ${
+        align === "center" ? "left-1/2 -translate-x-1/2" : "right-1"
+      }`}
+    >
+      <span className="animate-new-tip relative block whitespace-nowrap rounded-full bg-emerald-600 px-2 py-1 text-[10px] font-bold leading-none text-white shadow-lg shadow-emerald-600/30">
+        새로운 기능
+        <span
+          className={`absolute top-full -mt-1 h-2 w-2 rotate-45 bg-emerald-600 ${
+            align === "center" ? "left-1/2 -ml-1" : "right-3"
+          }`}
+        />
+      </span>
+    </span>
+  );
+}
+
 function getActiveMenu(pathname: string): MenuId {
   if (pathname.startsWith("/dashboard/history")) return "history";
   if (pathname.startsWith("/dashboard/quiz")) return "quiz";
@@ -179,7 +203,7 @@ export default function DashboardLayout({
               <button
                 key={item.id}
                 onClick={() => router.push(item.href)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${
+                className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${
                   activeMenu === item.id
                     ? "bg-emerald-50 text-emerald-700 font-medium"
                     : "text-gray-600 hover:bg-gray-100"
@@ -187,11 +211,7 @@ export default function DashboardLayout({
               >
                 {item.icon}
                 {item.label}
-                {newBadges.includes(item.id) && (
-                  <span className="ml-auto px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold leading-none tracking-wide">
-                    NEW
-                  </span>
-                )}
+                {newBadges.includes(item.id) && <NewFeatureTip align="right" />}
               </button>
             ))}
           </nav>
@@ -223,9 +243,7 @@ export default function DashboardLayout({
             <span className={activeMenu === item.id ? "text-emerald-600" : "text-gray-400"}>
               {item.icon}
             </span>
-            {newBadges.includes(item.id) && (
-              <span className="absolute top-1 right-3 w-2 h-2 rounded-full bg-emerald-600 ring-2 ring-white" />
-            )}
+            {newBadges.includes(item.id) && <NewFeatureTip align="center" />}
             <span className="text-[10px] font-medium leading-tight">{item.label}</span>
           </button>
         ))}

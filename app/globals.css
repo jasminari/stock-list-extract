@@ -110,8 +110,23 @@
   );
 }
 
+/* 신규 기능 안내 말풍선 — 시선을 끌되 거슬리지 않을 만큼만 떠 있게 */
+@keyframes new-tip-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+.animate-new-tip {
+  animation: new-tip-float 2.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-ticker {
+  .animate-ticker,
+  .animate-new-tip {
     animation: none;
   }
 }
