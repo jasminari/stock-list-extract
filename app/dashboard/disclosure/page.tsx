@@ -17,9 +17,13 @@ const fromInput = (s: string) => s.replace(/-/g, "");
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 min-w-[7rem]">
-      <div className="text-[11px] text-gray-500">{label}</div>
-      <div className={`text-sm font-semibold tabular-nums ${tone ?? "text-gray-800"}`}>
+    // 모바일에선 4개가 한 줄에 들어가야 해서 최소폭을 걸지 않는다 (min-w-0)
+    <div className="min-w-0 px-1.5 py-1.5 md:px-3 md:py-2 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200 md:min-w-[7rem]">
+      <div className="text-[10px] md:text-[11px] leading-tight text-gray-500">{label}</div>
+      {/* "-1,234억원"까지는 잘리지 않아야 한다 — 헤드라인 숫자가 잘리면 카드가 무의미해진다 */}
+      <div
+        className={`truncate text-[11px] md:text-sm font-semibold tabular-nums ${tone ?? "text-gray-800"}`}
+      >
         {value}
       </div>
     </div>
@@ -101,18 +105,21 @@ export default function DisclosurePage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <span className="text-sm text-gray-700 font-medium mr-1">
+        <div className="flex flex-col gap-2 mb-4 md:flex-row md:flex-wrap md:items-center">
+          <span className="text-sm text-gray-700 font-medium md:mr-1">
             {formatDateKorean(date)}
           </span>
-          <Stat label="보고 건수" value={`${rows.length}건`} />
-          <Stat label="매수" value={`${buys.length}건`} tone="text-red-600" />
-          <Stat label="매도" value={`${sells.length}건`} tone="text-blue-700" />
-          <Stat
-            label="순매수 금액"
-            value={shortMoney(net)}
-            tone={net >= 0 ? "text-red-600" : "text-blue-700"}
-          />
+          {/* 카드 4개는 어떤 폭에서도 한 줄 — 두 줄로 접히면 무엇의 숫자인지 읽기 어려워진다 */}
+          <div className="grid grid-cols-4 gap-1.5 md:flex md:gap-2">
+            <Stat label="보고 건수" value={`${rows.length}건`} />
+            <Stat label="매수" value={`${buys.length}건`} tone="text-red-600" />
+            <Stat label="매도" value={`${sells.length}건`} tone="text-blue-700" />
+            <Stat
+              label="순매수"
+              value={shortMoney(net)}
+              tone={net >= 0 ? "text-red-600" : "text-blue-700"}
+            />
+          </div>
         </div>
 
         {error && (

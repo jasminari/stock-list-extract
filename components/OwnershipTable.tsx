@@ -90,20 +90,45 @@ type SortCol =
   | "amount";
 
 /** 헤더에 뿌릴 컬럼 정의. 처음 눌렀을 때의 방향은 그 컬럼을 볼 때 보통 궁금한 쪽으로 잡는다 */
-const COLUMNS: { col: SortCol; label: string; dir: Dir }[] = [
-  { col: "corpName", label: "종목명", dir: "asc" },
-  { col: "subject", label: "공시주체", dir: "asc" },
+const COLUMNS: { col: SortCol; label: string; dir: Dir; short?: string }[] = [
+  { col: "corpName", label: "종목명", dir: "asc", short: "종목" },
+  { col: "subject", label: "공시주체", dir: "asc", short: "주체" },
   { col: "holderName", label: "이름", dir: "asc" },
   { col: "firstDate", label: "최초변동일", dir: "desc" },
   { col: "lastDate", label: "최종변동일", dir: "desc" },
-  { col: "method", label: "취득방법", dir: "asc" },
+  { col: "method", label: "취득방법", dir: "asc", short: "방법" },
   { col: "delta", label: "증감", dir: "desc" },
   { col: "after", label: "변동후", dir: "desc" },
-  { col: "ratioBefore", label: "지분율(전)", dir: "desc" },
-  { col: "ratioAfter", label: "지분율(후)", dir: "desc" },
+  { col: "ratioBefore", label: "지분율(전)", dir: "desc", short: "지분전" },
+  { col: "ratioAfter", label: "지분율(후)", dir: "desc", short: "지분후" },
   { col: "unitPrice", label: "취득단가", dir: "desc" },
   { col: "amount", label: "총액", dir: "desc" },
 ];
+
+/**
+ * 모바일 셀 폭이 빠듯해 접두어를 뗀다. 장내매수→매수, 시간외매매→시간외.
+ * 장외는 장내와 구분해야 하므로 그대로 둔다.
+ */
+function shortMethod(m: string) {
+  return m === "시간외매매" ? "시간외" : m.replace(/^장내/, "");
+}
+
+/**
+ * 좁은 화면에서 살릴 컬럼. 12칸을 다 밀어 넣으면 가로 스크롤만 남아
+ * 어느 행을 보고 있는지조차 놓치게 된다. "누가 · 어떻게 · 얼마나"만 남긴다.
+ */
+const MOBILE_COLS = new Set<SortCol>([
+  "corpName",
+  "subject",
+  "method",
+  "ratioBefore",
+  "ratioAfter",
+  "amount",
+]);
+
+/** 모바일에서 감출 칸에 붙인다. th와 td에 똑같이 붙어야 열이 안 어긋난다 */
+const hideSm = (col: SortCol) =>
+  MOBILE_COLS.has(col) ? "" : "hidden md:table-cell";
 
 /**
  * 정렬에 쓸 값. 총액은 데이터상 항상 양수(크기)라서 화면에 보이는 대로
@@ -141,8 +166,12 @@ function leadRow(group: OwnershipRow[], col: SortCol, dir: Dir): OwnershipRow {
 }
 
 export default function OwnershipTable({ rows }: { rows: OwnershipRow[] }) {
-  // null이면 원본 순서(공시 접수 순)
-  const [sort, setSort] = useState<{ col: SortCol; dir: Dir } | null>(null);
+  // 기본은 총액 큰 순 — 그날 무엇이 컸는지가 이 표를 여는 이유다.
+  // null로 두면 원본 순서(공시 접수 순)이고, 정렬 칩의 ✕로 그 상태로 돌아간다.
+  const [sort, setSort] = useState<{ col: SortCol; dir: Dir } | null>({
+    col: "amount",
+    dir: "desc",
+  });
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
@@ -192,8 +221,8 @@ export default function OwnershipTable({ rows }: { rows: OwnershipRow[] }) {
   }, [rows, sort, filter, query]);
 
   const th =
-    "px-2 py-1.5 font-semibold text-gray-800 border border-amber-300/70 whitespace-nowrap";
-  const td = "px-2 py-1.5 border border-gray-200 whitespace-nowrap";
+    "px-1 md:px-2 py-1.5 font-semibold text-gray-800 border border-amber-300/70 whitespace-nowrap";
+  const td = "px-1 md:px-2 py-1.5 border border-gray-200 whitespace-nowrap";
   // 총액 칸은 막대를 셀 가장자리까지 채워야 해서 안쪽 span이 여백을 맡는다
   const tdBar = "border border-gray-200 whitespace-nowrap";
 
@@ -246,13 +275,13 @@ export default function OwnershipTable({ rows }: { rows: OwnershipRow[] }) {
       </div>
 
       <div className="overflow-x-auto border border-gray-200 rounded-lg">
-        <table className="min-w-full text-xs border-collapse">
+        <table className="min-w-full text-[10px] md:text-xs border-collapse">
           <thead className="bg-amber-200/80 sticky top-0">
             <tr>
-              {COLUMNS.map(({ col, label }) => {
+              {COLUMNS.map(({ col, label, short }) => {
                 const active = sort?.col === col;
                 return (
-                  <th key={col} className={th} aria-sort={
+                  <th key={col} className={`${th} ${hideSm(col)}`} aria-sort={
                     active ? (sort!.dir === "asc" ? "ascending" : "descending") : "none"
                   }>
                     <button
@@ -262,8 +291,19 @@ export default function OwnershipTable({ rows }: { rows: OwnershipRow[] }) {
                       }`}
                       title={`${label} 기준 정렬 (종목 단위로 묶여 이동합니다)`}
                     >
-                      {label}
-                      <span className={active ? "" : "text-gray-400/70"}>
+                      {short ? (
+                        <>
+                          <span className="md:hidden">{short}</span>
+                          <span className="hidden md:inline">{label}</span>
+                        </>
+                      ) : (
+                        label
+                      )}
+                      {/* 정렬 안 걸린 컬럼의 ⇅는 모바일에서 감춘다.
+                          아이콘 하나가 14px씩 먹어 6칸이면 한 화면을 넘긴다 */}
+                      <span
+                        className={active ? "" : "hidden md:inline text-gray-400/70"}
+                      >
                         {active ? (sort!.dir === "asc" ? "▲" : "▼") : "⇅"}
                       </span>
                     </button>
@@ -280,7 +320,7 @@ export default function OwnershipTable({ rows }: { rows: OwnershipRow[] }) {
                   key={`${r.rceptNo}-${r.holderName}-${r.method}-${i}`}
                   className={isSell ? "bg-rose-50" : "bg-white"}
                 >
-                  <td className={td}>
+                  <td className={`${td} max-w-[4.5rem] md:max-w-none truncate`} title={r.corpName}>
                     <a
                       href={dartUrl(r.rceptNo)}
                       target="_blank"
@@ -291,24 +331,27 @@ export default function OwnershipTable({ rows }: { rows: OwnershipRow[] }) {
                       {r.corpName}
                     </a>
                   </td>
-                  <td className={`${td} text-gray-600 max-w-[13rem] truncate`} title={r.subject}>
+                  <td className={`${td} text-gray-600 max-w-[5rem] md:max-w-[13rem] truncate`} title={r.subject}>
                     {r.subject}
                   </td>
-                  <td className={`${td} max-w-[11rem] truncate`} title={r.holderName}>
+                  <td className={`${td} ${hideSm("holderName")} max-w-[11rem] truncate`} title={r.holderName}>
                     {r.holderName}
                   </td>
-                  <td className={`${td} text-center text-gray-600`}>{shortDate(r.firstDate)}</td>
-                  <td className={`${td} text-center text-gray-600`}>{shortDate(r.lastDate)}</td>
-                  <td className={`${td} text-center`}>{r.method}</td>
-                  <td className={`${td} text-right tabular-nums font-medium ${isSell ? "text-blue-700" : "text-red-600"}`}>
+                  <td className={`${td} ${hideSm("firstDate")} text-center text-gray-600`}>{shortDate(r.firstDate)}</td>
+                  <td className={`${td} ${hideSm("lastDate")} text-center text-gray-600`}>{shortDate(r.lastDate)}</td>
+                  <td className={`${td} text-center`}>
+                    <span className="md:hidden">{shortMethod(r.method)}</span>
+                    <span className="hidden md:inline">{r.method}</span>
+                  </td>
+                  <td className={`${td} ${hideSm("delta")} text-right tabular-nums font-medium ${isSell ? "text-blue-700" : "text-red-600"}`}>
                     {int(r.delta)}
                   </td>
-                  <td className={`${td} text-right tabular-nums`}>{int(r.after)}</td>
+                  <td className={`${td} ${hideSm("after")} text-right tabular-nums`}>{int(r.after)}</td>
                   <td className={`${td} text-right tabular-nums text-gray-600`}>{pct(r.ratioBefore)}</td>
                   <td className={`${td} text-right tabular-nums`}>{pct(r.ratioAfter)}</td>
-                  <td className={`${td} text-right tabular-nums`}>{int(r.unitPrice)}</td>
+                  <td className={`${td} ${hideSm("unitPrice")} text-right tabular-nums`}>{int(r.unitPrice)}</td>
                   <td
-                    className={`${tdBar} text-right tabular-nums relative min-w-[11rem]`}
+                    className={`${tdBar} text-right tabular-nums relative min-w-[4.5rem] md:min-w-[11rem]`}
                     style={r.amount === null ? undefined : BAR_TICKS}
                     title={r.amount === null ? undefined : shortMoney(r.amount)}
                   >
@@ -320,8 +363,21 @@ export default function OwnershipTable({ rows }: { rows: OwnershipRow[] }) {
                         style={barStyle(r.amount, isSell)}
                       />
                     )}
-                    <span className="relative block px-2 py-1.5">
-                      {r.amount === null ? "-" : `${isSell ? "-" : ""}${int(r.amount)}`}
+                    {/* 모바일은 원 단위를 다 적을 자리가 없다 — 억/조로 줄여야 한 화면에 들어간다 */}
+                    <span className="relative block px-1 md:px-2 py-1.5">
+                      {r.amount === null ? (
+                        "-"
+                      ) : (
+                        <>
+                          <span className="md:hidden">
+                            {shortMoney(isSell ? -r.amount : r.amount)}
+                          </span>
+                          <span className="hidden md:inline">
+                            {isSell ? "-" : ""}
+                            {int(r.amount)}
+                          </span>
+                        </>
+                      )}
                     </span>
                   </td>
                 </tr>
