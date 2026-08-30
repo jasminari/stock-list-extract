@@ -1,18 +1,20 @@
-import NavBar from "@/components/landing/NavBar";
-import HeroSection from "@/components/landing/HeroSection";
-import FeaturesSection from "@/components/landing/FeaturesSection";
-import HowItWorksSection from "@/components/landing/HowItWorksSection";
-import CTASection from "@/components/landing/CTASection";
+import ComingSoonNav from "@/components/landing/ComingSoonNav";
+import ComingSoonHero from "@/components/landing/ComingSoonHero";
+import ScreensSection from "@/components/landing/ScreensSection";
+import AppFeaturesSection from "@/components/landing/AppFeaturesSection";
+import RoadmapSection from "@/components/landing/RoadmapSection";
+import ComingSoonCTA from "@/components/landing/ComingSoonCTA";
 import Footer from "@/components/landing/Footer";
 
 export default function LandingPage() {
   return (
     <>
-      <NavBar />
-      <HeroSection />
-      <FeaturesSection />
-      <HowItWorksSection />
-      <CTASection />
+      <ComingSoonNav />
+      <ComingSoonHero />
+      <ScreensSection />
+      <AppFeaturesSection />
+      <RoadmapSection />
+      <ComingSoonCTA />
       <Footer />
     </>
   );
