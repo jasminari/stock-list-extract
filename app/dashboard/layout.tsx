@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { getTodayStr } from "@/lib/date";
+import FeedbackButton from "@/components/FeedbackButton";
 
 /**
  * 새 메뉴 강조 배지. 이 날짜(KST)까지는 눌러봤든 아니든 계속 떠 있고, 지나면 사라진다.
@@ -227,6 +228,9 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+
+      {/* 의견 보내기 — 모든 대시보드 화면에 떠 있는 작은 버튼 */}
+      {session?.user && <FeedbackButton />}
 
       {/* Bottom Tab Bar — Mobile only */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex items-center justify-around px-1 py-1 z-50 safe-area-bottom">

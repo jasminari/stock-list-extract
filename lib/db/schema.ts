@@ -120,3 +120,22 @@ export const quizAttempts = pgTable(
   },
   (t) => [unique().on(t.userId, t.quizDate)]
 );
+
+/**
+ * 사용자 의견/만족도. 로그인 유저만 남길 수 있고, 한 사람이 여러 번 보낼 수 있다.
+ * rating 없이 글만, 글 없이 rating만 보내는 것도 허용한다(둘 다 비면 서버에서 막는다).
+ */
+export const feedbacks = pgTable("feedbacks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  /** 만족도 1~5. 글만 남긴 경우 null */
+  rating: integer("rating"),
+  message: text("message").default(""),
+  /** 의견을 남긴 화면 경로. 어느 기능에 대한 말인지 추적용 */
+  pagePath: varchar("page_path", { length: 200 }).default(""),
+  /** new | done — 관리자가 확인했는지 */
+  status: varchar("status", { length: 10 }).default("new").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});

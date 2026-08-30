@@ -9,6 +9,7 @@ import {
   extractionLogs,
   userSubscriptions,
   quizAttempts,
+  feedbacks,
 } from "./db/schema";
 import type { StockResult, RegisteredCondition } from "./types";
 
@@ -611,4 +612,91 @@ export async function saveQuizAttempt(
     .returning({ id: quizAttempts.id });
 
   return inserted.length > 0;
+}
+
+// === 의견/만족도 ===
+
+export interface FeedbackSummary {
+  id: number;
+  userId: number;
+  username: string;
+  displayName: string | null;
+  rating: number | null;
+  message: string;
+  pagePath: string;
+  status: string;
+  createdAt: string;
+}
+
+export async function saveFeedback(input: {
+  userId: number;
+  rating: number | null;
+  message: string;
+  pagePath: string;
+}): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .insert(feedbacks)
+    .values({
+      userId: input.userId,
+      rating: input.rating,
+      message: input.message,
+      pagePath: input.pagePath,
+    })
+    .returning({ id: feedbacks.id });
+  return row.id;
+}
+
+/** 최근 24시간 제출 건수 — 한 사람이 도배하는 것을 막는 용도 */
+export async function countRecentFeedbacks(userId: number): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(feedbacks)
+    .where(
+      and(
+        eq(feedbacks.userId, userId),
+        sql`${feedbacks.createdAt} > now() - interval '1 day'`
+      )
+    );
+  return row?.count ?? 0;
+}
+
+export async function listFeedbacks(): Promise<FeedbackSummary[]> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: feedbacks.id,
+      userId: feedbacks.userId,
+      username: users.username,
+      displayName: users.displayName,
+      rating: feedbacks.rating,
+      message: feedbacks.message,
+      pagePath: feedbacks.pagePath,
+      status: feedbacks.status,
+      createdAt: feedbacks.createdAt,
+    })
+    .from(feedbacks)
+    .innerJoin(users, eq(users.id, feedbacks.userId))
+    .orderBy(desc(feedbacks.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    userId: r.userId,
+    username: r.username,
+    displayName: r.displayName,
+    rating: r.rating,
+    message: r.message ?? "",
+    pagePath: r.pagePath ?? "",
+    status: r.status,
+    createdAt: r.createdAt?.toISOString() ?? "",
+  }));
+}
+
+export async function updateFeedbackStatus(
+  id: number,
+  status: "new" | "done"
+): Promise<void> {
+  const db = getDb();
+  await db.update(feedbacks).set({ status }).where(eq(feedbacks.id, id));
 }

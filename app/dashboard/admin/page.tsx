@@ -52,6 +52,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tokenStatus, setTokenStatus] = useState<TokenStatus>({ status: "loading" });
+  const [newFeedbackCount, setNewFeedbackCount] = useState(0);
 
   // 조건검색식 관리
   const [registered, setRegistered] = useState<RegisteredCondition[]>([]);
@@ -111,13 +112,30 @@ export default function AdminPage() {
     }
   }, []);
 
+  // 미확인 의견 수 (진입 버튼 배지용)
+  const loadFeedbackCount = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/feedback");
+      const data = await res.json();
+      if (data.error) return;
+      setNewFeedbackCount(
+        (data.feedbacks ?? []).filter(
+          (f: { status: string }) => f.status === "new"
+        ).length
+      );
+    } catch {
+      // 배지일 뿐이라 실패해도 조용히 넘어간다
+    }
+  }, []);
+
   useEffect(() => {
     if (session?.user?.role === "admin") {
       checkTokenStatus();
       loadLogs();
       loadRegistered();
+      loadFeedbackCount();
     }
-  }, [session, checkTokenStatus, loadLogs, loadRegistered]);
+  }, [session, checkTokenStatus, loadLogs, loadRegistered, loadFeedbackCount]);
 
   // 키움에서 조건검색식 불러오기
   const handleLoadConditions = async () => {
@@ -289,7 +307,7 @@ export default function AdminPage() {
         {/* 가입자 관리 진입 */}
         <button
           onClick={() => router.push("/dashboard/admin/users")}
-          className="w-full mb-6 p-4 bg-white border border-gray-200 rounded-xl flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
+          className="w-full mb-3 p-4 bg-white border border-gray-200 rounded-xl flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
@@ -301,6 +319,34 @@ export default function AdminPage() {
               <p className="text-sm font-medium text-gray-900">가입자 관리</p>
               <p className="text-xs text-gray-500 mt-0.5">
                 가입자 조회 및 관리자 권한 부여
+              </p>
+            </div>
+          </div>
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+
+        {/* 의견 · 만족도 진입 */}
+        <button
+          onClick={() => router.push("/dashboard/admin/feedback")}
+          className="w-full mb-6 p-4 bg-white border border-gray-200 rounded-xl flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4-.8L3 20l1.3-3.2A7.6 7.6 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">의견 · 만족도</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                사용자가 보낸 만족도와 의견 확인
+                {newFeedbackCount > 0 && (
+                  <span className="ml-1.5 px-1.5 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-medium rounded-full">
+                    미확인 {newFeedbackCount}
+                  </span>
+                )}
               </p>
             </div>
           </div>
