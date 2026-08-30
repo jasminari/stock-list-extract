@@ -113,7 +113,9 @@ export default function FeedbackButton() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center sm:justify-center"
+            /* 모바일 하단 탭바가 z-50이라 같은 값이면 DOM 순서상 탭바가 위로 덮어
+               제출 버튼이 가려진다. 모달은 그보다 위에 있어야 한다 */
+            className="fixed inset-0 z-[60] bg-black/40 flex items-end sm:items-center sm:justify-center"
             onClick={close}
           >
             <motion.div
@@ -121,7 +123,9 @@ export default function FeedbackButton() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 60, opacity: 0 }}
               transition={{ type: "spring", damping: 28, stiffness: 320 }}
-              className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl"
+              /* 키보드가 올라오거나 화면이 짧으면 시트가 넘치므로 높이를 제한하고 안에서 스크롤한다.
+                 safe-area-bottom — 홈 인디케이터에 제출 버튼이 물리지 않게 */
+              className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[85dvh] overflow-y-auto safe-area-bottom"
               onClick={(e) => e.stopPropagation()}
             >
               {done ? (
