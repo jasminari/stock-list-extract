@@ -34,7 +34,7 @@ export default function HowItWorksSection() {
           {steps.map((s, i) => (
             <Reveal key={s.step} delay={i * 0.12}>
               <div className="relative text-center px-4">
-                <div className="w-16 h-16 bg-emerald-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 text-xl font-extrabold shadow-lg shadow-emerald-600/25">
+                <div className="w-16 h-16 bg-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 text-xl font-extrabold shadow-lg shadow-indigo-600/25">
                   {s.step}
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">

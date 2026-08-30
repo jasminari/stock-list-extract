@@ -213,7 +213,7 @@ export default function OwnershipTable({ rows }: { rows: OwnershipRow[] }) {
               onClick={() => setFilter(id)}
               className={`px-3 py-1.5 transition-colors ${
                 filter === id
-                  ? "bg-emerald-600 text-white"
+                  ? "bg-indigo-600 text-white"
                   : "bg-white text-gray-600 hover:bg-gray-50"
               }`}
             >
@@ -237,7 +237,7 @@ export default function OwnershipTable({ rows }: { rows: OwnershipRow[] }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="종목·이름 검색"
-          className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg w-40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg w-40 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
 
         <span className="text-xs text-gray-500 ml-auto">
@@ -257,8 +257,8 @@ export default function OwnershipTable({ rows }: { rows: OwnershipRow[] }) {
                   }>
                     <button
                       onClick={() => toggleSort(col)}
-                      className={`w-full flex items-center justify-center gap-1 hover:text-emerald-800 transition-colors ${
-                        active ? "text-emerald-800" : ""
+                      className={`w-full flex items-center justify-center gap-1 hover:text-indigo-800 transition-colors ${
+                        active ? "text-indigo-800" : ""
                       }`}
                       title={`${label} 기준 정렬 (종목 단위로 묶여 이동합니다)`}
                     >
@@ -285,7 +285,7 @@ export default function OwnershipTable({ rows }: { rows: OwnershipRow[] }) {
                       href={dartUrl(r.rceptNo)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-900 hover:text-emerald-700 hover:underline"
+                      className="text-gray-900 hover:text-indigo-700 hover:underline"
                       title="DART 원문 보기"
                     >
                       {r.corpName}

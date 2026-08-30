@@ -99,7 +99,7 @@ export default function FeedbackButton() {
       <button
         onClick={openModal}
         aria-label="의견 보내기"
-        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full shadow-lg shadow-gray-900/10 text-gray-600 hover:text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50 transition-colors"
+        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full shadow-lg shadow-gray-900/10 text-gray-600 hover:text-indigo-700 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4-.8L3 20l1.3-3.2A7.6 7.6 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -126,8 +126,8 @@ export default function FeedbackButton() {
             >
               {done ? (
                 <div className="px-6 py-10 text-center">
-                  <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center mx-auto">
-                    <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center mx-auto">
+                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
@@ -170,7 +170,7 @@ export default function FeedbackButton() {
                           aria-pressed={rating === r.value}
                           className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl border transition-colors ${
                             rating === r.value
-                              ? "border-emerald-400 bg-emerald-50"
+                              ? "border-indigo-400 bg-indigo-50"
                               : "border-transparent hover:bg-gray-50"
                           }`}
                         >
@@ -179,7 +179,7 @@ export default function FeedbackButton() {
                           </span>
                           <span
                             className={`text-[10px] leading-tight ${
-                              rating === r.value ? "text-emerald-700 font-medium" : "text-gray-400"
+                              rating === r.value ? "text-indigo-700 font-medium" : "text-gray-400"
                             }`}
                           >
                             {r.label}
@@ -195,7 +195,7 @@ export default function FeedbackButton() {
                         onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
                         rows={4}
                         placeholder="불편한 점, 있으면 좋겠는 기능을 자유롭게 적어주세요. (선택)"
-                        className="w-full px-3 py-2.5 bg-gray-100 border-0 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-colors"
+                        className="w-full px-3 py-2.5 bg-gray-100 border-0 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-colors"
                       />
                       <p className="text-[11px] text-gray-400 text-right mt-1">
                         {message.length}/{MAX_MESSAGE_LENGTH}
@@ -211,7 +211,7 @@ export default function FeedbackButton() {
                     <button
                       onClick={handleSubmit}
                       disabled={!canSubmit || submitting}
-                      className="w-full py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-xl hover:bg-emerald-700 disabled:opacity-40 disabled:hover:bg-emerald-600 transition-colors"
+                      className="w-full py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 disabled:opacity-40 disabled:hover:bg-indigo-600 transition-colors"
                     >
                       {submitting ? "보내는 중..." : "의견 보내기"}
                     </button>

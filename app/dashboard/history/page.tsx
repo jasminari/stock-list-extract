@@ -12,7 +12,7 @@ export default function HistoryPage() {
   return (
     <Suspense fallback={
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
       </div>
     }>
       <HistoryContent />
@@ -159,7 +159,7 @@ function HistoryContent() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -197,7 +197,7 @@ function HistoryContent() {
                   onClick={() => setSelectedResult(r)}
                   className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg text-[11px] md:text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                     selectedResult?.id === r.id
-                      ? "bg-emerald-600 text-white"
+                      ? "bg-indigo-600 text-white"
                       : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
                   }`}
                 >
@@ -213,7 +213,7 @@ function HistoryContent() {
       <div className="flex-1 overflow-auto px-2 md:px-6 py-2 md:py-4">
         {stocksLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mb-4" />
+            <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4" />
             <p className="text-sm text-gray-500">종목 데이터 불러오는 중...</p>
           </div>
         ) : stocks.length > 0 && selectedResult ? (

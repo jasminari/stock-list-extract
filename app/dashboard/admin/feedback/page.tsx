@@ -168,7 +168,7 @@ export default function AdminFeedbackPage() {
           </div>
           <div className="p-4 bg-white border border-gray-200 rounded-xl">
             <p className="text-xs text-gray-500">평균 만족도</p>
-            <p className="text-xl font-bold text-emerald-600 mt-1">
+            <p className="text-xl font-bold text-indigo-600 mt-1">
               {stats.ratedCount > 0 ? stats.avg.toFixed(1) : "-"}
               <span className="text-xs font-normal text-gray-400 ml-1">
                 / 5 ({stats.ratedCount}명)
@@ -191,7 +191,7 @@ export default function AdminFeedbackPage() {
                     <span className="text-xs text-gray-500 w-16">{RATING_LABEL[v]}</span>
                     <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-emerald-500 rounded-full"
+                        className="h-full bg-indigo-500 rounded-full"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -235,7 +235,7 @@ export default function AdminFeedbackPage() {
                   onClick={() => setFilter(tab.id)}
                   className={`px-2.5 py-1 text-xs rounded-lg transition-colors ${
                     filter === tab.id
-                      ? "bg-emerald-50 text-emerald-700 font-medium"
+                      ? "bg-indigo-50 text-indigo-700 font-medium"
                       : "text-gray-500 hover:bg-gray-100"
                   }`}
                 >
@@ -298,7 +298,7 @@ export default function AdminFeedbackPage() {
                       className={`flex-shrink-0 px-2.5 py-1 text-xs border rounded-md transition-colors disabled:opacity-40 ${
                         item.status === "done"
                           ? "text-gray-400 border-gray-200 hover:bg-gray-50"
-                          : "text-emerald-600 border-emerald-300 hover:bg-emerald-50"
+                          : "text-indigo-600 border-indigo-300 hover:bg-indigo-50"
                       }`}
                     >
                       {item.status === "done" ? "되돌리기" : "확인"}

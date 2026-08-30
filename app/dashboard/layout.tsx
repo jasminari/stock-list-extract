@@ -104,10 +104,10 @@ function NewFeatureTip({ align }: { align: "center" | "right" }) {
         align === "center" ? "left-1/2 -translate-x-1/2" : "right-1"
       }`}
     >
-      <span className="animate-new-tip relative block whitespace-nowrap rounded-full bg-emerald-600 px-2 py-1 text-[10px] font-bold leading-none text-white shadow-lg shadow-emerald-600/30">
+      <span className="animate-new-tip relative block whitespace-nowrap rounded-full bg-indigo-600 px-2 py-1 text-[10px] font-bold leading-none text-white shadow-lg shadow-indigo-600/30">
         새로운 기능
         <span
-          className={`absolute top-full -mt-1 h-2 w-2 rotate-45 bg-emerald-600 ${
+          className={`absolute top-full -mt-1 h-2 w-2 rotate-45 bg-indigo-600 ${
             align === "center" ? "left-1/2 -ml-1" : "right-3"
           }`}
         />
@@ -169,7 +169,7 @@ export default function DashboardLayout({
       <header className="h-14 md:h-16 border-b border-gray-200 flex items-center justify-between px-3 md:px-4 flex-shrink-0">
         <div className="flex items-center gap-3 md:gap-4 flex-1">
           <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white">
               <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
@@ -184,7 +184,7 @@ export default function DashboardLayout({
               <input
                 type="text"
                 placeholder="종목명 또는 키워드 검색"
-                className="w-full pl-10 pr-4 h-11 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-colors"
+                className="w-full pl-10 pr-4 h-11 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-colors"
               />
             </div>
           </div>
@@ -200,7 +200,7 @@ export default function DashboardLayout({
               >
                 로그아웃
               </button>
-              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-emerald-500 flex items-center justify-center text-white text-sm font-medium">
+              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-medium">
                 {userInitial}
               </div>
             </div>
@@ -218,7 +218,7 @@ export default function DashboardLayout({
                 onClick={() => router.push(item.href)}
                 className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${
                   activeMenu === item.id
-                    ? "bg-emerald-50 text-emerald-700 font-medium"
+                    ? "bg-indigo-50 text-indigo-700 font-medium"
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
@@ -252,11 +252,11 @@ export default function DashboardLayout({
             onClick={() => router.push(item.href)}
             className={`relative flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[56px] transition-colors ${
               activeMenu === item.id
-                ? "text-emerald-600"
+                ? "text-indigo-600"
                 : "text-gray-400"
             }`}
           >
-            <span className={activeMenu === item.id ? "text-emerald-600" : "text-gray-400"}>
+            <span className={activeMenu === item.id ? "text-indigo-600" : "text-gray-400"}>
               {item.icon}
             </span>
             {newBadges.includes(item.id) && <NewFeatureTip align="center" />}

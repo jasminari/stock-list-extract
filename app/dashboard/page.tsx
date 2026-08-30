@@ -40,7 +40,7 @@ export default function DashboardHome() {
                 onClick={() => setSelectedYear(y)}
                 className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   selectedYear === y
-                    ? "bg-emerald-600 text-white"
+                    ? "bg-indigo-600 text-white"
                     : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}
               >
@@ -53,10 +53,10 @@ export default function DashboardHome() {
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={() => router.push("/dashboard/search")}
-            className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-sm transition-all text-left"
+            className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-xl hover:border-indigo-300 hover:shadow-sm transition-all text-left"
           >
-            <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -68,7 +68,7 @@ export default function DashboardHome() {
 
           <button
             onClick={() => router.push("/dashboard/history")}
-            className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-sm transition-all text-left"
+            className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-xl hover:border-indigo-300 hover:shadow-sm transition-all text-left"
           >
             <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
               <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

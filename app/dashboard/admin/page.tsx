@@ -310,8 +310,8 @@ export default function AdminPage() {
           className="w-full mb-3 p-4 bg-white border border-gray-200 rounded-xl flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-              <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
@@ -333,8 +333,8 @@ export default function AdminPage() {
           className="w-full mb-6 p-4 bg-white border border-gray-200 rounded-xl flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-              <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4-.8L3 20l1.3-3.2A7.6 7.6 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
@@ -363,7 +363,7 @@ export default function AdminPage() {
               <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                 registered.length >= MAX_CONDITIONS
                   ? "bg-orange-100 text-orange-700"
-                  : "bg-emerald-100 text-emerald-700"
+                  : "bg-indigo-100 text-indigo-700"
               }`}>
                 {registered.length}/{MAX_CONDITIONS}
               </span>
@@ -391,10 +391,10 @@ export default function AdminPage() {
               registered.map((cond) => (
                 <div
                   key={cond.seq}
-                  className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-lg"
+                  className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-200 rounded-lg"
                 >
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <div>
@@ -431,7 +431,7 @@ export default function AdminPage() {
                     <button
                       onClick={() => handleRegister(cond)}
                       disabled={registeringSeq === cond.seq || registered.length >= MAX_CONDITIONS}
-                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-emerald-600 border border-emerald-300 rounded-md hover:bg-emerald-50 transition-colors disabled:opacity-40"
+                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-indigo-600 border border-indigo-300 rounded-md hover:bg-indigo-50 transition-colors disabled:opacity-40"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -474,7 +474,7 @@ export default function AdminPage() {
           </div>
           {loading ? (
             <div className="p-8 text-center">
-              <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-emerald-600 rounded-full animate-spin" />
+              <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin" />
               <p className="text-sm text-gray-400 mt-2">로그를 불러오는 중...</p>
             </div>
           ) : logs.length === 0 ? (
@@ -500,7 +500,7 @@ export default function AdminPage() {
                     <td className="px-4 py-3 text-gray-900">{formatDate(log.date)}</td>
                     <td className="px-4 py-3 text-gray-700">{log.conditionName}</td>
                     <td className="px-4 py-3 text-right">
-                      <span className={`font-medium ${log.stockCount > 0 ? "text-emerald-600" : "text-gray-400"}`}>
+                      <span className={`font-medium ${log.stockCount > 0 ? "text-indigo-600" : "text-gray-400"}`}>
                         {log.stockCount}
                       </span>
                     </td>

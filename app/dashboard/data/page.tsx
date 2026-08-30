@@ -251,7 +251,7 @@ export default function DataPage() {
               <button
                 onClick={handleExtractNow}
                 disabled={extracting}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
               >
                 {extracting ? (
                   <>
@@ -363,7 +363,7 @@ export default function DataPage() {
                           key={uc.seq}
                           onClick={() => handleSubscribe(uc.seq)}
                           disabled={togglingSeq === uc.seq}
-                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors border-b border-gray-100 last:border-b-0 disabled:opacity-40"
+                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors border-b border-gray-100 last:border-b-0 disabled:opacity-40"
                         >
                           {togglingSeq === uc.seq ? "추가 중..." : uc.name}
                         </button>
@@ -393,7 +393,7 @@ export default function DataPage() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-gray-300 border-t-emerald-600 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin" />
             <p className="text-sm text-gray-400 mt-3">수집 데이터를 불러오는 중...</p>
           </div>
         ) : data.length === 0 ? (
@@ -444,7 +444,7 @@ export default function DataPage() {
                         onClick={() => item.count > 0 && handleViewResult(item)}
                         className={`border-b border-gray-100 transition-colors ${
                           item.count > 0
-                            ? "cursor-pointer hover:bg-emerald-50"
+                            ? "cursor-pointer hover:bg-indigo-50"
                             : "hover:bg-gray-50"
                         }`}
                       >
@@ -457,7 +457,7 @@ export default function DataPage() {
                         </td>
                         <td className="px-4 py-3 text-gray-700">{item.conditionName}</td>
                         <td className="px-4 py-3 text-right">
-                          <span className={`font-medium ${item.count > 0 ? "text-emerald-600" : "text-gray-400"}`}>
+                          <span className={`font-medium ${item.count > 0 ? "text-indigo-600" : "text-gray-400"}`}>
                             {item.count}
                           </span>
                         </td>
@@ -484,7 +484,7 @@ export default function DataPage() {
                                 e.stopPropagation();
                                 handleViewResult(item);
                               }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-emerald-300 rounded-md hover:bg-emerald-50 transition-colors text-emerald-600"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-indigo-300 rounded-md hover:bg-indigo-50 transition-colors text-indigo-600"
                             >
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

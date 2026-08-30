@@ -159,9 +159,9 @@ export default function Calendar({
                   onClick={() => handleSelectDate(dateStr)}
                   className={`relative flex flex-col items-center justify-center h-10 rounded-lg text-sm transition-colors ${
                     isSelected
-                      ? "bg-emerald-600 text-white"
+                      ? "bg-indigo-600 text-white"
                       : hasData
-                      ? "hover:bg-emerald-50 font-medium text-gray-900"
+                      ? "hover:bg-indigo-50 font-medium text-gray-900"
                       : "hover:bg-gray-50 text-gray-300"
                   }`}
                 >
@@ -169,7 +169,7 @@ export default function Calendar({
                     isSelected
                       ? "text-white"
                       : isToday
-                      ? "text-emerald-600 font-bold"
+                      ? "text-indigo-600 font-bold"
                       : isSunday && !hasData
                       ? "text-red-300"
                       : isSunday
@@ -184,7 +184,7 @@ export default function Calendar({
                   </span>
                   {hasData && (
                     <span className={`absolute bottom-0.5 text-[8px] leading-none ${
-                      isSelected ? "text-emerald-200" : "text-emerald-500"
+                      isSelected ? "text-indigo-200" : "text-indigo-500"
                     }`}>
                       {count}
                     </span>

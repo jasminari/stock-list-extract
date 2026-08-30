@@ -6,7 +6,7 @@ import TickerMarquee from "./TickerMarquee";
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-x-clip bg-gradient-to-b from-emerald-50/60 via-white to-white">
+    <section className="relative overflow-x-clip bg-gradient-to-b from-indigo-50/60 via-white to-white">
       <div className="max-w-6xl mx-auto px-6 pt-20 pb-12 md:pt-28 md:pb-16">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="min-w-0">
@@ -15,14 +15,14 @@ export default function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             >
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold mb-6">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                 AI가 상승이유까지 정리
               </span>
               <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 leading-[1.1] tracking-tight">
                 오늘 오른 종목,
                 <br />
-                <span className="text-emerald-600">왜 올랐는지</span>
+                <span className="text-indigo-600">왜 올랐는지</span>
                 <br />
                 까지 자동으로.
               </h1>
@@ -41,7 +41,7 @@ export default function HeroSection() {
             >
               <Link
                 href="/login"
-                className="px-7 py-3.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20"
+                className="px-7 py-3.5 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20"
               >
                 무료로 시작하기
               </Link>
@@ -139,12 +139,12 @@ function HeroPreview() {
               </div>
             </div>
             <div className="mt-2 flex items-start gap-2 min-w-0">
-              <span className="shrink-0 text-[10px] font-semibold bg-emerald-50 text-emerald-600 rounded-full px-2 py-0.5">
+              <span className="shrink-0 text-[10px] font-semibold bg-indigo-50 text-indigo-600 rounded-full px-2 py-0.5">
                 {row.keyword}
               </span>
               <p className="text-xs text-gray-500 leading-snug min-w-0">
                 {row.reason}{" "}
-                <span className="text-emerald-400">🔗</span>
+                <span className="text-indigo-400">🔗</span>
               </p>
             </div>
           </motion.div>

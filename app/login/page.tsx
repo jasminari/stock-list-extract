@@ -59,7 +59,7 @@ export default function LoginPage() {
             </h1>
             <Link
               href="/register"
-              className="text-sm text-emerald-600 hover:underline"
+              className="text-sm text-indigo-600 hover:underline"
             >
               처음이신가요? 가입하기
             </Link>
@@ -80,7 +80,7 @@ export default function LoginPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 transition-colors"
                   placeholder="아이디 입력"
                 />
               </div>
@@ -95,7 +95,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 transition-colors pr-12"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 transition-colors pr-12"
                     placeholder="비밀번호 입력"
                   />
                   <button
@@ -120,7 +120,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-40 transition-colors"
+                className="w-full py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors"
               >
                 {loading ? "로그인 중..." : "로그인"}
               </button>
@@ -179,7 +179,7 @@ export default function LoginPage() {
             <tbody className="text-gray-700">
               <tr className="border-b border-gray-50">
                 <td className="py-2 font-medium">삼성전자</td>
-                <td className="py-2 text-emerald-500">반도체</td>
+                <td className="py-2 text-indigo-500">반도체</td>
                 <td className="py-2 text-right">
                   <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded text-[11px]">3,200억</span>
                 </td>
@@ -187,7 +187,7 @@ export default function LoginPage() {
               </tr>
               <tr className="border-b border-gray-50">
                 <td className="py-2 font-medium">SK하이닉스</td>
-                <td className="py-2 text-emerald-500">HBM</td>
+                <td className="py-2 text-indigo-500">HBM</td>
                 <td className="py-2 text-right">
                   <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded text-[11px]">2,800억</span>
                 </td>
@@ -195,7 +195,7 @@ export default function LoginPage() {
               </tr>
               <tr>
                 <td className="py-2 font-medium">에코프로</td>
-                <td className="py-2 text-emerald-500">2차전지</td>
+                <td className="py-2 text-indigo-500">2차전지</td>
                 <td className="py-2 text-right text-gray-600">1,500억</td>
                 <td className="py-2 text-right">+7.1%</td>
               </tr>

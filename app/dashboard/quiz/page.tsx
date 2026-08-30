@@ -182,7 +182,7 @@ export default function QuizPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -229,10 +229,10 @@ export default function QuizPage() {
                     className={`h-2.5 flex-1 rounded-full transition-colors ${
                       i < index || (i === index && checked)
                         ? answers[i] === questions[i].answerIndex
-                          ? "bg-emerald-500"
+                          ? "bg-indigo-500"
                           : "bg-rose-400"
                         : i === index
-                          ? "bg-emerald-200"
+                          ? "bg-indigo-200"
                           : "bg-gray-200"
                     }`}
                   />
@@ -300,7 +300,7 @@ export default function QuizPage() {
           className={`flex-shrink-0 border-t px-4 md:px-6 py-3 md:py-4 transition-colors ${
             checked
               ? selected === current.answerIndex
-                ? "bg-emerald-50 border-emerald-100"
+                ? "bg-indigo-50 border-indigo-100"
                 : "bg-rose-50 border-rose-100"
               : "bg-white border-gray-200"
           }`}
@@ -311,7 +311,7 @@ export default function QuizPage() {
                 <div
                   className={`text-sm font-semibold mb-1 ${
                     selected === current.answerIndex
-                      ? "text-emerald-700"
+                      ? "text-indigo-700"
                       : "text-rose-700"
                   }`}
                 >
@@ -332,7 +332,7 @@ export default function QuizPage() {
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                   : checked && selected !== current.answerIndex
                     ? "bg-rose-500 hover:bg-rose-600"
-                    : "bg-emerald-600 hover:bg-emerald-700"
+                    : "bg-indigo-600 hover:bg-indigo-700"
               }`}
             >
               {submitting
@@ -378,8 +378,8 @@ function StartCard({
 
   return (
     <div className="text-center py-6">
-      <div className="w-20 h-20 rounded-3xl bg-emerald-50 flex items-center justify-center mx-auto mb-5">
-        <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="w-20 h-20 rounded-3xl bg-indigo-50 flex items-center justify-center mx-auto mb-5">
+        <svg className="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
@@ -394,7 +394,7 @@ function StartCard({
 
       <button
         onClick={onStart}
-        className="w-full md:w-64 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base transition-colors shadow-sm"
+        className="w-full md:w-64 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base transition-colors shadow-sm"
       >
         시작하기
       </button>
@@ -415,7 +415,7 @@ function StartCard({
                 </span>
                 <span
                   className={`text-sm font-bold tabular-nums ${
-                    h.score === h.total ? "text-emerald-600" : "text-gray-500"
+                    h.score === h.total ? "text-indigo-600" : "text-gray-500"
                   }`}
                 >
                   {h.score}/{h.total}
@@ -450,7 +450,7 @@ function QuestionCard({
       </h2>
 
       {question.passage && (
-        <div className="mb-5 px-4 py-3 rounded-xl bg-gray-50 border-l-4 border-emerald-200 text-sm text-gray-600 leading-relaxed">
+        <div className="mb-5 px-4 py-3 rounded-xl bg-gray-50 border-l-4 border-indigo-200 text-sm text-gray-600 leading-relaxed">
           {question.passage}
         </div>
       )}
@@ -462,11 +462,11 @@ function QuestionCard({
 
           let style = "border-gray-200 bg-white hover:bg-gray-50 text-gray-700";
           if (checked && isAnswer)
-            style = "border-emerald-500 bg-emerald-50 text-emerald-800";
+            style = "border-indigo-500 bg-indigo-50 text-indigo-800";
           else if (checked && isSelected)
             style = "border-rose-400 bg-rose-50 text-rose-800";
           else if (isSelected)
-            style = "border-emerald-500 bg-emerald-50 text-emerald-800";
+            style = "border-indigo-500 bg-indigo-50 text-indigo-800";
 
           return (
             <button
@@ -488,7 +488,7 @@ function QuestionCard({
               </span>
               <span className="flex-1">{choice}</span>
               {checked && isAnswer && (
-                <svg className="w-5 h-5 mt-0.5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mt-0.5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               )}
@@ -540,12 +540,12 @@ function ResultCard({
       <div className="text-center mb-8">
         <div
           className={`w-24 h-24 rounded-full flex flex-col items-center justify-center mx-auto mb-4 ${
-            perfect ? "bg-emerald-50" : "bg-gray-100"
+            perfect ? "bg-indigo-50" : "bg-gray-100"
           }`}
         >
           <span
             className={`text-3xl font-bold tabular-nums ${
-              perfect ? "text-emerald-600" : "text-gray-700"
+              perfect ? "text-indigo-600" : "text-gray-700"
             }`}
           >
             {score}
@@ -578,7 +578,7 @@ function ResultCard({
                 <div className="flex items-start gap-2.5 mb-2">
                   <span
                     className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                      ok ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-500"
+                      ok ? "bg-indigo-100 text-indigo-600" : "bg-rose-100 text-rose-500"
                     }`}
                   >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -594,7 +594,7 @@ function ResultCard({
                     <p className="text-sm font-semibold text-gray-800 leading-snug">
                       {q.prompt}
                     </p>
-                    <p className="text-sm text-emerald-700 mt-1">
+                    <p className="text-sm text-indigo-700 mt-1">
                       정답 · {answerHeadline(q)}
                     </p>
                     {!ok && mine >= 0 && mine !== undefined && (

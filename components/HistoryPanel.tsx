@@ -83,7 +83,7 @@ export default function HistoryPanel({
                   onClick={() => toggleDetail(r)}
                   className={`hover:bg-gray-50 transition-colors ${
                     r.id ? "cursor-pointer" : ""
-                  } ${expandedId === r.id ? "bg-emerald-50" : ""}`}
+                  } ${expandedId === r.id ? "bg-indigo-50" : ""}`}
                 >
                   <td className="px-4 py-3 text-gray-700">{r.date}</td>
                   <td className="px-4 py-3 font-medium text-gray-900">
@@ -94,7 +94,7 @@ export default function HistoryPanel({
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right text-emerald-600 font-medium">
+                  <td className="px-4 py-3 text-right text-indigo-600 font-medium">
                     {r.count}
                   </td>
                   <td className="px-4 py-3 text-right text-gray-400 text-xs">

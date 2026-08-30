@@ -4,14 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_LABELS = ["", "Mon", "", "Wed", "", "Fri", ""];
-const LEGEND_COLORS = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"];
+const LEGEND_COLORS = ["#ebedf0", "#c7d2fe", "#818cf8", "#4f46e5", "#3730a3"];
 
 function getContributionFill(count: number): string {
   if (count === 0) return "#ebedf0";
-  if (count <= 2) return "#9be9a8";
-  if (count <= 5) return "#40c463";
-  if (count <= 8) return "#30a14e";
-  return "#216e39";
+  if (count <= 2) return "#c7d2fe";
+  if (count <= 5) return "#818cf8";
+  if (count <= 8) return "#4f46e5";
+  return "#3730a3";
 }
 
 interface ContributionGraphProps {

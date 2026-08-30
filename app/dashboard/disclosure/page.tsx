@@ -89,12 +89,12 @@ export default function DisclosurePage() {
               value={toInput(date)}
               max={toInput(getCollectionDateStr())}
               onChange={(e) => e.target.value && setDate(fromInput(e.target.value))}
-              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <button
               onClick={() => load(date)}
               disabled={loading}
-              className="px-3 py-1.5 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+              className="px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
             >
               {loading ? "불러오는 중" : "새로고침"}
             </button>
