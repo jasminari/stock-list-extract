@@ -93,24 +93,29 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
 ];
 
 /**
- * 신규 기능 안내 말풍선. 메뉴 위에 떠서 아래를 가리킨다.
- * 배지는 메뉴 안에 묻혀 잘 안 보여서, 바깥으로 띄우고 문구를 붙였다.
+ * 신규 기능 안내 말풍선. 배지는 메뉴 안에 묻혀 잘 안 보여서 말풍선으로 띄웠다.
+ * - "row"(데스크톱 사이드바): 해당 메뉴 줄 안 오른쪽에 붙여 왼쪽을 가리킨다.
+ *   위로 띄우면 바로 윗 메뉴 위에 겹쳐서 어느 메뉴를 가리키는지 헷갈린다.
+ * - "center"(모바일 하단 탭): 탭 위로 떠서 아래를 가리킨다.
  * pointer-events-none — 어떤 경우에도 탭을 가로막지 않는다.
  */
-function NewFeatureTip({ align }: { align: "center" | "right" }) {
+function NewFeatureTip({ align }: { align: "center" | "row" }) {
+  if (align === "row") {
+    return (
+      <span className="pointer-events-none absolute right-2 top-1/2 z-20 -translate-y-1/2">
+        <span className="animate-new-tip-x relative block whitespace-nowrap rounded-full bg-indigo-600 px-2 py-1 text-[10px] font-bold leading-none text-white shadow-lg shadow-indigo-600/30">
+          새로운 기능
+          <span className="absolute right-full top-1/2 -mr-1 -mt-1 h-2 w-2 rotate-45 bg-indigo-600" />
+        </span>
+      </span>
+    );
+  }
+
   return (
-    <span
-      className={`pointer-events-none absolute bottom-full z-20 mb-1.5 ${
-        align === "center" ? "left-1/2 -translate-x-1/2" : "right-1"
-      }`}
-    >
+    <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2">
       <span className="animate-new-tip relative block whitespace-nowrap rounded-full bg-indigo-600 px-2 py-1 text-[10px] font-bold leading-none text-white shadow-lg shadow-indigo-600/30">
         새로운 기능
-        <span
-          className={`absolute top-full -mt-1 h-2 w-2 rotate-45 bg-indigo-600 ${
-            align === "center" ? "left-1/2 -ml-1" : "right-3"
-          }`}
-        />
+        <span className="absolute left-1/2 top-full -ml-1 -mt-1 h-2 w-2 rotate-45 bg-indigo-600" />
       </span>
     </span>
   );
@@ -224,7 +229,7 @@ export default function DashboardLayout({
               >
                 {item.icon}
                 {item.label}
-                {newBadges.includes(item.id) && <NewFeatureTip align="right" />}
+                {newBadges.includes(item.id) && <NewFeatureTip align="row" />}
               </button>
             ))}
           </nav>

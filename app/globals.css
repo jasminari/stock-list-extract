@@ -124,9 +124,24 @@
   animation: new-tip-float 2.4s ease-in-out infinite;
 }
 
+/* 사이드바에서는 옆으로 붙으므로 가로로 살짝 흔든다 */
+@keyframes new-tip-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+.animate-new-tip-x {
+  animation: new-tip-nudge 2.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-ticker,
-  .animate-new-tip {
+  .animate-new-tip,
+  .animate-new-tip-x {
     animation: none;
   }
 }
