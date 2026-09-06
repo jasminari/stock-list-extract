@@ -2,6 +2,86 @@
 
 키움 OpenAPI가 **고정 IP에서만 토큰 발급·호출**을 허용하므로, 맥북 대신 Oracle Cloud Free Tier VM에서 `scripts/auto-extract.mjs`를 상시 스케줄링한다.
 
+## 2026-09-06 업데이트 — 일봉 차트 프록시 (배포 환경 IP 문제 해결)
+
+**문제**: 종목 클릭 시 뜨는 캔들차트(`/api/stock/chart/[code]`)가 로컬(등록된 IP)에서는 되는데
+배포 환경(Vercel)에서는 항상 `지정단말기 인증에 실패했습니다` 에러가 남. Vercel은 서버리스라
+요청마다 출발 IP가 바뀌어 키움 IP 등록 정책을 통과할 수 없음 — 등록할 고정 IP 자체가 없는 구조적 문제.
+
+**해결**: 고정 IP를 가진 이 Oracle VM에 상시 실행되는 작은 프록시 서버(`scripts/chart-proxy-server.mjs`)를
+띄우고, 배포된 웹앱은 키움을 직접 호출하지 않고 이 프록시를 호출하도록 변경 (`CHART_PROXY_URL` 설정 시).
+로컬 개발은 `CHART_PROXY_URL` 미설정 시 기존처럼 키움 직접 호출 유지.
+
+### VM에 배포하기
+
+- [ ] 프록시 시크릿 생성 (아무 강력한 랜덤 문자열)
+  ```bash
+  openssl rand -hex 32
+  ```
+- [ ] `/etc/stock-extract.env`에 추가 (끝에 개행 있는지 확인 후 append)
+  ```
+  CHART_PROXY_SECRET=<위에서 생성한 값>
+  CHART_PROXY_PORT=8787
+  ```
+- [ ] 스크립트 전달 (scp, 기존 배포 방식과 동일)
+  ```bash
+  scp -i /Users/jangssukmin/00_personal/Oracle_key/ssh-key-2026-04-19.key \
+    scripts/chart-proxy-server.mjs \
+    opc@134.185.116.216:~/stock-list-extract/scripts/chart-proxy-server.mjs
+  ```
+- [ ] systemd **service** 등록 (timer 아님 — 상시 떠 있어야 함) `/etc/systemd/system/chart-proxy.service`
+  ```ini
+  [Unit]
+  Description=Kiwoom daily chart proxy
+  After=network-online.target
+  Wants=network-online.target
+
+  [Service]
+  Type=simple
+  User=opc
+  WorkingDirectory=/home/opc/stock-list-extract
+  EnvironmentFile=/etc/stock-extract.env
+  Environment=TZ=Asia/Seoul
+  ExecStart=/usr/bin/node scripts/chart-proxy-server.mjs
+  Restart=on-failure
+  RestartSec=5
+
+  [Install]
+  WantedBy=multi-user.target
+  ```
+- [ ] 활성화
+  ```bash
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now chart-proxy.service
+  systemctl status chart-proxy.service
+  ```
+- [ ] OS 방화벽 개방 (Oracle Linux 9, firewalld)
+  ```bash
+  sudo firewall-cmd --permanent --add-port=8787/tcp
+  sudo firewall-cmd --reload
+  ```
+- [ ] **OCI 콘솔에서도 개방 필요**: Networking → Virtual Cloud Networks → 해당 VCN → Security Lists →
+      Ingress Rules 추가 (Source `0.0.0.0/0`, TCP, Destination Port `8787`). 이건 SSH로는 안 되고
+      콘솔에서 직접 해야 함.
+- [ ] 헬스체크 (로컬에서)
+  ```bash
+  curl http://134.185.116.216:8787/health
+  ```
+
+### Vercel에 연결하기
+
+- [ ] Vercel 프로젝트 → Settings → Environment Variables에 추가 (Production)
+  ```
+  CHART_PROXY_URL=http://134.185.116.216:8787
+  CHART_PROXY_SECRET=<VM에 넣은 것과 동일한 값>
+  ```
+- [ ] 재배포 (env 변수 추가 후 자동 재배포 안 되면 수동 트리거)
+- [ ] 배포된 사이트에서 종목명 클릭 → 차트 정상 로드되는지 확인
+
+**보안 메모**: 프록시가 공인 IP:포트로 열려 있으므로 시크릿 없이 호출하면 401. 그래도 포트 스캔에는
+노출되니, 여유 있을 때 IP 허용 목록(Vercel 아웃바운드 대역은 공개돼 있지 않아 어려움) 대신
+mTLS나 좀 더 강한 인증으로 교체 고려.
+
 ## 2026-08-30 업데이트 — 상승이유 매칭 개선 + 저녁 2차 패스 배포 완료
 
 - [x] `scripts/enrich-reasons.mjs` 갱신 전송 (2순위 「<종목명> 주가」 검색 + 시세 자동기사 배제). 백업: `enrich-reasons.mjs.bak.20260830003854`

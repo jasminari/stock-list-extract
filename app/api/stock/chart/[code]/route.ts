@@ -2,6 +2,31 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken, fetchDailyChart } from "@/lib/kiwoom";
 import { isDbConfigured } from "@/lib/db";
 import { getStockArticleDates } from "@/lib/storage-db";
+import type { DailyCandle } from "@/lib/types";
+
+/**
+ * 배포 환경(Vercel)은 서버리스라 출발 IP가 매번 바뀌어 키움의 "지정단말기"
+ * IP 등록을 통과하지 못한다. CHART_PROXY_URL이 설정돼 있으면 고정 IP를 가진
+ * Oracle VM의 프록시(scripts/chart-proxy-server.mjs)를 대신 호출하고,
+ * 없으면(로컬 개발 등록된 네트워크) 기존처럼 키움을 직접 호출한다.
+ */
+async function fetchCandles(code: string): Promise<DailyCandle[]> {
+  const proxyUrl = process.env.CHART_PROXY_URL;
+  if (proxyUrl) {
+    const res = await fetch(`${proxyUrl.replace(/\/$/, "")}/chart/${code}`, {
+      headers: { authorization: `Bearer ${process.env.CHART_PROXY_SECRET}` },
+      cache: "no-store",
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.error || "차트 프록시 조회 실패");
+    }
+    return data.candles;
+  }
+
+  const { token } = await getAccessToken();
+  return fetchDailyChart(token, code, 250);
+}
 
 /**
  * 종목 클릭 시 모달에 띄울 일봉.
@@ -21,8 +46,7 @@ export async function GET(
   }
 
   try {
-    const { token } = await getAccessToken();
-    const candles = await fetchDailyChart(token, code, 250);
+    const candles = await fetchCandles(code);
 
     // 상승이유 기사가 붙었던 날짜. 실패해도 차트 자체는 보여줘야 하므로 별도로 감싼다.
     let articleDates: string[] = [];
