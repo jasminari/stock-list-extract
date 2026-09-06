@@ -424,7 +424,7 @@ export default function PhoneMockup({
   scaleClass: string;
 }) {
   return (
-    <div className={`flex w-full justify-center ${heightClass}`}>
+    <div className={`flex w-full justify-center overflow-hidden ${heightClass}`}>
       <div className={`origin-top ${scaleClass}`}>
         <div className="w-[406px] rounded-[48px] bg-gray-900 p-2 shadow-[0_40px_70px_-30px_rgba(17,24,39,0.45)]">
           <div className="flex h-[844px] w-[390px] flex-col overflow-hidden rounded-[40px] bg-white">

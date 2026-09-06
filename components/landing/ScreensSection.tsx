@@ -36,7 +36,7 @@ export default function ScreensSection() {
 
         <div className="grid gap-12 md:grid-cols-3 md:gap-8">
           {SCREENS.map((s, i) => (
-            <Reveal key={s.title} delay={i * 0.1}>
+            <Reveal key={s.title} delay={i * 0.1} className="min-w-0">
               <div className="flex flex-col items-center gap-6">
                 <PhoneMockup
                   heightClass="h-[600px] md:h-[630px] lg:h-[750px]"

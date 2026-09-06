@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PwaInstallButton from "@/components/landing/PwaInstallButton";
 
 export default function ComingSoonNav() {
   return (
@@ -23,7 +24,8 @@ export default function ComingSoonNav() {
           </a>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <PwaInstallButton />
           <Link
             href="/login"
             className="hidden text-sm text-gray-600 transition-colors hover:text-gray-900 sm:block"
