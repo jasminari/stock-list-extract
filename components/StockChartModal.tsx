@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createChart, createSeriesMarkers, type IChartApi } from "lightweight-charts";
 import {
-  createChart,
-  createSeriesMarkers,
-  CandlestickSeries,
-  ColorType,
-  type IChartApi,
-} from "lightweight-charts";
-import type { DailyCandle } from "@/lib/types";
+  dailyChartOptions,
+  addCandleSeries,
+  addVolumeSeries,
+  useDailyChartData,
+} from "@/lib/dailyChart";
 
 interface StockChartModalProps {
   code: string;
@@ -20,97 +19,30 @@ interface StockChartModalProps {
 export default function StockChartModal({ code, name, onClose }: StockChartModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const [candles, setCandles] = useState<DailyCandle[] | null>(null);
-  const [appearances, setAppearances] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // 일봉 데이터 조회
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setCandles(null);
-    setAppearances([]);
-
-    fetch(`/api/stock/chart/${code}`)
-      .then(async (res) => {
-        const data = await res.json();
-        if (cancelled) return;
-        if (!res.ok || data.error) {
-          setError(data.error || "차트를 불러오지 못했습니다");
-        } else {
-          setCandles(data.candles || []);
-          setAppearances(data.appearances || []);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setError("차트를 불러오지 못했습니다");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [code]);
+  const { candles, articleDates, error, loading } = useDailyChartData(code);
 
   // 캔들차트 렌더링
   useEffect(() => {
     if (!candles || candles.length === 0 || !containerRef.current) return;
 
-    const priceFormatter = (price: number) => Math.round(price).toLocaleString("ko-KR");
-
-    const chart = createChart(containerRef.current, {
-      layout: {
-        background: { type: ColorType.Solid, color: "#ffffff" },
-        textColor: "#374151",
-        fontSize: 11,
-      },
-      grid: {
-        vertLines: { color: "#f3f4f6" },
-        horzLines: { color: "#f3f4f6" },
-      },
-      width: containerRef.current.clientWidth,
-      height: containerRef.current.clientHeight,
-      timeScale: { borderColor: "#e5e7eb" },
-      rightPriceScale: { borderColor: "#e5e7eb", minimumWidth: 68 },
-      localization: {
-        priceFormatter,
-        locale: "ko-KR",
-      },
-    });
+    const chart = createChart(
+      containerRef.current,
+      dailyChartOptions(containerRef.current.clientWidth, containerRef.current.clientHeight)
+    );
     chartRef.current = chart;
 
-    const series = chart.addSeries(CandlestickSeries, {
-      upColor: "#dc2626",
-      downColor: "#2563eb",
-      borderVisible: false,
-      wickUpColor: "#dc2626",
-      wickDownColor: "#2563eb",
-      priceFormat: { type: "custom", formatter: priceFormatter, minMove: 1 },
-    });
+    const series = addCandleSeries(chart, candles);
+    addVolumeSeries(chart, candles);
 
-    series.setData(
-      candles.map((c) => ({
-        time: c.date,
-        open: c.open,
-        high: c.high,
-        low: c.low,
-        close: c.close,
-      }))
-    );
-
-    // 시장 공부하기 리스트에 등장했던 날짜를 캔들 아래 점으로 표시
+    // 상승이유 기사가 붙었던 날짜만 캔들 위에 점으로 표시 (단순 등장은 너무 잦아 생략)
     const candleDates = new Set(candles.map((c) => c.date));
-    const markerDates = appearances.filter((d) => candleDates.has(d));
+    const markerDates = articleDates.filter((d) => candleDates.has(d));
     if (markerDates.length > 0) {
       createSeriesMarkers(
         series,
         markerDates.map((d) => ({
           time: d,
-          position: "belowBar",
+          position: "aboveBar",
           color: "#f59e0b",
           shape: "circle",
         }))
@@ -140,7 +72,7 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
       chart.remove();
       chartRef.current = null;
     };
-  }, [candles, appearances]);
+  }, [candles, articleDates]);
 
   // 모달 열려있는 동안 배경 스크롤 잠금
   useEffect(() => {
@@ -206,12 +138,12 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
             <div
               ref={containerRef}
               className="w-full"
-              style={{ height: candles && candles.length > 0 ? "min(360px, 45dvh)" : 0 }}
+              style={{ height: candles && candles.length > 0 ? "min(420px, 52dvh)" : 0 }}
             />
-            {appearances.length > 0 && (
+            {articleDates.length > 0 && (
               <p className="mt-2 flex items-center gap-1.5 text-[11px] text-gray-400">
                 <span className="inline-block w-2 h-2 rounded-full bg-amber-500" />
-                시장 공부하기 리스트에 등장했던 날
+                상승이유 기사가 있던 날
               </p>
             )}
           </div>

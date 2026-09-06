@@ -2,14 +2,13 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createChart, type IChartApi, type ISeriesApi } from "lightweight-charts";
 import {
-  createChart,
-  CandlestickSeries,
-  ColorType,
-  type IChartApi,
-  type ISeriesApi,
-} from "lightweight-charts";
-import type { DailyCandle } from "@/lib/types";
+  dailyChartOptions,
+  addCandleSeries,
+  addVolumeSeries,
+  useDailyChartData,
+} from "@/lib/dailyChart";
 
 interface WatchlistChartModalProps {
   code: string;
@@ -38,9 +37,7 @@ export default function WatchlistChartModal({
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
-  const [candles, setCandles] = useState<DailyCandle[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { candles, error, loading } = useDailyChartData(code);
 
   // 가격 기준값(원본) — 픽셀 좌표는 이 값에서 매번 다시 계산한다
   const [range, setRange] = useState<{ low: number; high: number } | null>(
@@ -58,34 +55,6 @@ export default function WatchlistChartModal({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setCandles(null);
-
-    fetch(`/api/stock/chart/${code}`)
-      .then(async (res) => {
-        const data = await res.json();
-        if (cancelled) return;
-        if (!res.ok || data.error) {
-          setError(data.error || "차트를 불러오지 못했습니다");
-        } else {
-          setCandles(data.candles || []);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setError("차트를 불러오지 못했습니다");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [code]);
-
   const recomputePixels = useCallback(() => {
     const series = seriesRef.current;
     const r = rangeRef.current;
@@ -99,45 +68,26 @@ export default function WatchlistChartModal({
   useEffect(() => {
     if (!candles || candles.length === 0 || !containerRef.current) return;
 
-    const priceFormatter = (price: number) => Math.round(price).toLocaleString("ko-KR");
-
-    const chart = createChart(containerRef.current, {
-      layout: {
-        background: { type: ColorType.Solid, color: "#ffffff" },
-        textColor: "#374151",
-        fontSize: 11,
-      },
-      grid: {
-        vertLines: { color: "#f3f4f6" },
-        horzLines: { color: "#f3f4f6" },
-      },
-      width: containerRef.current.clientWidth,
-      height: containerRef.current.clientHeight,
-      timeScale: { borderColor: "#e5e7eb" },
-      rightPriceScale: { borderColor: "#e5e7eb", minimumWidth: 68 },
-      localization: { priceFormatter, locale: "ko-KR" },
-    });
+    const chart = createChart(
+      containerRef.current,
+      dailyChartOptions(containerRef.current.clientWidth, containerRef.current.clientHeight)
+    );
     chartRef.current = chart;
 
-    const series = chart.addSeries(CandlestickSeries, {
-      upColor: "#dc2626",
-      downColor: "#2563eb",
-      borderVisible: false,
-      wickUpColor: "#dc2626",
-      wickDownColor: "#2563eb",
-      priceFormat: { type: "custom", formatter: priceFormatter, minMove: 1 },
-    });
+    const series = addCandleSeries(chart, candles);
     seriesRef.current = series;
+    addVolumeSeries(chart, candles);
 
-    series.setData(
-      candles.map((c) => ({ time: c.date, open: c.open, high: c.high, low: c.low, close: c.close }))
-    );
     chart.timeScale().fitContent();
 
     // 초기 범위가 없으면 최근 종가 기준 ±5%로 시작한다
     if (!rangeRef.current) {
       const lastClose = candles[candles.length - 1].close;
       setRange({ low: Math.round(lastClose * 0.95), high: Math.round(lastClose * 1.05) });
+    } else {
+      // 이미 범위가 있는 경우(기존 알림 수정) range 값 자체는 안 바뀌므로
+      // range 변경에만 반응하는 recomputePixels가 트리거되지 않는다 — 여기서 직접 호출
+      recomputePixels();
     }
 
     const handleResize = () => {
@@ -303,7 +253,7 @@ export default function WatchlistChartModal({
                 </p>
                 <div
                   className="relative w-full select-none"
-                  style={{ height: "min(360px, 45dvh)" }}
+                  style={{ height: "min(420px, 52dvh)" }}
                 >
                   <div ref={containerRef} className="absolute inset-0" />
 

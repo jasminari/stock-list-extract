@@ -34,7 +34,10 @@ export interface DailyCandle {
   high: number;
   low: number;
   close: number;
+  /** 거래량(주) */
   volume: number;
+  /** 거래대금(원) */
+  amount: number;
 }
 
 // === 가공된 종목 데이터 ===

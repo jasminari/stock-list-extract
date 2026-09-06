@@ -192,6 +192,7 @@ export async function fetchDailyChart(
         low: Number(String(row.low_pric || "0").replace(/^[+-]/, "")),
         close: Number(String(row.cur_prc || "0").replace(/^[+-]/, "")),
         volume: Number(String(row.trde_qty || "0").replace(/^[+-]/, "")),
+        amount: Number(String(row.trde_prica || "0").replace(/^[+-]/, "")),
       });
     }
 
