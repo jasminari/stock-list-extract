@@ -26,6 +26,17 @@ export interface StockResult {
   low: string;
 }
 
+/** 일봉 캔들 한 개 (키움 ka10081) */
+export interface DailyCandle {
+  /** YYYY-MM-DD */
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
 // === 가공된 종목 데이터 ===
 
 export interface ProcessedStock {

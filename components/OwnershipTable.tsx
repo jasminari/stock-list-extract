@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { OwnershipRow } from "@/lib/types";
+import WatchlistStar from "./WatchlistStar";
 
 /** YYYYMMDD → "25-02-13" (표가 좁아 두 자리 연도로 줄인다) */
 function shortDate(s: string) {
@@ -165,7 +166,15 @@ function leadRow(group: OwnershipRow[], col: SortCol, dir: Dir): OwnershipRow {
   return group.reduce((best, r) => (compareBy(r, best, col, dir) < 0 ? r : best));
 }
 
-export default function OwnershipTable({ rows }: { rows: OwnershipRow[] }) {
+export default function OwnershipTable({
+  rows,
+  watchlistCodes,
+  onToggleWatchlist,
+}: {
+  rows: OwnershipRow[];
+  watchlistCodes?: Set<string>;
+  onToggleWatchlist?: (code: string, name: string) => void;
+}) {
   // 기본은 총액 큰 순 — 그날 무엇이 컸는지가 이 표를 여는 이유다.
   // null로 두면 원본 순서(공시 접수 순)이고, 정렬 칩의 ✕로 그 상태로 돌아간다.
   const [sort, setSort] = useState<{ col: SortCol; dir: Dir } | null>({
@@ -321,15 +330,23 @@ export default function OwnershipTable({ rows }: { rows: OwnershipRow[] }) {
                   className={isSell ? "bg-rose-50" : "bg-white"}
                 >
                   <td className={`${td} max-w-[4.5rem] md:max-w-none truncate`} title={r.corpName}>
-                    <a
-                      href={dartUrl(r.rceptNo)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-900 hover:text-indigo-700 hover:underline"
-                      title="DART 원문 보기"
-                    >
-                      {r.corpName}
-                    </a>
+                    <div className="flex items-center gap-1">
+                      {onToggleWatchlist && (
+                        <WatchlistStar
+                          active={!!watchlistCodes?.has(r.stockCode)}
+                          onClick={() => onToggleWatchlist(r.stockCode, r.corpName)}
+                        />
+                      )}
+                      <a
+                        href={dartUrl(r.rceptNo)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-900 hover:text-indigo-700 hover:underline truncate"
+                        title="DART 원문 보기"
+                      >
+                        {r.corpName}
+                      </a>
+                    </div>
                   </td>
                   <td className={`${td} text-gray-600 max-w-[5rem] md:max-w-[13rem] truncate`} title={r.subject}>
                     {r.subject}

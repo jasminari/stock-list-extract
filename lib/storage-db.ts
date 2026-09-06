@@ -10,8 +10,28 @@ import {
   userSubscriptions,
   quizAttempts,
   feedbacks,
+  watchlistItems,
+  notifications,
 } from "./db/schema";
 import type { StockResult, RegisteredCondition } from "./types";
+
+/**
+ * 특정 종목에 상승이유 기사가 붙었던 날짜들 (YYYYMMDD, 오름차순).
+ * 단순히 리스트에 등장만 한 날은 너무 잦아 의미가 없어서, sourceUrl이 있는 날만 뽑는다.
+ */
+export async function getStockArticleDates(code: string): Promise<string[]> {
+  const db = getDb();
+
+  const rows = await db
+    .selectDistinct({ date: searchResults.date })
+    .from(stockEntries)
+    .innerJoin(searchResults, eq(stockEntries.searchResultId, searchResults.id))
+    .innerJoin(stockAnnotations, eq(stockAnnotations.stockEntryId, stockEntries.id))
+    .where(and(eq(stockEntries.code, code), ne(stockAnnotations.sourceUrl, "")))
+    .orderBy(searchResults.date);
+
+  return rows.map((r) => r.date);
+}
 
 export async function saveSearchResult(
   date: string,
@@ -699,4 +719,168 @@ export async function updateFeedbackStatus(
 ): Promise<void> {
   const db = getDb();
   await db.update(feedbacks).set({ status }).where(eq(feedbacks.id, id));
+}
+
+// === 관심종목 ===
+
+export interface WatchlistItem {
+  id: number;
+  code: string;
+  name: string;
+  alertLow: number | null;
+  alertHigh: number | null;
+  alertActive: boolean;
+  alertTriggeredAt: string | null;
+  createdAt: string;
+}
+
+export async function listWatchlist(userId: number): Promise<WatchlistItem[]> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(watchlistItems)
+    .where(eq(watchlistItems.userId, userId))
+    .orderBy(desc(watchlistItems.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    code: r.code,
+    name: r.name,
+    alertLow: r.alertLow,
+    alertHigh: r.alertHigh,
+    alertActive: r.alertActive,
+    alertTriggeredAt: r.alertTriggeredAt?.toISOString() ?? null,
+    createdAt: r.createdAt?.toISOString() ?? "",
+  }));
+}
+
+export async function addToWatchlist(
+  userId: number,
+  code: string,
+  name: string
+): Promise<void> {
+  const db = getDb();
+  await db
+    .insert(watchlistItems)
+    .values({ userId, code, name })
+    .onConflictDoNothing();
+}
+
+export async function removeFromWatchlist(
+  userId: number,
+  code: string
+): Promise<void> {
+  const db = getDb();
+  await db
+    .delete(watchlistItems)
+    .where(and(eq(watchlistItems.userId, userId), eq(watchlistItems.code, code)));
+}
+
+export async function setPriceAlert(
+  userId: number,
+  code: string,
+  low: number,
+  high: number
+): Promise<void> {
+  const db = getDb();
+  await db
+    .update(watchlistItems)
+    .set({ alertLow: low, alertHigh: high, alertActive: true, alertTriggeredAt: null })
+    .where(and(eq(watchlistItems.userId, userId), eq(watchlistItems.code, code)));
+}
+
+export async function clearPriceAlert(
+  userId: number,
+  code: string
+): Promise<void> {
+  const db = getDb();
+  await db
+    .update(watchlistItems)
+    .set({ alertLow: null, alertHigh: null, alertActive: false, alertTriggeredAt: null })
+    .where(and(eq(watchlistItems.userId, userId), eq(watchlistItems.code, code)));
+}
+
+export interface ActivePriceAlert {
+  id: number;
+  userId: number;
+  code: string;
+  name: string;
+  alertLow: number;
+  alertHigh: number;
+}
+
+/** 크론에서 매일 장마감 후 검사할 대상 전체(전 사용자) */
+export async function listActivePriceAlerts(): Promise<ActivePriceAlert[]> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(watchlistItems)
+    .where(eq(watchlistItems.alertActive, true));
+
+  return rows
+    .filter((r) => r.alertLow !== null && r.alertHigh !== null)
+    .map((r) => ({
+      id: r.id,
+      userId: r.userId,
+      code: r.code,
+      name: r.name,
+      alertLow: r.alertLow!,
+      alertHigh: r.alertHigh!,
+    }));
+}
+
+/** 알림을 보낸 뒤 한 번만 알리고 끈다 */
+export async function deactivatePriceAlert(id: number): Promise<void> {
+  const db = getDb();
+  await db
+    .update(watchlistItems)
+    .set({ alertActive: false, alertTriggeredAt: new Date() })
+    .where(eq(watchlistItems.id, id));
+}
+
+// === 알림 ===
+
+export interface NotificationRow {
+  id: number;
+  title: string;
+  body: string;
+  link: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export async function createNotification(
+  userId: number,
+  title: string,
+  body: string,
+  link = ""
+): Promise<void> {
+  const db = getDb();
+  await db.insert(notifications).values({ userId, title, body, link });
+}
+
+export async function listNotifications(userId: number): Promise<NotificationRow[]> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.userId, userId))
+    .orderBy(desc(notifications.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    body: r.body ?? "",
+    link: r.link ?? "",
+    read: r.read,
+    createdAt: r.createdAt?.toISOString() ?? "",
+  }));
+}
+
+export async function markAllNotificationsRead(userId: number): Promise<void> {
+  const db = getDb();
+  await db
+    .update(notifications)
+    .set({ read: true })
+    .where(eq(notifications.userId, userId));
 }

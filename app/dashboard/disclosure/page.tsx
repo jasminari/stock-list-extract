@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import OwnershipTable from "@/components/OwnershipTable";
 import { formatDateKorean, getCollectionDateStr } from "@/lib/date";
 import type { OwnershipRow } from "@/lib/types";
+import { useWatchlist } from "@/lib/useWatchlist";
 
 interface Failure {
   rceptNo: string;
@@ -45,6 +46,7 @@ export default function DisclosurePage() {
   const [failures, setFailures] = useState<Failure[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { codes: watchlistCodes, toggle: toggleWatchlist } = useWatchlist();
 
   const load = useCallback(async (target: string) => {
     setLoading(true);
@@ -140,7 +142,11 @@ export default function DisclosurePage() {
             공시 원문을 하나씩 읽는 중입니다…
           </div>
         ) : (
-          <OwnershipTable rows={rows} />
+          <OwnershipTable
+            rows={rows}
+            watchlistCodes={watchlistCodes}
+            onToggleWatchlist={toggleWatchlist}
+          />
         )}
       </div>
     </div>

@@ -15,6 +15,13 @@
       "when": 1785039325941,
       "tag": "0001_add_annotation_source",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788666300183,
+      "tag": "0005_add_watchlist_and_notifications",
+      "breakpoints": true
     }
   ]
 }

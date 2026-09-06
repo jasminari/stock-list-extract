@@ -1,7 +1,7 @@
 import WebSocket from "ws";
-import type { KiwoomToken, Condition, StockResult } from "./types";
+import type { KiwoomToken, Condition, StockResult, DailyCandle } from "./types";
 
-export type { KiwoomToken, Condition, StockResult };
+export type { KiwoomToken, Condition, StockResult, DailyCandle };
 
 const HTTP_BASE = "https://api.kiwoom.com";
 const WS_URL = "wss://api.kiwoom.com:10000/api/dostk/websocket";
@@ -142,6 +142,68 @@ export async function fetchListCountMap(
 
   listCountCache = { date: today, map };
   return map;
+}
+
+/**
+ * 주식일봉차트조회요청(ka10081)으로 최근 N영업일 일봉(OHLCV)을 가져온다.
+ *
+ * 응답은 최신순으로 내려오며 연속조회로 과거 데이터를 더 채울 수 있다.
+ * days만큼 모이면 조기 종료하고, 날짜 오름차순으로 정렬해 반환한다.
+ */
+export async function fetchDailyChart(
+  token: string,
+  code: string,
+  days = 90
+): Promise<DailyCandle[]> {
+  const candles: DailyCandle[] = [];
+  let contYn = "N";
+  let nextKey = "";
+  const maxPages = 10;
+
+  for (let page = 0; page < maxPages && candles.length < days; page++) {
+    const res = await fetch(`${HTTP_BASE}/api/dostk/chart`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json;charset=UTF-8",
+        "api-id": "ka10081",
+        authorization: `Bearer ${token}`,
+        "cont-yn": contYn,
+        "next-key": nextKey,
+      },
+      body: JSON.stringify({
+        stk_cd: code,
+        base_dt: kstDateKey(),
+        upd_stkpc_tp: "1", // 수정주가 반영
+      }),
+    });
+
+    const data = await res.json();
+    if (data.return_code !== 0) {
+      throw new Error(`일봉 조회 실패: ${data.return_msg}`);
+    }
+
+    for (const row of data.stk_dt_pole_chart_qry || []) {
+      const dt = String(row.dt || "");
+      if (!/^\d{8}$/.test(dt)) continue;
+      candles.push({
+        date: `${dt.slice(0, 4)}-${dt.slice(4, 6)}-${dt.slice(6, 8)}`,
+        open: Number(String(row.open_pric || "0").replace(/^[+-]/, "")),
+        high: Number(String(row.high_pric || "0").replace(/^[+-]/, "")),
+        low: Number(String(row.low_pric || "0").replace(/^[+-]/, "")),
+        close: Number(String(row.cur_prc || "0").replace(/^[+-]/, "")),
+        volume: Number(String(row.trde_qty || "0").replace(/^[+-]/, "")),
+      });
+    }
+
+    contYn = res.headers.get("cont-yn") || "N";
+    nextKey = res.headers.get("next-key") || "";
+    if (contYn !== "Y") break;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+
+  // 최신순으로 오므로 오름차순 정렬 후 최근 days개만 남긴다
+  candles.sort((a, b) => a.date.localeCompare(b.date));
+  return candles.slice(-days);
 }
 
 // WebSocket 연결 + 로그인 (LOGIN 패킷 전송 후 응답 확인)

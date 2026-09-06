@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { getTodayStr } from "@/lib/date";
 import FeedbackButton from "@/components/FeedbackButton";
 
@@ -12,7 +13,7 @@ import FeedbackButton from "@/components/FeedbackButton";
  */
 const NEW_BADGE_UNTIL = "20260930";
 
-type MenuId = "home" | "history" | "quiz" | "disclosure" | "data" | "settings" | "admin";
+type MenuId = "home" | "history" | "quiz" | "disclosure" | "data" | "watchlist" | "settings" | "admin";
 
 const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNode; adminOnly?: boolean; isNew?: boolean }[] = [
   {
@@ -69,13 +70,13 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
     ),
   },
   {
-    id: "settings",
-    label: "설정",
-    href: "/dashboard/settings",
+    id: "watchlist",
+    label: "관심종목",
+    href: "/dashboard/watchlist",
+    isNew: true,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
       </svg>
     ),
   },
@@ -126,6 +127,7 @@ function getActiveMenu(pathname: string): MenuId {
   if (pathname.startsWith("/dashboard/quiz")) return "quiz";
   if (pathname.startsWith("/dashboard/disclosure")) return "disclosure";
   if (pathname.startsWith("/dashboard/data")) return "data";
+  if (pathname.startsWith("/dashboard/watchlist")) return "watchlist";
   if (pathname.startsWith("/dashboard/settings")) return "settings";
   if (pathname.startsWith("/dashboard/admin")) return "admin";
   return "home";
@@ -145,6 +147,31 @@ export default function DashboardLayout({
   // 날짜 판정은 마운트 후에 한다 — 서버와 브라우저의 시각이 갈리는 순간에도 hydration이 어긋나지 않는다
   const [newBadges, setNewBadges] = useState<MenuId[]>([]);
 
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setProfileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    function onClickOutside(e: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setProfileOpen(false);
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClickOutside);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [profileOpen]);
+
   useEffect(() => {
     if (getTodayStr() > NEW_BADGE_UNTIL) return;
     setNewBadges(
@@ -160,6 +187,22 @@ export default function DashboardLayout({
       })
       .catch(() => {});
   }, []);
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    fetch("/api/notifications")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) {
+          setUnreadCount(
+            (data.notifications ?? []).filter((n: { read: boolean }) => !n.read).length
+          );
+        }
+      })
+      .catch(() => {});
+  }, [session?.user]);
 
   const userName = session?.user?.name ?? session?.user?.email ?? "사용자";
   const userInitial = userName.charAt(0).toUpperCase();
@@ -205,8 +248,69 @@ export default function DashboardLayout({
               >
                 로그아웃
               </button>
-              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-medium">
-                {userInitial}
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  onClick={() => setProfileOpen((v) => !v)}
+                  aria-label="프로필 메뉴"
+                  aria-expanded={profileOpen}
+                  className="relative w-8 h-8 md:w-9 md:h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-medium hover:bg-indigo-600 transition-colors"
+                >
+                  {userInitial}
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white" />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {profileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scaleY: 0.85, y: -8 }}
+                      animate={{ opacity: 1, scaleY: 1, y: 0 }}
+                      exit={{ opacity: 0, scaleY: 0.85, y: -8 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      style={{ transformOrigin: "top right" }}
+                      className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden"
+                    >
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-900 truncate">{userName}</p>
+                        {session?.user?.email && (
+                          <p className="text-xs text-gray-400 truncate mt-0.5">{session.user.email}</p>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setProfileOpen(false);
+                          router.push("/dashboard/notifications");
+                        }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        알림
+                        {unreadCount > 0 && (
+                          <span className="ml-auto px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white bg-red-500 rounded-full">
+                            {unreadCount}
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setProfileOpen(false);
+                          router.push("/dashboard/settings");
+                        }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        설정
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           )}

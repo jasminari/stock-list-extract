@@ -139,3 +139,39 @@ export const feedbacks = pgTable("feedbacks", {
   status: varchar("status", { length: 10 }).default("new").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+/**
+ * 관심종목. 가격 알림 범위는 종목당 하나만 유지한다(다시 그리면 덮어씀) —
+ * 실시간 시세가 없어 매일 장마감 배치 때 종가로만 검사하므로,
+ * 여러 범위를 동시에 감시할 근거가 약하다.
+ */
+export const watchlistItems = pgTable(
+  "watchlist_items",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    code: varchar("code", { length: 10 }).notNull(),
+    name: varchar("name", { length: 100 }).notNull(),
+    alertLow: integer("alert_low"),
+    alertHigh: integer("alert_high"),
+    alertActive: boolean("alert_active").default(false).notNull(),
+    alertTriggeredAt: timestamp("alert_triggered_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.code)]
+);
+
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  body: text("body").default(""),
+  /** 알림을 눌렀을 때 이동할 경로. 예: 관심종목 상세 */
+  link: varchar("link", { length: 300 }).default(""),
+  read: boolean("read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});

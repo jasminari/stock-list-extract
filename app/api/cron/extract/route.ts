@@ -4,6 +4,7 @@ import { saveResultAsExcel, saveResultAsJson } from "@/lib/storage";
 import { isDbConfigured } from "@/lib/db";
 import { getCollectionDateStr } from "@/lib/date";
 import { saveSearchResult, listRegisteredConditions } from "@/lib/storage-db";
+import { checkPriceAlerts } from "@/lib/price-alerts";
 
 export const maxDuration = 60;
 
@@ -27,15 +28,6 @@ export async function GET(req: NextRequest) {
     const dateStr = getCollectionDateStr();
 
     const registered = await listRegisteredConditions();
-
-    if (registered.length === 0) {
-      return NextResponse.json({
-        message: "등록된 조건검색식 없음",
-        date: dateStr,
-        results,
-      });
-    }
-
     const { token } = await getAccessToken();
 
     for (const cond of registered) {
@@ -64,6 +56,13 @@ export async function GET(req: NextRequest) {
         const msg = e instanceof Error ? e.message : "알 수 없는 오류";
         results.push({ condition: cond.name, count: 0, error: msg });
       }
+    }
+
+    // 등록된 조건검색식이 없어도 관심종목 가격 알림은 검사한다
+    try {
+      await checkPriceAlerts(token);
+    } catch (e) {
+      console.error("가격 알림 체크 실패:", e);
     }
 
     return NextResponse.json({

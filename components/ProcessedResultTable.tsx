@@ -4,6 +4,8 @@ import { Fragment, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import type { ProcessedStock } from "@/lib/types";
 import ArticleModal from "./ArticleModal";
+import StockChartModal from "./StockChartModal";
+import WatchlistStar from "./WatchlistStar";
 
 /** 정렬 가능한 숫자 컬럼 */
 type SortKey =
@@ -22,6 +24,8 @@ interface ProcessedResultTableProps {
     field: "keyword" | "reason",
     value: string
   ) => void;
+  watchlistCodes?: Set<string>;
+  onToggleWatchlist?: (code: string, name: string) => void;
 }
 
 function EditableCell({
@@ -142,10 +146,16 @@ export default function ProcessedResultTable({
   conditionName,
   date,
   onAnnotationUpdate,
+  watchlistCodes,
+  onToggleWatchlist,
 }: ProcessedResultTableProps) {
   const [viewArticle, setViewArticle] = useState<{
     url: string;
     title: string;
+  } | null>(null);
+  const [chartTarget, setChartTarget] = useState<{
+    code: string;
+    name: string;
   } | null>(null);
   // null = 수집된 원본 순서 유지
   const [sort, setSort] = useState<SortState | null>(null);
@@ -245,8 +255,22 @@ export default function ProcessedResultTable({
               return (
                 <Fragment key={s.index}>
                 <tr className="hover:bg-gray-50 transition-colors">
-                  <td className="px-2 md:px-3 py-1.5 md:py-3 font-medium text-gray-900 whitespace-nowrap">
-                    {s.name}
+                  <td className="px-2 md:px-3 py-1.5 md:py-3 font-medium whitespace-nowrap">
+                    <div className="flex items-center gap-1.5">
+                      {onToggleWatchlist && (
+                        <WatchlistStar
+                          active={!!watchlistCodes?.has(s.code)}
+                          onClick={() => onToggleWatchlist(s.code, s.name)}
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setChartTarget({ code: s.code, name: s.name })}
+                        className="text-gray-900 hover:text-indigo-600 hover:underline"
+                      >
+                        {s.name}
+                      </button>
+                    </div>
                   </td>
                   <td className="px-2 md:px-3 py-1.5 md:py-3 hidden sm:table-cell">
                     <EditableCell
@@ -358,6 +382,13 @@ export default function ProcessedResultTable({
           url={viewArticle.url}
           fallbackTitle={viewArticle.title}
           onClose={() => setViewArticle(null)}
+        />
+      )}
+      {chartTarget && (
+        <StockChartModal
+          code={chartTarget.code}
+          name={chartTarget.name}
+          onClose={() => setChartTarget(null)}
         />
       )}
     </motion.div>

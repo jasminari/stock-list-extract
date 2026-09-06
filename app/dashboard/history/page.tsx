@@ -7,6 +7,7 @@ import { toDateStr, parseDate } from "@/lib/date";
 import ProcessedResultTable from "@/components/ProcessedResultTable";
 import Calendar from "@/components/Calendar";
 import type { ResultMeta, ProcessedStock } from "@/lib/types";
+import { useWatchlist } from "@/lib/useWatchlist";
 
 export default function HistoryPage() {
   return (
@@ -30,6 +31,7 @@ function HistoryContent() {
   const [selectedResult, setSelectedResult] = useState<ResultMeta | null>(null);
   const [stocks, setStocks] = useState<ProcessedStock[]>([]);
   const [stocksLoading, setStocksLoading] = useState(false);
+  const { codes: watchlistCodes, toggle: toggleWatchlist } = useWatchlist();
 
   const now = useMemo(() => new Date(), []);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -222,6 +224,8 @@ function HistoryContent() {
             conditionName={selectedResult.conditionName}
             date={selectedResult.date}
             onAnnotationUpdate={handleAnnotationUpdate}
+            watchlistCodes={watchlistCodes}
+            onToggleWatchlist={toggleWatchlist}
           />
         ) : (
           <div className="flex flex-col items-center justify-center py-16">
