@@ -12,65 +12,39 @@
 띄우고, 배포된 웹앱은 키움을 직접 호출하지 않고 이 프록시를 호출하도록 변경 (`CHART_PROXY_URL` 설정 시).
 로컬 개발은 `CHART_PROXY_URL` 미설정 시 기존처럼 키움 직접 호출 유지.
 
-### VM에 배포하기
+### VM에 배포하기 — **2026-09-13 완료**
 
-- [ ] 프록시 시크릿 생성 (아무 강력한 랜덤 문자열)
-  ```bash
-  openssl rand -hex 32
-  ```
-- [ ] `/etc/stock-extract.env`에 추가 (끝에 개행 있는지 확인 후 append)
-  ```
-  CHART_PROXY_SECRET=<위에서 생성한 값>
-  CHART_PROXY_PORT=8787
-  ```
-- [ ] 스크립트 전달 (scp, 기존 배포 방식과 동일)
-  ```bash
-  scp -i /Users/jangssukmin/00_personal/Oracle_key/ssh-key-2026-04-19.key \
-    scripts/chart-proxy-server.mjs \
-    opc@134.185.116.216:~/stock-list-extract/scripts/chart-proxy-server.mjs
-  ```
-- [ ] systemd **service** 등록 (timer 아님 — 상시 떠 있어야 함) `/etc/systemd/system/chart-proxy.service`
+> 2026-09-06 커밋은 코드만 올라갔고 VM 배포는 실행되지 않은 상태였다. 그래서 배포 사이트는
+> 계속 키움을 직접 호출했고 `8050:지정단말기 인증에 실패했습니다`가 그대로 났다. 아래는 실제 수행 결과.
+
+- [x] 프록시 시크릿 생성 (`openssl rand -hex 32`) → `/etc/stock-extract.env`에 `CHART_PROXY_SECRET` / `CHART_PROXY_PORT=8787` append (백업: `/etc/stock-extract.env.bak.<ts>`)
+- [x] `scripts/chart-proxy-server.mjs` scp 전달
+- [x] systemd **service** 등록 `/etc/systemd/system/chart-proxy.service` (timer 아님 — 상시 기동)
+  - **⚠️ 문서의 `ExecStart=/usr/bin/node`는 틀렸다.** 이 VM에 `/usr/bin/node`는 없고
+    nvm에서 복사한 `/usr/local/bin/node`만 있다. 그대로 썼으면 유닛이 조용히 실패했을 것.
   ```ini
-  [Unit]
-  Description=Kiwoom daily chart proxy
-  After=network-online.target
-  Wants=network-online.target
-
-  [Service]
-  Type=simple
-  User=opc
-  WorkingDirectory=/home/opc/stock-list-extract
-  EnvironmentFile=/etc/stock-extract.env
-  Environment=TZ=Asia/Seoul
-  ExecStart=/usr/bin/node scripts/chart-proxy-server.mjs
-  Restart=on-failure
-  RestartSec=5
-
-  [Install]
-  WantedBy=multi-user.target
+  ExecStart=/usr/local/bin/node scripts/chart-proxy-server.mjs
   ```
-- [ ] 활성화
+- [x] `sudo systemctl enable --now chart-proxy.service` → `active`, 8787 LISTEN 확인
+- [x] OS 방화벽 개방: `sudo firewall-cmd --permanent --add-port=8787/tcp && sudo firewall-cmd --reload`
+- [x] VM 내부 검증: `/health` → `{"ok":true}`, `/chart/329180` → 일봉 정상 반환
+- [x] **OCI 콘솔에서 Ingress 규칙 추가** (SSH로는 불가 — 콘솔 전용 작업)
+      Networking → Virtual Cloud Networks → 해당 VCN → Security Lists → Ingress Rules
+      Stateless `No` / Source `0.0.0.0/0` / TCP / Destination Port `8787`
+  - **⚠️ OS 방화벽(firewalld)과 OCI Security List는 별개의 두 관문이다.** 둘 다 열어야 한다.
+    firewalld만 열고 끝내면 외부에서 계속 timeout이 난다 (refused가 아니라 timeout인 게 단서).
+  - 규칙 추가 전 포트 스캔 결과 **22번만 허용** 상태였다 → 이미 열린 80/443으로 우회하는 방법은 없었음.
+- [x] 외부 검증 (맥북에서)
   ```bash
-  sudo systemctl daemon-reload
-  sudo systemctl enable --now chart-proxy.service
-  systemctl status chart-proxy.service
-  ```
-- [ ] OS 방화벽 개방 (Oracle Linux 9, firewalld)
-  ```bash
-  sudo firewall-cmd --permanent --add-port=8787/tcp
-  sudo firewall-cmd --reload
-  ```
-- [ ] **OCI 콘솔에서도 개방 필요**: Networking → Virtual Cloud Networks → 해당 VCN → Security Lists →
-      Ingress Rules 추가 (Source `0.0.0.0/0`, TCP, Destination Port `8787`). 이건 SSH로는 안 되고
-      콘솔에서 직접 해야 함.
-- [ ] 헬스체크 (로컬에서)
-  ```bash
-  curl http://134.185.116.216:8787/health
+  curl http://134.185.116.216:8787/health          # → {"ok":true}
+  curl http://134.185.116.216:8787/chart/329180    # → HTTP 401 (시크릿 없음, 정상)
+  curl -H 'authorization: Bearer <secret>' http://134.185.116.216:8787/chart/329180
+  # → 일봉 250건 (2025-09-03 ~ 2026-09-11), 종가 479,000 — 화면 값과 일치
   ```
 
 ### Vercel에 연결하기
 
-- [ ] Vercel 프로젝트 → Settings → Environment Variables에 추가 (Production)
+- [ ] **남은 작업** Vercel 프로젝트 → Settings → Environment Variables에 추가 (Production)
   ```
   CHART_PROXY_URL=http://134.185.116.216:8787
   CHART_PROXY_SECRET=<VM에 넣은 것과 동일한 값>

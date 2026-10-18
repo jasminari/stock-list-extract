@@ -1,0 +1,39 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 5200,
+      "title": "랜딩 — 데스크톱 1440"
+    },
+    {
+      "file": "Mobile.dc.html",
+      "x": 1560,
+      "y": 0,
+      "w": 390,
+      "h": 8000,
+      "title": "랜딩 — 모바일 390"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "about-repro",
+      "x": 0,
+      "y": -240,
+      "w": 460,
+      "text": "구현 그대로 옮긴 재현본입니다.\ncomponents/landing/*.tsx 의 실제 값 기준 — Inter, 1152px 컨테이너, 390×844 폰 목업, indigo 토큰, 여백·라운드 전부 소스에서 가져왔습니다.\n\n정적 목업이라 호버 상태, 스크롤 등장 애니메이션(Reveal), 티커 흐름은 멈춰 있습니다."
+    },
+    {
+      "id": "grass-mismatch",
+      "x": 520,
+      "y": -240,
+      "w": 480,
+      "text": "발견 — 대시보드 화면(세 번째 폰)의 잔디 그래프만 아직 GitHub 초록입니다.\n\nPhoneMockup.tsx 의 GRASS 배열이 hex 하드코딩이라, 브랜드 색을 indigo로 바꿀 때 클래스만 치환된 이 파일은 안 따라왔습니다. 실제 앱 ContributionGraph.tsx 는 indigo로 바뀐 상태라 서로 어긋납니다."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}

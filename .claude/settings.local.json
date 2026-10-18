@@ -9,7 +9,10 @@
       "Bash(npm run:*)",
       "Bash(curl -s http://localhost:3000)",
       "Bash(grep -E \"\\\\.\\(ts|js|local\\)$\")",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git status *)",
+      "Bash(git add *)",
+      "Bash(git push *)"
     ]
   }
 }
