@@ -44,6 +44,8 @@ export default function QuizPage() {
   const [result, setResult] = useState<{ score: number; total: number } | null>(
     null
   );
+  const [jumpTarget, setJumpTarget] = useState<number | null>(null);
+  const drafts = useRef<Record<number, number | null>>({});
   const [articleOpen, setArticleOpen] = useState(false);
   const [streak, setStreak] = useState(0);
   const feedbackRef = useRef<HTMLDivElement>(null);
@@ -80,6 +82,8 @@ export default function QuizPage() {
       setSelected(null);
       setChecked(false);
       setAnswers([]);
+      drafts.current = {};
+      setJumpTarget(null);
       setResult(null);
       track("Daily Quiz Started", {
         quizDate: data?.quizDate,
@@ -166,13 +170,22 @@ export default function QuizPage() {
       return;
     }
     setIndex(index + 1);
-    setSelected(null);
-    setChecked(false);
+    setSelected(answers[index + 1] ?? drafts.current[index + 1] ?? null);
+    setChecked(answers[index + 1] !== undefined);
   }, [answers, index, selected, total, finish]);
+
+  const confirmJump = () => {
+    if (jumpTarget === null || submitting) return;
+    drafts.current[index] = selected;
+    setIndex(jumpTarget);
+    setSelected(answers[jumpTarget] ?? drafts.current[jumpTarget] ?? null);
+    setChecked(answers[jumpTarget] !== undefined);
+    setJumpTarget(null);
+  };
 
   // 숫자키로 보기 선택, Enter로 확인/다음 — 반복 학습 속도를 위해
   useEffect(() => {
-    if (stage !== "playing" || !current || articleOpen || submitting) return;
+    if (stage !== "playing" || !current || articleOpen || jumpTarget !== null || submitting) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLElement && e.target.closest("button, a, input, textarea, select, dialog")) return;
       if (e.key === "Enter") {
@@ -186,7 +199,7 @@ export default function QuizPage() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [stage, current, checked, handleCheck, handleNext, articleOpen, submitting]);
+  }, [stage, current, checked, handleCheck, handleNext, articleOpen, jumpTarget, submitting]);
 
   if (loading) {
     return (
@@ -225,18 +238,21 @@ export default function QuizPage() {
             <>
               <div className="flex-1 flex gap-1.5 max-w-md">
                 {questions.map((_, i) => (
-                  <div
+                  <button
                     key={i}
-                    className={`h-2.5 flex-1 rounded-full transition-colors ${
-                      i < index || (i === index && checked)
-                        ? answers[i] === questions[i].answerIndex
-                          ? "bg-indigo-500"
-                          : "bg-rose-400"
-                        : i === index
-                          ? "bg-indigo-200"
-                          : "bg-gray-200"
-                    }`}
-                  />
+                    type="button"
+                    aria-label={`${i + 1}번 문제로 이동`}
+                    aria-current={i === index ? "step" : undefined}
+                    disabled={i === index || i > answers.length || submitting}
+                    onClick={() => setJumpTarget(i)}
+                    className="flex min-h-11 flex-1 items-center rounded-full focus-visible:outline-indigo-600 disabled:cursor-default"
+                  >
+                    <span className={`h-2.5 w-full rounded-full transition-colors ${
+                      answers[i] !== undefined
+                        ? answers[i] === questions[i].answerIndex ? "bg-indigo-500" : "bg-rose-400"
+                        : i === index ? "bg-indigo-200" : "bg-gray-200"
+                    }`} />
+                  </button>
                 ))}
               </div>
               <span className="text-xs text-gray-400 tabular-nums flex-shrink-0">
@@ -334,6 +350,7 @@ export default function QuizPage() {
           </div>
         </div>
       )}
+      {jumpTarget !== null && <QuestionJumpDialog target={jumpTarget} backward={jumpTarget < index} onCancel={() => setJumpTarget(null)} onConfirm={confirmJump} />}
       {articleOpen && current?.article && <QuizArticleSheet article={current.article} onClose={() => setArticleOpen(false)} />}
     </div>
   );
@@ -628,5 +645,36 @@ function ResultCard({
         </button>
       )}
     </div>
+  );
+}
+
+
+function QuestionJumpDialog({ target, backward, onCancel, onConfirm }: {
+  target: number;
+  backward: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const element = dialog.current;
+    const previous = document.activeElement as HTMLElement | null;
+    element?.showModal();
+    return () => {
+      element?.close();
+      previous?.focus({ preventScroll: true });
+    };
+  }, []);
+  return (
+    <dialog ref={dialog} aria-labelledby="quiz-jump-title" aria-describedby="quiz-jump-description"
+      onCancel={(event) => { event.preventDefault(); onCancel(); }}
+      className="fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-sm rounded-2xl bg-white p-6 text-gray-900 shadow-xl backdrop:bg-black/40">
+      <h2 id="quiz-jump-title" className="text-lg font-bold">{target + 1}번 문제로 {backward ? "돌아가시겠어요?" : "이동하시겠어요?"}</h2>
+      <p id="quiz-jump-description" className="mt-2 text-sm text-gray-500">선택한 답과 풀이 기록은 유지돼요.</p>
+      <div className="mt-6 flex gap-3">
+        <button autoFocus onClick={onCancel} className="min-h-11 flex-1 rounded-xl bg-gray-100 font-semibold text-gray-600">취소</button>
+        <button onClick={onConfirm} className="min-h-11 flex-1 rounded-xl bg-indigo-600 font-semibold text-white">이동</button>
+      </div>
+    </dialog>
   );
 }
