@@ -37,6 +37,8 @@ export async function getStockArticleDates(code: string): Promise<string[]> {
 export async function getStockChartArticles(code: string) {
   return getDb().selectDistinct({
     date: searchResults.date,
+    resultId: searchResults.id,
+    entryId: stockEntries.id,
     reason: stockAnnotations.reason,
     keyword: stockAnnotations.keyword,
     sourceUrl: stockAnnotations.sourceUrl,

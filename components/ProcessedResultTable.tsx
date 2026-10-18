@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useCallback, useMemo } from "react";
+import { Fragment, useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import type { ProcessedStock } from "@/lib/types";
 import ArticleModal from "./ArticleModal";
@@ -16,6 +16,7 @@ type SortKey =
 type SortState = { key: SortKey; dir: "desc" | "asc" };
 
 interface ProcessedResultTableProps {
+  highlightedEntryId?: number;
   stocks: ProcessedStock[];
   conditionName: string;
   date: string;
@@ -143,6 +144,7 @@ function SortHeader({
 
 export default function ProcessedResultTable({
   stocks,
+  highlightedEntryId,
   conditionName,
   date,
   onAnnotationUpdate,
@@ -181,6 +183,17 @@ export default function ProcessedResultTable({
       return (av - bv) * factor;
     });
   }, [stocks, sort]);
+
+  const highlightedRowRef = useRef<HTMLTableRowElement>(null);
+  useEffect(() => {
+    if (!highlightedEntryId || !highlightedRowRef.current) return;
+    const row = highlightedRowRef.current;
+    const frame = requestAnimationFrame(() => {
+      row.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
+      row.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [highlightedEntryId, stocks]);
 
   if (stocks.length === 0) return null;
 
@@ -254,7 +267,12 @@ export default function ProcessedResultTable({
 
               return (
                 <Fragment key={s.index}>
-                <tr className="hover:bg-gray-50 transition-colors">
+                <tr
+                  ref={s.entryId === highlightedEntryId ? highlightedRowRef : undefined}
+                  tabIndex={s.entryId === highlightedEntryId ? -1 : undefined}
+                  aria-label={s.entryId === highlightedEntryId ? `${s.name} 원본 데이터` : undefined}
+                  className={s.entryId === highlightedEntryId ? "bg-indigo-50 outline outline-2 -outline-offset-2 outline-indigo-300" : "hover:bg-gray-50 transition-colors"}
+                >
                   <td className="px-2 md:px-3 py-1.5 md:py-3 font-medium whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
                       {onToggleWatchlist && (
@@ -340,7 +358,7 @@ export default function ProcessedResultTable({
                 </tr>
                 {/* 모바일 전용: 종목 아래 스레드형 서브 행 (키워드/상승이유/기사 링크) */}
                 {hasThread && (
-                  <tr className="sm:hidden !border-t-0">
+                  <tr className={`sm:hidden !border-t-0 ${s.entryId === highlightedEntryId ? "bg-indigo-50" : ""}`}>
                     <td colSpan={7} className="px-2 pb-2 pt-0">
                       <div className="ml-1 pl-2.5 border-l-2 border-indigo-200 space-y-1">
                         {s.keyword && (

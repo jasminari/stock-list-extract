@@ -25,6 +25,7 @@ export default function HistoryPage() {
 function HistoryContent() {
   const searchParams = useSearchParams();
   const resultIdParam = searchParams.get("resultId");
+  const entryIdParam = Number(searchParams.get("entryId")) || undefined;
 
   const [results, setResults] = useState<ResultMeta[]>([]);
   const [loading, setLoading] = useState(true);
@@ -221,6 +222,7 @@ function HistoryContent() {
           </div>
         ) : stocks.length > 0 && selectedResult ? (
           <ProcessedResultTable
+            highlightedEntryId={selectedResult.id === Number(resultIdParam) ? entryIdParam : undefined}
             stocks={stocks}
             conditionName={selectedResult.conditionName}
             date={selectedResult.date}

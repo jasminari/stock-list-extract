@@ -220,14 +220,30 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
                 className="mb-4 rounded-xl border border-gray-200 bg-gray-50/60"
               >
                 <div className="max-h-28 overflow-y-auto px-4 py-3 space-y-2">
-                {[...new Set(activeArticles.map((article) => article.reason?.trim()))].map((reason) => (
-                  <p key={reason} className="text-sm leading-relaxed text-gray-700">
-                    {reason}
-                  </p>
+                {activeArticles.filter((article, index, all) => all.findIndex((a) => a.reason?.trim() === article.reason?.trim()) === index).map((article) => (
+                  <div key={article.entryId} className="flex items-start gap-3">
+                    <p className="min-w-0 flex-1 text-sm leading-relaxed text-gray-700">{article.reason?.trim()}</p>
+
+                  </div>
                 ))}
                 </div>
                 <div className="flex items-center justify-between px-3 pb-3 pt-1">
-                  <time dateTime={activeDate} className="pl-1 text-xs tabular-nums font-medium text-indigo-600">{activeDate.replaceAll("-", ". ")}</time>
+                  <div className="flex items-center gap-1.5">
+                    <time dateTime={activeDate} className="pl-1 text-xs tabular-nums font-medium text-indigo-600">{activeDate.replaceAll("-", ". ")}</time>
+                    {activeArticles.filter((article, index, all) => all.findIndex((a) => a.reason?.trim() === article.reason?.trim()) === index).map((article) => (
+                      <a
+                        key={article.entryId}
+                        href={`/dashboard/history?resultId=${article.resultId}&entryId=${article.entryId}`}
+                        aria-label={`${name} ${activeDate} 원본 데이터로 이동`}
+                        title="원본 데이터로 이동"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-indigo-400 transition-colors hover:bg-indigo-100/70 hover:text-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500"
+                      >
+                        <svg aria-hidden="true" className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 5h16M4 10h10M4 15h6M4 20h6M14 17h7m-3-3 3 3-3 3" />
+                        </svg>
+                      </a>
+                    ))}
+                  </div>
                   <div className="flex items-center gap-2">
                     <button type="button" aria-label="이전 뉴스 요약" disabled={activeIndex <= 0} onClick={() => navigateSummary(-1)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">&lt;</button>
                     <button type="button" aria-label="다음 뉴스 요약" disabled={activeIndex >= summaryDates.length - 1} onClick={() => navigateSummary(1)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">&gt;</button>

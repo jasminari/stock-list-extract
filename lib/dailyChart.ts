@@ -86,6 +86,8 @@ export function addVolumeSeries(chart: IChartApi, candles: DailyCandle[]) {
 }
 
 export interface ChartArticle {
+  resultId: number;
+  entryId: number;
   date: string;
   reason: string | null;
   keyword: string | null;
