@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { formatDateKorean } from "@/lib/date";
 import { track } from "@/lib/analytics";
+import { LoadingIcon } from "@/components/ui/loading-icon";
 import type { QuizQuestion } from "@/lib/quiz";
 
 /**
@@ -182,7 +183,7 @@ export default function QuizPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <LoadingIcon className="h-12 w-12 text-indigo-600" label="퀴즈 불러오는 중" />
       </div>
     );
   }

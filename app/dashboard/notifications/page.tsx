@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { LoadingIcon } from "@/components/ui/loading-icon";
 
 interface Notification {
   id: number;
@@ -61,7 +62,7 @@ export default function NotificationsPage() {
 
         {loading ? (
           <div className="border border-gray-200 rounded-xl p-8 text-center">
-            <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin" />
+            <LoadingIcon className="mx-auto h-10 w-10 text-indigo-600" label="알림 불러오는 중" />
           </div>
         ) : notifications.length === 0 ? (
           <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center">

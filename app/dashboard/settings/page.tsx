@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { LoadingIcon } from "@/components/ui/loading-icon";
 
 interface RegisteredCondition {
   id: number;
@@ -111,8 +112,8 @@ export default function SettingsPage() {
           </div>
 
           {loading ? (
-            <div className="border border-gray-200 rounded-xl p-8 text-center">
-              <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin" />
+            <div role="status" className="border border-gray-200 rounded-xl p-8 text-center">
+              <LoadingIcon className="mx-auto h-10 w-10 text-indigo-600" decorative />
               <p className="text-sm text-gray-400 mt-2">불러오는 중...</p>
             </div>
           ) : registered.length === 0 ? (

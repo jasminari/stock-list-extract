@@ -147,3 +147,19 @@
 }
 
 
+
+/* Selected arch motif, motion 15: small pulse followed by a large pulse, 3 seconds. */
+.motif-loading-stroke {
+  opacity: 0;
+  animation: motif-loading-pulse 3s cubic-bezier(0.35, 0, 0.65, 1) infinite;
+}
+@keyframes motif-loading-pulse {
+  0%, 26.666667%, 61.111111%, 100% { opacity: 0; }
+  13.888889% { opacity: 0.65; }
+  40% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motif-loading-stroke { animation: none; }
+  .motif-loading-wave { display: none; }
+  .motif-loading-base { opacity: 1; }
+}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { LoadingIcon } from "@/components/ui/loading-icon";
 
 interface ExtractionLog {
   id: number;
@@ -231,7 +232,7 @@ export default function AdminPage() {
         </div>
 
         {/* 키움 API 연결 상태 */}
-        <div className={`mb-6 p-4 rounded-xl border flex items-center justify-between ${
+        <div role={tokenStatus.status === "loading" ? "status" : undefined} className={`mb-6 p-4 rounded-xl border flex items-center justify-between ${
           tokenStatus.status === "connected"
             ? "bg-green-50 border-green-200"
             : tokenStatus.status === "error"
@@ -247,7 +248,7 @@ export default function AdminPage() {
                 : "bg-gray-100"
             }`}>
               {tokenStatus.status === "loading" ? (
-                <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                <LoadingIcon className="h-5 w-5 text-gray-600" decorative />
               ) : tokenStatus.status === "connected" ? (
                 <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -373,9 +374,9 @@ export default function AdminPage() {
               disabled={loadingConditions}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-xs text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"
             >
-              <svg className={`w-3.5 h-3.5 ${loadingConditions ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {loadingConditions ? <LoadingIcon className="h-5 w-5 text-gray-700" decorative /> : <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
+              </svg>}
               {loadingConditions ? "불러오는 중..." : "키움에서 불러오기"}
             </button>
           </div>
@@ -473,8 +474,8 @@ export default function AdminPage() {
             </button>
           </div>
           {loading ? (
-            <div className="p-8 text-center">
-              <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin" />
+            <div role="status" className="p-8 text-center">
+              <LoadingIcon className="mx-auto h-10 w-10 text-indigo-600" decorative />
               <p className="text-sm text-gray-400 mt-2">로그를 불러오는 중...</p>
             </div>
           ) : logs.length === 0 ? (

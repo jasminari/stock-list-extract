@@ -8,6 +8,7 @@ import { getTodayStr } from "@/lib/date";
 import { track } from "@/lib/analytics";
 import ProcessedResultTable from "@/components/ProcessedResultTable";
 import RawResultTable from "@/components/RawResultTable";
+import { LoadingIcon } from "@/components/ui/loading-icon";
 
 export default function SearchPage() {
   const [viewMode, setViewMode] = useState<"processed" | "raw">("processed");
@@ -87,7 +88,7 @@ export default function SearchPage() {
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span className="text-xs text-gray-500 flex-shrink-0">조건검색식:</span>
           {cond.loading ? (
-            <span className="text-xs text-gray-400">불러오는 중...</span>
+            <span role="status" className="inline-flex items-center gap-1.5 text-xs text-gray-400"><LoadingIcon className="h-5 w-5 text-gray-400" decorative />불러오는 중...</span>
           ) : cond.error ? (
             <span className="text-xs text-red-500">{cond.error}</span>
           ) : cond.conditions.length > 0 ? (
@@ -209,8 +210,8 @@ export default function SearchPage() {
             <p className="text-gray-400 text-xs mt-1">키움증권 REST API를 통해 종목을 추출합니다</p>
           </div>
         ) : search.searching ? (
-          <div className="h-full flex flex-col items-center justify-center">
-            <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4" />
+          <div role="status" className="h-full flex flex-col items-center justify-center">
+            <LoadingIcon className="mb-4 h-12 w-12 text-indigo-600" decorative />
             <p className="text-sm text-gray-500">종목을 검색하는 중입니다...</p>
           </div>
         ) : (

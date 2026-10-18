@@ -1,5 +1,7 @@
 "use client";
 
+import { LoadingIcon } from "@/components/ui/loading-icon";
+
 import { useEffect, useRef, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createChart, createSeriesMarkers, type IChartApi, type MouseEventParams, type ISeriesApi, type ISeriesMarkersPluginApi, type Time } from "lightweight-charts";
@@ -198,7 +200,8 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
           {/* 본문 */}
           <div className="px-4 sm:px-6 py-4 flex-1 min-h-0 overflow-y-auto">
             {loading && (
-              <div className="py-16 text-center text-gray-400 text-sm">
+              <div role="status" className="py-16 flex flex-col items-center gap-3 text-gray-500 text-sm">
+                  <LoadingIcon className="h-12 w-12 text-indigo-600" decorative />
                 차트를 불러오는 중…
               </div>
             )}

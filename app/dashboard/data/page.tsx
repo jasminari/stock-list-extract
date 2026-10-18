@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { LoadingIcon } from "@/components/ui/loading-icon";
 
 interface CollectedData {
   id: number;
@@ -255,7 +256,7 @@ export default function DataPage() {
               >
                 {extracting ? (
                   <>
-                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <LoadingIcon className="h-5 w-5 text-white" decorative />
                     수집 중...
                   </>
                 ) : (
@@ -392,8 +393,8 @@ export default function DataPage() {
         )}
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin" />
+          <div role="status" className="flex flex-col items-center justify-center py-20">
+            <LoadingIcon className="h-12 w-12 text-indigo-600" decorative />
             <p className="text-sm text-gray-400 mt-3">수집 데이터를 불러오는 중...</p>
           </div>
         ) : data.length === 0 ? (
@@ -505,7 +506,7 @@ export default function DataPage() {
                               className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-gray-600 disabled:opacity-40"
                             >
                               {downloadingId === item.id ? (
-                                <div className="w-3.5 h-3.5 border border-gray-400 border-t-transparent rounded-full animate-spin" />
+                                <LoadingIcon className="h-5 w-5 text-gray-400" decorative />
                               ) : (
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

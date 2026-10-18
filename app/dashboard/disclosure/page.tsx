@@ -5,6 +5,7 @@ import OwnershipTable from "@/components/OwnershipTable";
 import { formatDateKorean, getCollectionDateStr } from "@/lib/date";
 import type { OwnershipRow } from "@/lib/types";
 import { useWatchlist } from "@/lib/useWatchlist";
+import { LoadingIcon } from "@/components/ui/loading-icon";
 
 interface Failure {
   rceptNo: string;
@@ -138,7 +139,8 @@ export default function DisclosurePage() {
         )}
 
         {loading ? (
-          <div className="py-20 text-center text-sm text-gray-400">
+          <div role="status" className="flex flex-col items-center py-20 text-center text-sm text-gray-400">
+            <LoadingIcon className="mb-3 h-12 w-12 text-indigo-600" decorative />
             공시 원문을 하나씩 읽는 중입니다…
           </div>
         ) : (

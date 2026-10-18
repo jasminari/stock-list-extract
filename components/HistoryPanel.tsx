@@ -1,5 +1,7 @@
 "use client";
 
+import { LoadingIcon } from "@/components/ui/loading-icon";
+
 import { useState, useCallback } from "react";
 import { formatDbStocks } from "@/lib/format";
 import type { ResultMeta, ProcessedStock } from "@/lib/types";
@@ -123,7 +125,8 @@ export default function HistoryPanel({
           {expandedId && (
             <div className="border-t border-gray-200 p-4">
               {detailLoading ? (
-                <div className="py-8 text-center text-sm text-gray-400">
+                <div role="status" className="py-8 flex flex-col items-center gap-3 text-gray-500 text-sm">
+                  <LoadingIcon className="h-12 w-12 text-indigo-600" decorative />
                   종목 데이터 불러오는 중...
                 </div>
               ) : (

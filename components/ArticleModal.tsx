@@ -1,5 +1,7 @@
 "use client";
 
+import { LoadingIcon } from "@/components/ui/loading-icon";
+
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -99,7 +101,8 @@ export default function ArticleModal({
           {/* 본문 */}
           <div className="overflow-y-auto px-4 sm:px-6 py-4 text-[13px] sm:text-sm leading-relaxed text-gray-700">
             {loading && (
-              <div className="py-10 text-center text-gray-400 text-sm">
+              <div role="status" className="py-10 flex flex-col items-center gap-3 text-gray-500 text-sm">
+                  <LoadingIcon className="h-12 w-12 text-indigo-600" decorative />
                 기사를 불러오는 중…
               </div>
             )}

@@ -1,3 +1,5 @@
+import { LoadingIcon } from "@/components/ui/loading-icon";
+
 interface Condition {
   seq: string;
   name: string;
@@ -39,7 +41,7 @@ export default function ConditionPanel({
           disabled={condLoading}
           className="text-xs text-indigo-600 hover:text-indigo-700 disabled:opacity-40"
         >
-          {condLoading ? "불러오는 중..." : "새로고침"}
+          {condLoading ? <span className="inline-flex items-center gap-2"><LoadingIcon className="h-5 w-5" decorative />불러오는 중...</span> : "새로고침"}
         </button>
       </div>
 

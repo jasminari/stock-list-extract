@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
+import { LoadingIcon } from "@/components/ui/loading-icon";
 import { useRouter } from "next/navigation";
 
 interface FeedbackItem {
@@ -246,7 +247,8 @@ export default function AdminFeedbackPage() {
           </div>
 
           {loading ? (
-            <div className="px-4 py-12 text-center text-sm text-gray-400">
+            <div role="status" className="flex flex-col items-center px-4 py-12 text-center text-sm text-gray-400">
+              <LoadingIcon className="mb-2 h-10 w-10 text-indigo-600" decorative />
               불러오는 중...
             </div>
           ) : filtered.length === 0 ? (
