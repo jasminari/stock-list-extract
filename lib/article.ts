@@ -7,6 +7,10 @@ function decodeEntities(s: string): string {
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
+    .replace(/&middot;/g, "·")
+    .replace(/&hellip;/g, "…")
+    .replace(/&[lr]dquo;/g, '"')
+    .replace(/&[lr]squo;/g, "'")
     .replace(/&#39;|&apos;/g, "'");
 }
 
@@ -15,12 +19,15 @@ function stripTags(html: string): string {
     html
       .replace(/<script[\s\S]*?<\/script>/gi, "")
       .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<!--[\s\S]*?-->/g, "")
       .replace(/<br\s*\/?>/gi, "\n")
       .replace(/<\/p>/gi, "\n")
       .replace(/<\/div>/gi, "\n")
       .replace(/<[^>]+>/g, "")
   )
+    .replace(/\r\n?/g, "\n")
     .replace(/[ \t]+/g, " ")
+    .replace(/\n +/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
@@ -51,6 +58,23 @@ function extractDivBlock(html: string, openTagStart: number): string {
 
 /** 주요 언론사 본문 컨테이너 패턴 순서대로 시도, 실패 시 <p> 수집 → og:description */
 export function extractBody(html: string): string {
+  // 본문 전용 영역을 넓은 article-view/article-body 레이아웃보다 먼저 찾는다.
+  // 뉴스티앤티·핀포인트·금강일보 등은 바깥 레이아웃에 공유 메뉴도 포함한다.
+  const bodyArticle = html.match(
+    /<article\b[^>]*(?:id=["']article-view-content-div["']|itemprop=["']articleBody["'])[^>]*>([\s\S]*?)<\/article>/i
+  );
+  if (bodyArticle) {
+    const text = stripTags(bodyArticle[1]);
+    if (text.length > 100) return text;
+  }
+  const bodyDiv = html.match(
+    /<div\b[^>]*(?:id=["']article-view-content-div["']|itemprop=["']articleBody["'])[^>]*>/i
+  );
+  if (bodyDiv?.index !== undefined) {
+    const text = stripTags(extractDivBlock(html, bodyDiv.index));
+    if (text.length > 100) return text;
+  }
+
   // 네이버 뉴스 (n.news.naver.com): <article id="dic_area">
   const naver = html.match(
     /<article[^>]*id=["']dic_area["'][^>]*>([\s\S]*?)<\/article>/i

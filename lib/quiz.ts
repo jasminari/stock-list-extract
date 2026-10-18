@@ -15,12 +15,7 @@ export type QuizQuestionType =
   /** 같은 재료로 함께 오른 종목 고르기 */
   | "theme-peer"
   /** 사업 설명으로 종목 고르기 (재료가 왜 이 회사에 붙는지) */
-  | "business-match"
-  /** 시장 맥락 보조 문제 */
-  | "top-amount"
-  | "top-turnover"
-  /** 개념 문제 */
-  | "concept";
+  | "business-match";
 
 export interface QuizQuestion {
   id: string;
@@ -31,20 +26,26 @@ export interface QuizQuestion {
   tag: string;
   /** 인용문처럼 보여줄 보조 지문 (없을 수 있음) */
   passage?: string;
+  /** 정답 공개 뒤 종목명을 복원한 원문 지문 */
+  revealedPassage?: string;
   choices: string[];
+  /** 정답 공개 뒤 종목명을 복원한 보기 (choices와 같은 순서) */
+  revealedChoices?: string[];
   answerIndex: number;
   /** 정답 공개 후 보여줄 해설 */
   explanation: string;
   /** 보기가 긴 문장일 때 "정답은 ○○" 자리에 대신 쓸 짧은 이름 */
   answerLabel?: string;
+  /** 문제를 풀 때 참고할 사업·시장 맥락 */
+  learningContext?: string;
+  /** 정답 공개 뒤 종목명을 복원한 학습 맥락 */
+  revealedLearningContext?: string;
+  /** 해당 종목과 직접 연결된 원문 기사 */
+  article?: { title: string; url: string };
 }
 
 export const DAILY_QUIZ_SIZE = 5;
 
-/** 이유 기반 문제가 하루 5문제 중 차지하는 최소 목표치 */
-const MAX_DATA_QUESTIONS = DAILY_QUIZ_SIZE - 1;
-/** 거래대금·회전율 같은 지표 문제는 이유 문제가 모자랄 때만, 최대 1개 */
-const MAX_MARKET_QUESTIONS = 1;
 /** 이 정도는 올라야 "이 날 오른 이유"를 묻는 문제로 성립한다 (%) */
 const MIN_RISE_RATE = 1;
 
@@ -97,9 +98,7 @@ function placeChoices(
 
 // === 표시 형식 (표 화면과 동일하게 맞춘다) ===
 
-const fmtAmount = (bil: number) => `${bil.toLocaleString()}억`;
 const fmtRate = (rate: number) => `${rate.toFixed(2)}%`;
-const fmtTurnover = (rate: number) => `${rate.toFixed(rate < 1 ? 2 : 1)}%`;
 
 // === 상승 이유 텍스트 다루기 ===
 
@@ -116,20 +115,119 @@ function companyLine(reason: string): string {
   return (reason.split("\n")[1] ?? "").trim();
 }
 
+/** javascript: 같은 값을 걸러내고 실제 웹 기사 주소만 허용한다. */
+function safeArticleUrl(rawUrl: string): string | null {
+  const value = (rawUrl ?? "").trim();
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    if (!url.hostname) return null;
+    // The article API checks the exact stored URL; do not normalize its spelling.
+    return rawUrl;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * 지문·보기에서 종목명을 모두 가린다.
- * 정답 종목만 가리면 오답 보기에 남은 다른 종목명이 "이건 내가 아니다"라는
- * 단서가 되어 소거법으로 풀려버린다. 그래서 풀 전체의 이름을 가린다.
+ * 자동 수집된 출처가 다른 회사 기사일 가능성을 줄이기 위해 기사 제목에
+ * 해당 종목명이 명시된 경우만 원문 링크를 노출한다.
  */
+function articleFor(
+  stock: ProcessedStock,
+  knownNames: Iterable<string>
+): QuizQuestion["article"] {
+  const title = (stock.sourceTitle ?? "").trim();
+  const url = safeArticleUrl(stock.sourceUrl);
+  if (
+    !title ||
+    !url ||
+    !hasDistinctStockNameMention(title, stock.name, knownNames)
+  ) {
+    return undefined;
+  }
+  return { title, url };
+}
+
+const KOREAN_PARTICLES = [
+  "에게서", "으로부터", "에게", "에서", "으로", "부터", "까지", "이랑",
+  "처럼", "보다", "께서", "은", "는", "이", "가", "을", "를", "의", "에",
+  "도", "와", "과", "로", "께", "만", "랑",
+].sort((a, b) => b.length - a.length);
+
+const isNameChar = (char: string | undefined) =>
+  char !== undefined && /[0-9A-Za-z가-힣]/.test(char);
+
+/** 이름 뒤에는 문장 경계 또는 완결된 조사만 허용해 SK가 SK온 안에서 잡히지 않게 한다. */
+function nameEnd(text: string, end: number): number | null {
+  if (end === text.length || !isNameChar(text[end])) return end;
+  for (const particle of KOREAN_PARTICLES) {
+    if (!text.startsWith(particle, end)) continue;
+    const afterParticle = end + particle.length;
+    if (afterParticle === text.length || !isNameChar(text[afterParticle])) {
+      return end;
+    }
+  }
+  return null;
+}
+
+function replaceBoundedName(
+  text: string,
+  name: string,
+  replacement: string
+): string {
+  if (name.length < 2 || !text.includes(name)) return text;
+  let out = "";
+  let cursor = 0;
+  while (cursor < text.length) {
+    const at = text.indexOf(name, cursor);
+    if (at < 0) return out + text.slice(cursor);
+    const beforeOkay = at === 0 || !isNameChar(text[at - 1]);
+    const afterOkay = nameEnd(text, at + name.length) !== null;
+    if (beforeOkay && afterOkay) {
+      out += text.slice(cursor, at) + replacement;
+      cursor = at + name.length;
+    } else {
+      out += text.slice(cursor, at + 1);
+      cursor = at + 1;
+    }
+  }
+  return out;
+}
+
+/** 긴 종목명부터, 완전한 이름 토큰만 가린다. */
 function maskNames(text: string, names: string[]): string {
   let out = text;
-  for (const name of names) {
-    if (name.length >= 2 && out.includes(name)) out = out.split(name).join("○○○");
+  const ordered = Array.from(new Set(names))
+    .filter((name) => name.length >= 2)
+    .sort((a, b) => b.length - a.length);
+  for (const name of ordered) out = replaceBoundedName(out, name, "○○○");
+  return out;
+}
+
+function hasBatchim(text: string): boolean {
+  const code = text.trim().slice(-1).charCodeAt(0);
+  return code >= 0xac00 && code <= 0xd7a3 && (code - 0xac00) % 28 !== 0;
+}
+
+/** 종목 자신의 이름만 자연스러운 대명사로 바꾸고 관련 회사 이름은 그대로 둔다. */
+function replaceOwnName(text: string, name: string): string {
+  const replacement = "해당 기업";
+  const particleMap: Record<string, [string, string]> = {
+    은: ["은", "는"], 는: ["은", "는"],
+    이: ["이", "가"], 가: ["이", "가"],
+    을: ["을", "를"], 를: ["을", "를"],
+    과: ["과", "와"], 와: ["과", "와"],
+    으로: ["으로", "로"], 로: ["으로", "로"],
+  };
+  const replacementHasBatchim = hasBatchim(replacement);
+  let replaced = replaceBoundedName(text, name, replacement);
+  for (const [particle, forms] of Object.entries(particleMap)) {
+    const natural = forms[replacementHasBatchim ? 0 : 1];
+    replaced = replaced.split(`${replacement}${particle}`).join(`${replacement}${natural}`);
   }
-  // "네이버는 …"처럼 종목명(NAVER)과 다른 표기의 회사 별칭은 위 목록으로 못 거른다.
-  // 문장 첫 단어가 은/는으로 끝나면 거의 회사 이름이므로 함께 가린다.
-  out = out.replace(/^([^\s]{2,12})(은|는)\s/, "○○○$2 ");
-  return out.replace(/(○○○\s*){2,}/g, "○○○");
+  return replaced;
 }
 
 /** 받침 유무에 따라 "SK과(와)" 같은 어색한 표기를 피한다 */
@@ -141,13 +239,79 @@ function withGwa(name: string): string {
   return `${name}${(code - 0xac00) % 28 === 0 ? "와" : "과"}`;
 }
 
-function trimText(text: string, max: number): string {
-  return text.length > max ? `${text.slice(0, max).trimEnd()}…` : text;
-}
-
 /** 공백·조사·기호를 걷어낸 비교용 문자열 */
 function normalize(text: string): string {
   return text.replace(/[\s.,·"'()[\]%~\-–—]/g, "");
+}
+
+/** 문자열 안에서 겹치는 경우를 포함해 이름이 등장한 구간을 모두 찾는다. */
+function nameRanges(text: string, name: string): Array<[number, number]> {
+  const ranges: Array<[number, number]> = [];
+  for (let from = 0; from <= text.length - name.length; from++) {
+    if (text.startsWith(name, from)) ranges.push([from, from + name.length]);
+  }
+  return ranges;
+}
+
+/**
+ * "두산"이 "두산에너빌리티" 안에서만 등장하는 경우처럼, 더 긴 종목명의
+ * 일부로 잡힌 일치를 제외하고 대상 종목명이 별도로 적혔는지 확인한다.
+ * "두산·두산에너빌리티"처럼 둘 다 명시된 제목은 두산도 정상 일치다.
+ */
+function hasDistinctStockNameMention(
+  text: string,
+  targetName: string,
+  knownNames: Iterable<string>
+): boolean {
+  const normalizedText = normalize(text);
+  const target = normalize(targetName);
+  if (target.length < 2) return false;
+
+  const coveredByLongerName: Array<[number, number]> = [];
+  for (const knownName of knownNames) {
+    const longerName = normalize(knownName);
+    if (
+      longerName.length <= target.length ||
+      !longerName.includes(target)
+    ) {
+      continue;
+    }
+    coveredByLongerName.push(...nameRanges(normalizedText, longerName));
+  }
+
+  return nameRanges(normalizedText, target).some(
+    ([start, end]) =>
+      !coveredByLongerName.some(
+        ([longerStart, longerEnd]) =>
+          longerStart <= start && end <= longerEnd
+      )
+  );
+}
+
+/** 제목이 대상명이 아니라 그 이름을 포함하는 다른 긴 종목만 가리키는지 확인한다. */
+function sourceTitlePointsToLongerStock(
+  stock: ProcessedStock,
+  knownNames: Iterable<string>
+): boolean {
+  const title = (stock.sourceTitle ?? "").trim();
+  const target = normalize(stock.name);
+  if (!title || target.length < 2) return false;
+
+  const normalizedTitle = normalize(title);
+  const names = Array.from(knownNames);
+  const mentionsLongerStock = names.some((knownName) => {
+    const longerName = normalize(knownName);
+    return (
+      longerName.length > target.length &&
+      longerName.includes(target) &&
+      normalizedTitle.includes(longerName)
+    );
+  });
+
+  return (
+    mentionsLongerStock &&
+    !hasDistinctStockNameMention(title, stock.name, names)
+  );
 }
 
 /** 두 문장이 사실상 같은 내용인지 (bigram Jaccard) */
@@ -172,6 +336,7 @@ function similarity(a: string, b: string): number {
  * 이유 문장이 자기 이름이 아닌 다른 종목 이름으로 시작하면 출제에서 제외한다.
  */
 function reasonLooksMismatched(stock: DatedStock, names: Set<string>): boolean {
+  if (sourceTitlePointsToLongerStock(stock, names)) return true;
   const head = riseReasonLine(stock.reason).split(/\s/)[0] ?? "";
   const subject = head.replace(/(은|는|이|가|의|을|를|에|도)$/, "");
   return subject !== stock.name && names.has(subject);
@@ -200,7 +365,6 @@ interface Ctx {
   /** 마스킹에 쓸 전체 종목명 */
   names: string[];
   /** 시장 맥락 문제용 — 최신일 전체 종목 */
-  latest: ProcessedStock[];
   latestDate: string | null;
 }
 
@@ -262,9 +426,10 @@ const whyRoseQ: Generator = (ctx) => {
   const target = takeTarget(ctx, (s) => riseReasonLine(s.reason).length >= 20);
   if (!target) return null;
 
-  const render = (text: string) => trimText(maskNames(text, ctx.names), 78);
+  const render = (stock: DatedStock) =>
+    replaceOwnName(riseReasonLine(stock.reason), stock.name);
   const answerText = riseReasonLine(target.reason);
-  const answerLength = render(answerText).length;
+  const answerLength = render(target).length;
 
   const wrongs = pickDistractors(ctx, target, (s) => {
     const line = riseReasonLine(s.reason);
@@ -278,18 +443,27 @@ const whyRoseQ: Generator = (ctx) => {
   // 유독 길거나 짧은 보기 하나는 내용을 안 읽어도 정답으로 찍힌다.
   // 후보를 넉넉히 모은 뒤 정답과 길이가 가장 비슷한 셋만 남긴다.
   const picked = wrongs
-    .map((s) => render(riseReasonLine(s.reason)))
+    .map((stock) => ({
+      display: render(stock),
+      revealed: riseReasonLine(stock.reason),
+    }))
     .sort(
       (a, b) =>
-        Math.abs(a.length - answerLength) - Math.abs(b.length - answerLength)
+        Math.abs(a.display.length - answerLength) -
+        Math.abs(b.display.length - answerLength)
     )
     .slice(0, 3);
 
-  const { choices, answerIndex } = placeChoices(
-    render(answerText),
-    picked,
+  const placed = shuffle(
+    [
+      { display: render(target), revealed: answerText, correct: true },
+      ...picked.map((choice) => ({ ...choice, correct: false })),
+    ],
     ctx.rand
   );
+  const choices = placed.map((choice) => choice.display);
+  const revealedChoices = placed.map((choice) => choice.revealed);
+  const answerIndex = placed.findIndex((choice) => choice.correct);
 
   return {
     id: `why-rose:${keyOf(target)}`,
@@ -297,6 +471,7 @@ const whyRoseQ: Generator = (ctx) => {
     tag: tagOf(target, ctx),
     prompt: `${target.name}, 이 날 주가가 오른 이유는?`,
     choices,
+    revealedChoices,
     answerIndex,
     answerLabel: `${target.keyword.trim() || "상승 재료"}`,
     explanation: reasonExplanation(
@@ -329,7 +504,8 @@ const reasonMatchQ: Generator = (ctx) => {
     type: "reason-match",
     tag: tagOf(target, ctx),
     prompt: "다음 이유로 오른 종목은?",
-    passage: trimText(maskNames(answerText, ctx.names), 220),
+    passage: maskNames(answerText, ctx.names),
+    revealedPassage: answerText,
     choices,
     answerIndex,
     explanation: reasonExplanation(
@@ -502,7 +678,8 @@ const businessMatchQ: Generator = (ctx) => {
     type: "business-match",
     tag: tagOf(target, ctx),
     prompt: "다음 사업을 하는 회사는?",
-    passage: trimText(maskNames(answerText, ctx.names), 200),
+    passage: maskNames(answerText, ctx.names),
+    revealedPassage: answerText,
     choices,
     answerIndex,
     explanation: reasonExplanation(
@@ -515,7 +692,7 @@ const businessMatchQ: Generator = (ctx) => {
 /** 대표 문제. 데이터가 되는 날이면 항상 첫 번째로 시도한다 */
 const HEADLINE_GENERATOR: Generator = whyRoseQ;
 
-/** 나머지는 매일 섞어서 3개까지 뽑는다 */
+/** 나머지는 매일 섞어서 4개까지 뽑는다 */
 const REASON_GENERATORS: Generator[] = [
   reasonMatchQ,
   stockKeywordQ,
@@ -524,373 +701,64 @@ const REASON_GENERATORS: Generator[] = [
   businessMatchQ,
 ];
 
-// === 시장 맥락 보조 문제 (이유 문제가 모자란 날에만) ===
+function learningContextFor(
+  question: QuizQuestion,
+  stock: ProcessedStock
+): string | undefined {
+  const business = companyLine(stock.reason);
+  const reason = riseReasonLine(stock.reason);
 
-/** 값이 서로 충분히 벌어진 4종목을 고른다 (애매한 정답 방지) */
-function pickDistinct(
-  stocks: ProcessedStock[],
-  value: (s: ProcessedStock) => number,
-  rand: Rand,
-  count = 4
-): ProcessedStock[] | null {
-  for (let attempt = 0; attempt < 16; attempt++) {
-    const picked = sample(stocks, count, rand);
-    if (picked.length < count) return null;
-    const values = picked.map(value).sort((a, b) => b - a);
-    // 1등이 2등보다 40% 이상 커야 눈대중으로도 정답이 분명하다
-    if (values[0] > values[1] * 1.4) return picked;
+  // 사업 설명 자체가 지문인 문제에는 같은 문장을 되풀이하지 않고,
+  // 그 사업이 당일 주목받은 배경을 보충한다.
+  if (question.type === "business-match") {
+    return reason ? `당일 시장 맥락: ${reason}` : undefined;
   }
-  return null;
+
+  // 상승 이유나 키워드를 그대로 다시 쓰면 문제의 답을 먼저 보여줄 수 있으므로,
+  // 나머지 종목 문제는 회사 설명이 있는 경우에만 맥락을 덧붙인다.
+  return business ? `사업 맥락: ${business}` : undefined;
 }
 
-const topAmountQ: Generator = (ctx) => {
-  const pool = ctx.latest.slice(0, 25).filter((s) => s.tradingAmountBil > 0);
-  if (pool.length < 4 || !ctx.latestDate) return null;
-  const picked = pickDistinct(pool, (s) => s.tradingAmountBil, ctx.rand);
-  if (!picked) return null;
-
-  const answer = picked.reduce((a, b) =>
-    b.tradingAmountBil > a.tradingAmountBil ? b : a
-  );
-  const { choices, answerIndex } = placeChoices(
-    answer.name,
-    picked.filter((s) => s.code !== answer.code).map((s) => s.name),
-    ctx.rand
-  );
-
-  return {
-    id: `top-amount:${ctx.latestDate}:${answer.code}`,
-    type: "top-amount",
-    tag: formatDateKorean(ctx.latestDate),
-    prompt: "이 날 돈이 가장 많이 몰린(거래대금 1위) 종목은?",
-    choices,
-    answerIndex,
-    explanation:
-      `${answer.name} ${fmtAmount(answer.tradingAmountBil)}. ` +
-      `거래대금은 그날 그 종목에 실제로 오간 돈의 크기입니다. ` +
-      `돈이 몰린 종목부터 "왜 몰렸는지" 이유를 찾아보면 그날 시장의 관심사를 알 수 있습니다.`,
-  };
-};
-
-const topTurnoverQ: Generator = (ctx) => {
-  const pool = ctx.latest.filter((s) => (s.turnoverRate ?? 0) > 0);
-  if (pool.length < 4 || !ctx.latestDate) return null;
-  const picked = pickDistinct(pool, (s) => s.turnoverRate ?? 0, ctx.rand);
-  if (!picked) return null;
-
-  const answer = picked.reduce((a, b) =>
-    (b.turnoverRate ?? 0) > (a.turnoverRate ?? 0) ? b : a
-  );
-  const { choices, answerIndex } = placeChoices(
-    answer.name,
-    picked.filter((s) => s.code !== answer.code).map((s) => s.name),
-    ctx.rand
-  );
-
-  return {
-    id: `top-turnover:${ctx.latestDate}:${answer.code}`,
-    type: "top-turnover",
-    tag: formatDateKorean(ctx.latestDate),
-    prompt: "이 날 거래회전율이 가장 높았던 종목은?",
-    passage: "회전율 = 거래대금 ÷ 시가총액 × 100",
-    choices,
-    answerIndex,
-    explanation:
-      `${answer.name} ${fmtTurnover(answer.turnoverRate ?? 0)}. ` +
-      `회전율은 "발행된 주식 중 몇 %가 하루 만에 손바뀜했나"를 뜻합니다. ` +
-      `시총이 작은 종목은 재료 하나에도 회전율이 크게 튑니다.`,
-  };
-};
-
-const MARKET_GENERATORS: Generator[] = [topAmountQ, topTurnoverQ];
-
-// === 개념 문제 (데이터가 없어도 항상 풀 수 있게) ===
-
-interface ConceptSeed {
-  id: string;
-  /** 이유(재료·수급·테마 해석) 개념인지, 지표 개념인지 */
-  topic: "이유" | "지표";
-  prompt: string;
-  passage?: string;
-  correct: string;
-  wrongs: string[];
-  explanation: string;
+function asksForStockName(type: QuizQuestionType): boolean {
+  return [
+    "reason-match",
+    "business-match",
+    "keyword-match",
+    "theme-peer",
+  ].includes(type);
 }
 
-const CONCEPT_BANK: ConceptSeed[] = [
-  // --- 왜 올랐나를 읽는 개념 ---
-  {
-    id: "concept:teuk-jing-ju",
-    topic: "이유",
-    prompt: "'특징주' 기사는 보통 어떤 종목을 다룰까요?",
-    correct: "그날 특별한 이유로 주가가 크게 움직인 종목",
-    wrongs: [
-      "시가총액 상위 100개 종목",
-      "배당을 많이 주는 종목",
-      "그날 거래가 정지된 종목",
-    ],
-    explanation:
-      "특징주 기사는 '왜 움직였는지'를 짧게 정리해주기 때문에 상승 이유를 찾는 가장 빠른 출발점입니다. " +
-      "다만 기사도 사후 해석이라, 이유가 여러 개면 어떤 게 진짜 재료인지는 며칠 지켜봐야 알 수 있습니다.",
-  },
-  {
-    id: "concept:theme",
-    topic: "이유",
-    prompt: "'테마주'가 함께 오르내리는 이유는?",
-    correct: "같은 재료(뉴스·정책)의 영향을 받는 회사끼리 묶이기 때문",
-    wrongs: [
-      "같은 증권사가 관리하는 종목이기 때문",
-      "주가가 비슷한 가격대이기 때문",
-      "상장한 시기가 같기 때문",
-    ],
-    explanation:
-      "원전 계약 소식이 나오면 발전설비·배관·건설사가 함께 움직이는 식입니다. " +
-      "그래서 재료 하나를 알면 종목 여러 개를 한 번에 이해할 수 있고, 반대로 테마가 식으면 같이 빠집니다.",
-  },
-  {
-    id: "concept:sell-the-news",
-    topic: "이유",
-    prompt:
-      "기다리던 호재가 '확정 발표'된 날, 오히려 주가가 빠지는 일이 흔한 이유는?",
-    correct: "기대감으로 미리 올라 있어서 재료가 소멸했기 때문",
-    wrongs: [
-      "발표 당일은 거래가 제한되기 때문",
-      "호재는 원래 주가와 관계없기 때문",
-      "발표 직후에는 기관만 매매할 수 있기 때문",
-    ],
-    explanation:
-      "주가는 '앞으로 벌 돈'을 미리 반영합니다. 발표로 불확실성이 사라지면 더 살 이유가 줄어들어 차익 실현이 나옵니다. " +
-      "이걸 재료 소멸(뉴스에 팔아라)이라고 부릅니다. 상승 이유를 볼 때 '이미 알려진 이야기인가'를 같이 봐야 하는 이유입니다.",
-  },
-  {
-    id: "concept:order-size",
-    topic: "이유",
-    prompt:
-      "'500억 원 규모 공급계약 체결' 공시의 크기를 가늠하려면 무엇과 비교해야 할까요?",
-    correct: "그 회사의 연간 매출액",
-    wrongs: ["그날의 거래대금", "그 회사의 주가", "코스피 지수"],
-    explanation:
-      "연매출 300억 회사의 500억 수주는 회사를 바꾸는 사건이지만, 연매출 5조 회사의 500억은 반올림 오차에 가깝습니다. " +
-      "그래서 공시에는 '최근 매출액 대비 비율'이 함께 적혀 있고, 그 숫자를 먼저 봐야 합니다.",
-  },
-  {
-    id: "concept:policy",
-    topic: "이유",
-    prompt: "'정책 수혜주'는 어떤 종목을 말할까요?",
-    correct: "정부 예산·제도 변화로 실적이 늘어날 것으로 기대되는 종목",
-    wrongs: [
-      "정부가 지분을 보유한 종목",
-      "정부에 세금을 가장 많이 내는 종목",
-      "공공기관만 거래할 수 있는 종목",
-    ],
-    explanation:
-      "정책 재료는 발표 → 예산 배정 → 실제 발주까지 시차가 큽니다. " +
-      "기대감만으로 오른 구간인지, 수주 공시로 숫자가 확인된 구간인지 구분해서 봐야 합니다.",
-  },
-  {
-    id: "concept:supply-chain",
-    topic: "이유",
-    prompt:
-      "대형 IT기업의 대규모 데이터센터 투자 소식에 변압기·전선 회사가 오르는 것을 뭐라고 설명할 수 있을까요?",
-    correct: "전방 산업의 투자가 후방 부품·설비 업체 실적으로 이어지는 밸류체인 효과",
-    wrongs: [
-      "두 회사의 대주주가 같기 때문",
-      "같은 업종으로 분류돼 지수가 함께 움직이기 때문",
-      "우연의 일치일 뿐 관련이 없음",
-    ],
-    explanation:
-      "데이터센터를 지으려면 전력 설비가 반드시 필요합니다. 이렇게 '누가 돈을 쓰면 누가 버는가'를 따라가면 " +
-      "뉴스 하나에서 종목 여러 개를 찾아낼 수 있습니다. 다만 매출 비중이 작은 회사는 실제 효과가 미미할 수 있습니다.",
-  },
-  {
-    id: "concept:target-price",
-    topic: "이유",
-    prompt: "증권사 '목표주가 상향' 리포트가 주가를 밀어올리는 이유는?",
-    correct: "실적 전망치가 올라갔다는 신호로 받아들여지기 때문",
-    wrongs: [
-      "증권사가 그 가격에 주식을 사줘야 하기 때문",
-      "목표주가에 도달할 때까지 매도가 금지되기 때문",
-      "목표주가가 곧 다음 날 시초가가 되기 때문",
-    ],
-    explanation:
-      "목표주가는 애널리스트의 추정치일 뿐 보증이 아닙니다. 중요한 건 숫자 자체보다 '왜 올렸는가'(수주·판가·물량)입니다. " +
-      "리포트를 볼 때는 목표가보다 근거 문단을 먼저 읽는 편이 낫습니다.",
-  },
-  {
-    id: "concept:earnings-surprise",
-    topic: "이유",
-    prompt: "'어닝 서프라이즈'는 무엇을 뜻할까요?",
-    correct: "실적이 시장 예상치를 크게 웃돈 것",
-    wrongs: [
-      "실적을 예정보다 빨리 발표한 것",
-      "사상 최대 매출을 낸 것",
-      "적자에서 흑자로 돌아선 것",
-    ],
-    explanation:
-      "핵심은 '절대 금액'이 아니라 '예상 대비'입니다. 사상 최대 실적을 내고도 기대에 못 미치면 주가는 빠집니다. " +
-      "실적 발표로 오른 종목을 볼 때는 컨센서스(시장 예상치)와 비교했는지 확인해야 합니다.",
-  },
-  {
-    id: "concept:rights-issue",
-    topic: "이유",
-    prompt: "일반적으로 주주에게 악재로 받아들여지는 쪽은?",
-    correct: "유상증자 — 새 주식을 팔아 자금을 조달",
-    wrongs: [
-      "무상증자 — 기존 주주에게 주식을 나눠줌",
-      "자사주 매입 — 회사가 자기 주식을 사들임",
-      "현금배당 — 이익을 주주에게 나눠줌",
-    ],
-    explanation:
-      "유상증자는 주식 수가 늘어 기존 주주 몫이 희석됩니다. 다만 조달한 돈을 확실한 증설·인수에 쓴다면 호재로 읽히기도 합니다. " +
-      "공시를 볼 때 '얼마를, 누구에게, 어디에 쓰려고'를 확인하는 게 중요합니다.",
-  },
-  {
-    id: "concept:buyback",
-    topic: "이유",
-    prompt: "회사가 '자사주 매입·소각'을 발표하면 주가에 왜 긍정적일까요?",
-    correct: "유통 주식 수가 줄어 주당 가치가 올라가기 때문",
-    wrongs: [
-      "회사가 세금을 면제받기 때문",
-      "배당을 의무적으로 늘려야 하기 때문",
-      "주가가 법으로 보장되기 때문",
-    ],
-    explanation:
-      "같은 이익을 더 적은 주식으로 나누니 주당 이익이 늘어납니다. 매입만 하고 소각하지 않으면 " +
-      "나중에 다시 시장에 나올 수 있어서, 소각까지 하는지가 진짜 차이를 만듭니다.",
-  },
-  {
-    id: "concept:supply-demand",
-    topic: "이유",
-    prompt:
-      "'외국인·기관 동반 순매수'가 상승 이유로 자주 언급되는 까닭은?",
-    correct: "자금 규모가 커서 매수세가 며칠 이어지는 경우가 많기 때문",
-    wrongs: [
-      "외국인과 기관은 손해 보는 매매를 하지 않기 때문",
-      "이들이 사면 주가 상한이 풀리기 때문",
-      "개인 투자자는 그 종목을 살 수 없기 때문",
-    ],
-    explanation:
-      "수급은 '누가 사는가'일 뿐 '왜 사는가'는 아닙니다. 수급만 이유로 오른 날은 근거가 얕을 수 있으니, " +
-      "그 뒤에 실적·수주 같은 재료가 있는지 한 번 더 찾아보는 게 좋습니다.",
-  },
-  {
-    id: "concept:rumor",
-    topic: "이유",
-    prompt:
-      "'~에 진출한다더라' 수준의 소문으로 급등한 종목을 볼 때 먼저 확인할 것은?",
-    correct: "회사가 낸 공시로 사실이 확인되는지",
-    wrongs: [
-      "그날 거래량이 얼마나 늘었는지",
-      "주가가 며칠째 오르고 있는지",
-      "종목 게시판 글이 몇 개인지",
-    ],
-    explanation:
-      "공시는 회사가 법적 책임을 지고 내는 정보입니다. 거래소가 소문을 확인해달라고 요구하는 '조회공시 요구'가 뜨면 " +
-      "회사 답변으로 사실 여부가 드러납니다. 확인되지 않은 재료로 오른 급등은 되돌림도 빠릅니다.",
-  },
-  {
-    id: "concept:same-theme-gap",
-    topic: "이유",
-    prompt:
-      "같은 테마인데 A는 상한가, B는 2% 상승에 그쳤습니다. 가장 그럴듯한 설명은?",
-    correct: "그 재료가 두 회사 매출에서 차지하는 비중이 다르기 때문",
-    wrongs: [
-      "A의 주가가 B보다 싸기 때문",
-      "A가 코스닥, B가 코스피이기 때문",
-      "A의 상장 기간이 더 길기 때문",
-    ],
-    explanation:
-      "재료가 매출의 절반을 좌우하는 회사와, 여러 사업 중 하나일 뿐인 회사는 반응 크기가 다릅니다. " +
-      "테마에 묶였다는 이유만으로 오른 종목은 재료가 식으면 먼저 빠지는 경우가 많습니다.",
-  },
-  {
-    id: "concept:why-record",
-    topic: "이유",
-    prompt: "오른 종목의 '이유'를 매일 기록해두면 얻을 수 있는 것은?",
-    correct: "어떤 재료에 돈이 며칠째 머무는지 흐름을 볼 수 있다",
-    wrongs: [
-      "다음 날 주가를 정확히 예측할 수 있다",
-      "거래 수수료를 아낄 수 있다",
-      "배당금을 더 많이 받을 수 있다",
-    ],
-    explanation:
-      "하루치 이유는 소음이지만, 며칠을 이어 붙이면 자금이 머무는 테마와 빠지는 테마가 보입니다. " +
-      "같은 재료가 다시 나왔을 때 '그때 이 종목이 반응했지'를 떠올릴 수 있는 것이 기록의 힘입니다.",
-  },
+function enrichStockQuestions(
+  questions: QuizQuestion[],
+  stocksByKey: Map<string, ProcessedStock>,
+  names: string[],
+  sourceNames: Iterable<string>
+): QuizQuestion[] {
+  return questions.map((question) => {
+    const match = question.id.match(/:(\d{8}):([^:]+)$/);
+    if (!match) return question;
+    const stock = stocksByKey.get(`${match[1]}:${match[2]}`);
+    if (!stock) return question;
 
-  // --- 이유를 읽을 때 함께 쓰는 지표 개념 ---
-  {
-    id: "concept:trading-amount",
-    topic: "지표",
-    prompt: "거래대금이 뜻하는 것은?",
-    correct: "그날 그 종목에 오간 돈의 총액",
-    wrongs: [
-      "그날 거래된 주식의 총 수량",
-      "회사가 보유한 현금의 총액",
-      "회사 전체 가치를 나타내는 금액",
-    ],
-    explanation:
-      "거래대금 = 체결 가격 × 체결 수량의 합. 돈이 몰린 종목에는 대개 이유가 있으므로, " +
-      "거래대금 상위 목록은 '오늘 무슨 일이 있었나'를 찾는 입구로 쓰기 좋습니다.",
-  },
-  {
-    id: "concept:turnover",
-    topic: "지표",
-    prompt: "거래회전율이 높다는 것은 무슨 뜻일까요?",
-    passage: "회전율 = 거래대금 ÷ 시가총액 × 100",
-    correct: "발행된 주식 중 상당 비율이 하루 만에 손바뀜했다",
-    wrongs: [
-      "주가가 그만큼 많이 올랐다",
-      "회사가 배당을 많이 준다",
-      "외국인 지분율이 높다",
-    ],
-    explanation:
-      "회전율 20%면 발행 주식의 5분의 1이 하루에 주인을 바꿨다는 뜻입니다. " +
-      "재료가 붙은 소형주에서 특히 크게 튀어서, 단기 과열을 가늠할 때 씁니다.",
-  },
-  {
-    id: "concept:market-cap",
-    topic: "지표",
-    prompt: "시가총액을 구하는 식은?",
-    correct: "주가 × 상장주식수",
-    wrongs: ["주가 × 거래량", "거래대금 × 상장주식수", "주가 ÷ 상장주식수"],
-    explanation:
-      "시가총액은 회사를 통째로 사는 데 필요한 돈입니다. 같은 재료라도 시총이 작은 회사가 더 크게 반응하는 이유가 여기 있습니다.",
-  },
-  {
-    id: "concept:change-rate",
-    topic: "지표",
-    prompt: "등락률은 무엇을 기준으로 계산할까요?",
-    correct: "전일 종가",
-    wrongs: ["당일 시가", "최근 5일 평균가", "상장 당시 공모가"],
-    explanation:
-      "등락률 = (당일 종가 − 전일 종가) ÷ 전일 종가 × 100. " +
-      "갭 상승 후 밀린 날은 등락률이 플러스여도 장중 내내 하락이었을 수 있습니다.",
-  },
-  {
-    id: "concept:limit-up",
-    topic: "지표",
-    prompt: "국내 증시에서 하루 주가가 오를 수 있는 최대 폭(상한가)은?",
-    correct: "전일 종가 대비 +30%",
-    wrongs: ["전일 종가 대비 +15%", "전일 종가 대비 +50%", "제한이 없다"],
-    explanation:
-      "코스피·코스닥 모두 ±30%가 일일 가격제한폭입니다(신규 상장 첫날 등 예외 있음). " +
-      "등락률이 29%대라면 그날 재료가 그만큼 강하게 받아들여졌다는 뜻입니다.",
-  },
-];
-
-function conceptQuestion(seed: ConceptSeed, rand: Rand): QuizQuestion {
-  const { choices, answerIndex } = placeChoices(seed.correct, seed.wrongs, rand);
-  return {
-    id: seed.id,
-    type: "concept",
-    tag: seed.topic === "이유" ? "개념 · 왜 오르나" : "개념 · 지표",
-    prompt: seed.prompt,
-    passage: seed.passage,
-    choices,
-    answerIndex,
-    explanation: seed.explanation,
-  };
+    const fullLearningContext = learningContextFor(question, stock);
+    const shouldMaskContext = asksForStockName(question.type);
+    const learningContext =
+      fullLearningContext && shouldMaskContext
+        ? maskNames(fullLearningContext, names)
+        : fullLearningContext;
+    const revealedLearningContext =
+      fullLearningContext && shouldMaskContext
+        ? fullLearningContext
+        : undefined;
+    const article = articleFor(stock, sourceNames);
+    if (!learningContext && !article) return question;
+    return {
+      ...question,
+      learningContext,
+      revealedLearningContext,
+      article,
+    };
+  });
 }
 
 // === 하루치 퀴즈 조립 ===
@@ -902,15 +770,11 @@ export interface BuildQuizInput {
   stocks: ProcessedStock[];
   /** 최근 며칠 중 상승이유가 채워진 종목 (이유 문제용) */
   reasonPool: DatedStock[];
-  /** 출제에 쓰인 시장 데이터 날짜 (YYYYMMDD). 없으면 개념 문제만 */
+  /** 출제에 쓰인 시장 데이터 날짜 (YYYYMMDD). 없으면 날짜가 있는 이유 데이터만 사용 */
   dataDate: string | null;
 }
 
-/**
- * "왜 올랐는지"가 이 서비스의 본론이라, 상승 이유 기반 문제를 먼저 채운다.
- * 거래대금·회전율 같은 지표 문제는 이유 문제가 모자란 날에만 최대 1개 들어가고,
- * 남는 자리는 개념 문제(이유 해석 우선)로 채운다.
- */
+/** 실제 시황 기반 6가지 유형으로 최대 5문제를 만든다. 부족한 데이터는 가상 문제로 채우지 않는다. */
 export function buildDailyQuiz({
   seedKey,
   stocks,
@@ -942,49 +806,32 @@ export function buildDailyQuiz({
     targets: [...shuffle(latestFirst, rand), ...shuffle(older, rand)],
     used: new Set<string>(),
     names,
-    latest: stocks,
     latestDate: dataDate,
   };
 
   if (usable.length >= 4) {
     for (const generate of [HEADLINE_GENERATOR, ...shuffle(REASON_GENERATORS, rand)]) {
-      if (questions.length >= MAX_DATA_QUESTIONS) break;
+      if (questions.length >= DAILY_QUIZ_SIZE) break;
       const q = generate(ctx);
       if (q && !questions.some((prev) => prev.id === q.id)) questions.push(q);
     }
   }
 
-  if (dataDate && stocks.length >= 4) {
-    let market = 0;
-    for (const generate of shuffle(MARKET_GENERATORS, rand)) {
-      if (questions.length >= MAX_DATA_QUESTIONS) break;
-      if (market >= MAX_MARKET_QUESTIONS) break;
-      const q = generate(ctx);
-      if (q && !questions.some((prev) => prev.id === q.id)) {
-        questions.push(q);
-        market++;
-      }
+  const stocksByKey = new Map<string, ProcessedStock>();
+  for (const stock of usable) stocksByKey.set(keyOf(stock), stock);
+  if (dataDate) {
+    for (const stock of stocks) {
+      const key = `${dataDate}:${stock.code}`;
+      if (!stocksByKey.has(key)) stocksByKey.set(key, stock);
     }
   }
 
-  // 개념 문제도 "왜 오르나" 쪽을 먼저 쓴다 (지표 개념은 최대 1개)
-  const concepts = shuffle(CONCEPT_BANK, rand);
-  let metricConcepts = 0;
-  for (const pass of [1, 2]) {
-    for (const seed of concepts) {
-      if (questions.length >= DAILY_QUIZ_SIZE) break;
-      if (questions.some((q) => q.id === seed.id)) continue;
-      if (seed.topic === "지표") {
-        // 1차에서는 이유 개념만, 2차에서 지표 개념을 최대 1개까지 허용
-        if (pass === 1 || metricConcepts >= 1) continue;
-        metricConcepts++;
-      }
-      questions.push(conceptQuestion(seed, rand));
-    }
-    if (questions.length >= DAILY_QUIZ_SIZE) break;
-  }
-
-  return questions.slice(0, DAILY_QUIZ_SIZE);
+  return enrichStockQuestions(
+    questions.slice(0, DAILY_QUIZ_SIZE),
+    stocksByKey,
+    names,
+    new Set([...knownNames, ...stocks.map((stock) => stock.name)])
+  );
 }
 
 // === 연속 학습일(스트릭) ===

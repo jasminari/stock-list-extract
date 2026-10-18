@@ -1,21 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { formatDateKorean } from "@/lib/date";
 import { track } from "@/lib/analytics";
-import { LoadingIcon } from "@/components/ui/loading-icon";
+import QuizArticleSheet from "@/components/QuizArticleSheet";
+import { CheckCircle2, ChevronRight, CircleHelp, Newspaper, XCircle } from "lucide-react";
 import type { QuizQuestion } from "@/lib/quiz";
-
-/**
- * 상승 이유를 고르는 문제는 보기가 한 문장이라 "정답은 ○○" 자리에 그대로 넣으면 너무 길다.
- * 그럴 땐 재료 키워드 같은 짧은 라벨을 대신 쓰고, 없으면 앞부분만 보여준다.
- */
-function answerHeadline(q: QuizQuestion): string {
-  const answer = q.choices[q.answerIndex] ?? "";
-  if (answer.length <= 24) return answer;
-  return q.answerLabel || `${answer.slice(0, 22).trimEnd()}…`;
-}
+import { LoadingIcon } from "@/components/ui/loading-icon";
 
 interface AttemptRecord {
   quizDate: string;
@@ -52,7 +44,10 @@ export default function QuizPage() {
   const [result, setResult] = useState<{ score: number; total: number } | null>(
     null
   );
+  const [articleOpen, setArticleOpen] = useState(false);
   const [streak, setStreak] = useState(0);
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/quiz")
@@ -76,10 +71,6 @@ export default function QuizPage() {
   const questions = data?.questions ?? [];
   const current = questions[index];
   const total = questions.length;
-  const correctSoFar = useMemo(
-    () => answers.filter((a, i) => a === questions[i]?.answerIndex).length,
-    [answers, questions]
-  );
 
   const start = useCallback(
     (isPractice: boolean) => {
@@ -150,6 +141,22 @@ export default function QuizPage() {
     });
   }, [selected, current, index]);
 
+  const handleSkip = useCallback(() => {
+    if (!current || checked) return;
+    setSelected(-1);
+    setChecked(true);
+    setAnswers((prev) => {
+      const next = [...prev];
+      next[index] = -1;
+      return next;
+    });
+  }, [current, checked, index]);
+
+  useEffect(() => {
+    if (checked) feedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    else scrollRef.current?.scrollTo({ top: 0 });
+  }, [checked, index, stage]);
+
   const handleNext = useCallback(() => {
     const next = [...answers];
     next[index] = selected ?? -1;
@@ -165,8 +172,9 @@ export default function QuizPage() {
 
   // 숫자키로 보기 선택, Enter로 확인/다음 — 반복 학습 속도를 위해
   useEffect(() => {
-    if (stage !== "playing" || !current) return;
+    if (stage !== "playing" || !current || articleOpen || submitting) return;
     const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLElement && e.target.closest("button, a, input, textarea, select, dialog")) return;
       if (e.key === "Enter") {
         e.preventDefault();
         if (checked) handleNext();
@@ -178,7 +186,7 @@ export default function QuizPage() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [stage, current, checked, handleCheck, handleNext]);
+  }, [stage, current, checked, handleCheck, handleNext, articleOpen, submitting]);
 
   if (loading) {
     return (
@@ -211,16 +219,8 @@ export default function QuizPage() {
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="border-b border-gray-200 px-3 md:px-6 py-2 md:py-3 flex-shrink-0">
-        <div className="hidden md:flex items-center gap-2 text-sm text-gray-500 mb-3">
-          <span>내 검색</span>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          <span className="text-gray-900 font-medium">매일 퀴즈</span>
-        </div>
-
         <div className="flex items-center gap-3">
-          <StreakBadge streak={streak} />
+          {stage !== "playing" && <StreakBadge streak={streak} />}
           {stage === "playing" ? (
             <>
               <div className="flex-1 flex gap-1.5 max-w-md">
@@ -251,7 +251,7 @@ export default function QuizPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto px-4 md:px-6 py-6">
+      <div ref={scrollRef} className="flex-1 overflow-auto px-4 md:px-6 py-6">
         <div className="max-w-2xl mx-auto">
           {stage === "start" && (
             <StartCard
@@ -275,6 +275,32 @@ export default function QuizPage() {
                   checked={checked}
                   onSelect={setSelected}
                 />
+                {!checked && (
+                  <button onClick={handleSkip} className="mt-4 min-h-11 flex items-center gap-2 mx-auto px-4 text-sm text-gray-500 hover:text-indigo-600">
+                    <CircleHelp className="w-4 h-4" aria-hidden="true" />모르겠어요
+                  </button>
+                )}
+                {checked && (
+                  <div ref={feedbackRef} className={`mt-6 rounded-2xl p-4 md:p-5 ${selected === current.answerIndex ? "bg-emerald-50" : selected === -1 ? "bg-indigo-50" : "bg-rose-50"}`}>
+                    {selected !== -1 && (
+                      <div role="status" className="flex items-start gap-2.5">
+                        {selected === current.answerIndex ? <CheckCircle2 className="w-6 h-6 shrink-0 text-emerald-600" aria-hidden="true" /> : <XCircle className="w-6 h-6 shrink-0 text-rose-500" aria-hidden="true" />}
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-gray-900">{selected === current.answerIndex ? "맞았어요!" : "정답을 확인해봐요"}</h3>
+                          {selected !== current.answerIndex && <p className="mt-2 text-sm font-semibold text-gray-900">{(current.revealedChoices ?? current.choices)[current.answerIndex]}</p>}
+                        </div>
+                      </div>
+                    )}
+                    <p className={`${selected === -1 ? "" : "mt-3 "}text-sm md:text-base text-gray-700 leading-relaxed whitespace-pre-line`}>{current.explanation}</p>
+                    {current.article && (
+                      <button onClick={() => setArticleOpen(true)} aria-haspopup="dialog" className="mt-4 flex w-full items-center gap-3 rounded-xl bg-white p-3 text-left hover:bg-white/80">
+                        <Newspaper className="w-5 h-5 shrink-0 text-indigo-600" aria-hidden="true" />
+                        <span className="min-w-0 flex-1"><span className="block text-xs text-gray-500">관련 기사</span><span className="block mt-1 text-sm font-medium text-gray-900">{current.article.title}</span></span>
+                        <ChevronRight className="w-5 h-5 shrink-0 text-gray-400" aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
+                )}
               </motion.div>
             </AnimatePresence>
           )}
@@ -295,58 +321,20 @@ export default function QuizPage() {
         </div>
       </div>
 
-      {/* 하단 확인/다음 바 */}
       {stage === "playing" && current && (
-        <div
-          className={`flex-shrink-0 border-t px-4 md:px-6 py-3 md:py-4 transition-colors ${
-            checked
-              ? selected === current.answerIndex
-                ? "bg-indigo-50 border-indigo-100"
-                : "bg-rose-50 border-rose-100"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <div className="max-w-2xl mx-auto flex flex-col md:flex-row md:items-center gap-3">
-            {checked && (
-              <div className="flex-1 min-w-0">
-                <div
-                  className={`text-sm font-semibold mb-1 ${
-                    selected === current.answerIndex
-                      ? "text-indigo-700"
-                      : "text-rose-700"
-                  }`}
-                >
-                  {selected === current.answerIndex
-                    ? "정답이에요!"
-                    : `아쉬워요 · 정답은 ${answerHeadline(current)}`}
-                </div>
-                <p className="text-xs md:text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                  {current.explanation}
-                </p>
-              </div>
-            )}
+        <div className="shrink-0 border-t border-gray-100 bg-white px-4 py-3 safe-area-bottom">
+          <div className="max-w-2xl mx-auto">
             <button
               onClick={checked ? handleNext : handleCheck}
               disabled={selected === null || submitting}
-              className={`px-6 py-3 rounded-xl text-sm font-bold text-white transition-colors flex-shrink-0 md:w-40 ${
-                selected === null
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : checked && selected !== current.answerIndex
-                    ? "bg-rose-500 hover:bg-rose-600"
-                    : "bg-indigo-600 hover:bg-indigo-700"
-              }`}
+              className="w-full min-h-12 rounded-xl bg-indigo-600 px-6 py-3 text-base font-bold text-white hover:bg-indigo-700 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
             >
-              {submitting
-                ? "채점 중..."
-                : checked
-                  ? index + 1 >= total
-                    ? "결과 보기"
-                    : "계속하기"
-                  : "확인"}
+              {submitting ? "저장 중…" : checked ? index + 1 >= total ? "완료" : "다음" : "확인"}
             </button>
           </div>
         </div>
       )}
+      {articleOpen && current?.article && <QuizArticleSheet article={current.article} onClose={() => setArticleOpen(false)} />}
     </div>
   );
 }
@@ -385,19 +373,20 @@ function StartCard({
         </svg>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">오늘의 퀴즈 5문제</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">퀴즈로 배우는 시황</h1>
       <p className="text-sm text-gray-500 mb-1">
         {data.dataDate
           ? `${formatDateKorean(data.dataDate)} 시장 데이터로 만든 문제예요`
-          : "시장 데이터가 아직 없어 개념 문제로 준비했어요"}
+          : "시장 데이터를 준비하고 있어요"}
       </p>
-      <p className="text-xs text-gray-400 mb-8">하루 한 번, 3분이면 충분합니다</p>
+      <p className="text-xs text-gray-400 mb-8">{data.questions.length ? `${data.questions.length}문제 · 약 3분 · 처음이어도 괜찮아요` : "출제할 시황 데이터가 아직 부족해요"}</p>
 
       <button
         onClick={onStart}
-        className="w-full md:w-64 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base transition-colors shadow-sm"
+        disabled={data.questions.length === 0}
+        className="w-full md:w-64 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        시작하기
+        시작
       </button>
 
       {data.history.length > 0 && (
@@ -441,29 +430,39 @@ function QuestionCard({
   checked: boolean;
   onSelect: (i: number) => void;
 }) {
+  const choices = checked ? question.revealedChoices ?? question.choices : question.choices;
+  const passage = checked ? question.revealedPassage ?? question.passage : question.passage;
+  const context = checked ? question.revealedLearningContext ?? question.learningContext : question.learningContext;
+
   return (
     <div>
       <div className="inline-block px-2.5 py-1 rounded-lg bg-gray-100 text-[11px] font-medium text-gray-500 mb-3">
         {question.tag}
       </div>
+      {context && (
+        <div className="mb-5 flex items-start gap-3 rounded-2xl bg-indigo-50 px-4 py-4">
+          <Newspaper className="mt-0.5 w-5 h-5 shrink-0 text-indigo-500" aria-hidden="true" />
+          <p className="text-sm md:text-base text-gray-700 leading-relaxed whitespace-pre-line">{context}</p>
+        </div>
+      )}
       <h2 className="text-lg md:text-xl font-bold text-gray-900 leading-snug mb-4">
         {question.prompt}
       </h2>
 
-      {question.passage && (
+      {passage && (
         <div className="mb-5 px-4 py-3 rounded-xl bg-gray-50 border-l-4 border-indigo-200 text-sm text-gray-600 leading-relaxed">
-          {question.passage}
+          {passage}
         </div>
       )}
 
       <div className="space-y-2.5">
-        {question.choices.map((choice, i) => {
+        {choices.map((choice, i) => {
           const isSelected = selected === i;
           const isAnswer = i === question.answerIndex;
 
           let style = "border-gray-200 bg-white hover:bg-gray-50 text-gray-700";
           if (checked && isAnswer)
-            style = "border-indigo-500 bg-indigo-50 text-indigo-800";
+            style = "border-emerald-500 bg-emerald-50 text-emerald-800";
           else if (checked && isSelected)
             style = "border-rose-400 bg-rose-50 text-rose-800";
           else if (isSelected)
@@ -471,9 +470,10 @@ function QuestionCard({
 
           return (
             <button
-              key={`${choice}-${i}`}
+              key={`${question.id}-${i}`}
               onClick={() => !checked && onSelect(i)}
               disabled={checked}
+              aria-pressed={isSelected}
               className={`w-full flex items-start gap-3 px-4 py-3.5 rounded-2xl border-2 border-b-4 text-left text-sm md:text-base font-medium leading-relaxed transition-colors ${style} ${
                 checked ? "cursor-default" : ""
               }`}
@@ -489,7 +489,7 @@ function QuestionCard({
               </span>
               <span className="flex-1">{choice}</span>
               {checked && isAnswer && (
-                <svg className="w-5 h-5 mt-0.5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mt-0.5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               )}
@@ -529,7 +529,7 @@ function ResultCard({
 }) {
   const perfect = score === total;
   const message = perfect
-    ? "완벽해요! 오늘 시장은 다 파악했네요"
+    ? "오늘 학습 완료!"
     : score >= total - 1
       ? "거의 다 맞혔어요"
       : score >= total / 2
@@ -596,15 +596,16 @@ function ResultCard({
                       {q.prompt}
                     </p>
                     <p className="text-sm text-indigo-700 mt-1">
-                      정답 · {answerHeadline(q)}
+                      정답 · {(q.revealedChoices ?? q.choices)[q.answerIndex]}
                     </p>
                     {!ok && mine >= 0 && mine !== undefined && (
-                      <p className="text-xs text-rose-500 mt-0.5 line-clamp-2">
-                        내 답 · {q.choices[mine]}
+                      <p className="text-xs text-rose-500 mt-0.5">
+                        내 답 · {(q.revealedChoices ?? q.choices)[mine]}
                       </p>
                     )}
                   </div>
                 </div>
+                {q.revealedPassage && <p className="mb-3 rounded-xl bg-gray-50 p-3 text-sm leading-relaxed text-gray-700 whitespace-pre-line">{q.revealedPassage}</p>}
                 <p className="text-xs text-gray-500 leading-relaxed pl-8 whitespace-pre-line">
                   {q.explanation}
                 </p>
