@@ -140,8 +140,8 @@ export default function DisclosurePage() {
 
         {loading ? (
           <div role="status" className="flex flex-col items-center py-20 text-center text-sm text-gray-400">
-            <LoadingIcon className="mb-3 h-12 w-12 text-indigo-600" decorative />
-            공시 원문을 하나씩 읽는 중입니다…
+            <LoadingIcon className="h-20 w-20 text-indigo-600" decorative />
+            <span className="sr-only">공시 원문을 하나씩 읽는 중입니다…</span>
           </div>
         ) : (
           <OwnershipTable

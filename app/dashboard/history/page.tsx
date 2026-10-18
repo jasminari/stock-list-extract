@@ -14,7 +14,7 @@ export default function HistoryPage() {
   return (
     <Suspense fallback={
       <div className="flex-1 flex items-center justify-center">
-        <LoadingIcon className="h-12 w-12 text-indigo-600" label="기록 불러오는 중" />
+        <LoadingIcon className="h-20 w-20 text-indigo-600" label="기록 불러오는 중" />
       </div>
     }>
       <HistoryContent />
@@ -162,7 +162,7 @@ function HistoryContent() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <LoadingIcon className="h-12 w-12 text-indigo-600" label="기록 불러오는 중" />
+        <LoadingIcon className="h-20 w-20 text-indigo-600" label="기록 불러오는 중" />
       </div>
     );
   }
@@ -216,8 +216,8 @@ function HistoryContent() {
       <div className="flex-1 overflow-auto px-2 md:px-6 py-2 md:py-4">
         {stocksLoading ? (
           <div role="status" className="flex flex-col items-center justify-center py-16">
-            <LoadingIcon className="mb-4 h-12 w-12 text-indigo-600" decorative />
-            <p className="text-sm text-gray-500">종목 데이터 불러오는 중...</p>
+            <LoadingIcon className="h-20 w-20 text-indigo-600" decorative />
+            <span className="sr-only">종목 데이터 불러오는 중...</span>
           </div>
         ) : stocks.length > 0 && selectedResult ? (
           <ProcessedResultTable

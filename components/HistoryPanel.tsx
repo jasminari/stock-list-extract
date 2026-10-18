@@ -126,8 +126,8 @@ export default function HistoryPanel({
             <div className="border-t border-gray-200 p-4">
               {detailLoading ? (
                 <div role="status" className="py-8 flex flex-col items-center gap-3 text-gray-500 text-sm">
-                  <LoadingIcon className="h-12 w-12 text-indigo-600" decorative />
-                  종목 데이터 불러오는 중...
+                  <LoadingIcon className="h-20 w-20 text-indigo-600" decorative />
+                  <span className="sr-only">종목 데이터 불러오는 중...</span>
                 </div>
               ) : (
                 <ProcessedResultTable

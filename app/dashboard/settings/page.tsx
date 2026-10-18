@@ -113,8 +113,8 @@ export default function SettingsPage() {
 
           {loading ? (
             <div role="status" className="border border-gray-200 rounded-xl p-8 text-center">
-              <LoadingIcon className="mx-auto h-10 w-10 text-indigo-600" decorative />
-              <p className="text-sm text-gray-400 mt-2">불러오는 중...</p>
+              <LoadingIcon className="mx-auto h-20 w-20 text-indigo-600" decorative />
+              <span className="sr-only">불러오는 중...</span>
             </div>
           ) : registered.length === 0 ? (
             <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center">

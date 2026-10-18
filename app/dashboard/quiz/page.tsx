@@ -191,7 +191,7 @@ export default function QuizPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <LoadingIcon className="h-12 w-12 text-indigo-600" label="퀴즈 불러오는 중" />
+        <LoadingIcon className="h-20 w-20 text-indigo-600" label="퀴즈 불러오는 중" />
       </div>
     );
   }

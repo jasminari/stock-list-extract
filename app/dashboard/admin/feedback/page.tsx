@@ -248,8 +248,8 @@ export default function AdminFeedbackPage() {
 
           {loading ? (
             <div role="status" className="flex flex-col items-center px-4 py-12 text-center text-sm text-gray-400">
-              <LoadingIcon className="mb-2 h-10 w-10 text-indigo-600" decorative />
-              불러오는 중...
+              <LoadingIcon className="h-20 w-20 text-indigo-600" decorative />
+              <span className="sr-only">불러오는 중...</span>
             </div>
           ) : filtered.length === 0 ? (
             <div className="px-4 py-12 text-center text-sm text-gray-400">

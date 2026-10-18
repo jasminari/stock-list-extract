@@ -62,7 +62,7 @@ export default function NotificationsPage() {
 
         {loading ? (
           <div className="border border-gray-200 rounded-xl p-8 text-center">
-            <LoadingIcon className="mx-auto h-10 w-10 text-indigo-600" label="알림 불러오는 중" />
+            <LoadingIcon className="mx-auto h-20 w-20 text-indigo-600" label="알림 불러오는 중" />
           </div>
         ) : notifications.length === 0 ? (
           <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center">

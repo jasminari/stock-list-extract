@@ -475,8 +475,8 @@ export default function AdminPage() {
           </div>
           {loading ? (
             <div role="status" className="p-8 text-center">
-              <LoadingIcon className="mx-auto h-10 w-10 text-indigo-600" decorative />
-              <p className="text-sm text-gray-400 mt-2">로그를 불러오는 중...</p>
+              <LoadingIcon className="mx-auto h-20 w-20 text-indigo-600" decorative />
+              <span className="sr-only">로그를 불러오는 중...</span>
             </div>
           ) : logs.length === 0 ? (
             <div className="p-8 text-center">

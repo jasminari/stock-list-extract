@@ -394,8 +394,8 @@ export default function DataPage() {
 
         {loading ? (
           <div role="status" className="flex flex-col items-center justify-center py-20">
-            <LoadingIcon className="h-12 w-12 text-indigo-600" decorative />
-            <p className="text-sm text-gray-400 mt-3">수집 데이터를 불러오는 중...</p>
+            <LoadingIcon className="h-20 w-20 text-indigo-600" decorative />
+            <span className="sr-only">수집 데이터를 불러오는 중...</span>
           </div>
         ) : data.length === 0 ? (
           <div className="border border-dashed border-gray-300 rounded-xl p-12 text-center">

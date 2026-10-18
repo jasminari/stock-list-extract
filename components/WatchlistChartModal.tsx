@@ -242,7 +242,7 @@ export default function WatchlistChartModal({
           </div>
 
           <div className="px-4 sm:px-6 py-4 flex-1 min-h-0 overflow-y-auto">
-            {loading && <div role="status" className="py-16 flex flex-col items-center gap-3 text-gray-500 text-sm"><LoadingIcon className="h-12 w-12 text-indigo-600" decorative />차트를 불러오는 중…</div>}
+            {loading && <div role="status" className="py-16 flex flex-col items-center gap-3 text-gray-500 text-sm"><LoadingIcon className="h-20 w-20 text-indigo-600" decorative /><span className="sr-only">차트를 불러오는 중…</span></div>}
             {error && <div className="py-16 text-center text-sm text-gray-500">{error}</div>}
             {!loading && !error && candles?.length === 0 && (
               <div className="py-16 text-center text-sm text-gray-500">표시할 차트 데이터가 없습니다</div>

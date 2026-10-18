@@ -211,8 +211,8 @@ export default function SearchPage() {
           </div>
         ) : search.searching ? (
           <div role="status" className="h-full flex flex-col items-center justify-center">
-            <LoadingIcon className="mb-4 h-12 w-12 text-indigo-600" decorative />
-            <p className="text-sm text-gray-500">종목을 검색하는 중입니다...</p>
+            <LoadingIcon className="h-20 w-20 text-indigo-600" decorative />
+            <span className="sr-only">종목을 검색하는 중입니다...</span>
           </div>
         ) : (
           <AnimatePresence mode="wait">
