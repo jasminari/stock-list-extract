@@ -85,7 +85,16 @@ export function addVolumeSeries(chart: IChartApi, candles: DailyCandle[]) {
   return volumeSeries;
 }
 
+export interface ChartArticle {
+  date: string;
+  reason: string | null;
+  keyword: string | null;
+  sourceUrl: string | null;
+  sourceTitle: string | null;
+}
+
 interface DailyChartData {
+  articles: ChartArticle[];
   candles: DailyCandle[] | null;
   /** 상승이유 기사가 붙었던 날짜 (YYYY-MM-DD) */
   articleDates: string[];
@@ -96,6 +105,7 @@ interface DailyChartData {
 /** 종목 일봉 + 상승이유 기사일 조회. code가 바뀔 때마다 다시 가져온다 */
 export function useDailyChartData(code: string): DailyChartData {
   const [candles, setCandles] = useState<DailyCandle[] | null>(null);
+  const [articles, setArticles] = useState<ChartArticle[]>([]);
   const [articleDates, setArticleDates] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,6 +116,7 @@ export function useDailyChartData(code: string): DailyChartData {
     setError(null);
     setCandles(null);
     setArticleDates([]);
+    setArticles([]);
 
     fetch(`/api/stock/chart/${code}`)
       .then(async (res) => {
@@ -116,6 +127,7 @@ export function useDailyChartData(code: string): DailyChartData {
         } else {
           setCandles(data.candles || []);
           setArticleDates(data.articleDates || []);
+          setArticles(data.articles || []);
         }
       })
       .catch(() => {
@@ -130,5 +142,5 @@ export function useDailyChartData(code: string): DailyChartData {
     };
   }, [code]);
 
-  return { candles, articleDates, error, loading };
+  return { candles, articleDates, articles, error, loading };
 }

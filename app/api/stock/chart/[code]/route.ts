@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken, fetchDailyChart } from "@/lib/kiwoom";
 import { isDbConfigured } from "@/lib/db";
-import { getStockArticleDates } from "@/lib/storage-db";
+import { getStockChartArticles } from "@/lib/storage-db";
 import type { DailyCandle } from "@/lib/types";
 
 /**
@@ -50,18 +50,20 @@ export async function GET(
 
     // 상승이유 기사가 붙었던 날짜. 실패해도 차트 자체는 보여줘야 하므로 별도로 감싼다.
     let articleDates: string[] = [];
+    let articles: Awaited<ReturnType<typeof getStockChartArticles>> = [];
     if (isDbConfigured()) {
       try {
-        const dates = await getStockArticleDates(code);
-        articleDates = dates.map(
-          (d) => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`
-        );
+        const rows = await getStockChartArticles(code);
+        articles = rows.map((row) => ({ ...row,
+          date: `${row.date.slice(0, 4)}-${row.date.slice(4, 6)}-${row.date.slice(6, 8)}`,
+        }));
+        articleDates = [...new Set(articles.map((row) => row.date))];
       } catch (e) {
         console.warn("기사 등장일 조회 실패:", e);
       }
     }
 
-    return NextResponse.json({ code, candles, articleDates });
+    return NextResponse.json({ code, candles, articleDates, articles });
   } catch (error) {
     const message = error instanceof Error ? error.message : "알 수 없는 오류";
     return NextResponse.json({ error: message }, { status: 500 });

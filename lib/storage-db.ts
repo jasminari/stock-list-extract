@@ -33,6 +33,21 @@ export async function getStockArticleDates(code: string): Promise<string[]> {
   return rows.map((r) => r.date);
 }
 
+/** 기사 링크와 함께 저장된 날짜별 요약. 같은 날짜의 서로 다른 기사도 유지한다. */
+export async function getStockChartArticles(code: string) {
+  return getDb().selectDistinct({
+    date: searchResults.date,
+    reason: stockAnnotations.reason,
+    keyword: stockAnnotations.keyword,
+    sourceUrl: stockAnnotations.sourceUrl,
+    sourceTitle: stockAnnotations.sourceTitle,
+  }).from(stockEntries)
+    .innerJoin(searchResults, eq(stockEntries.searchResultId, searchResults.id))
+    .innerJoin(stockAnnotations, eq(stockAnnotations.stockEntryId, stockEntries.id))
+    .where(and(eq(stockEntries.code, code), ne(stockAnnotations.sourceUrl, "")))
+    .orderBy(searchResults.date);
+}
+
 export async function saveSearchResult(
   date: string,
   conditionSeq: string,
