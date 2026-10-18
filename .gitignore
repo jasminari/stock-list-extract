@@ -6,3 +6,6 @@ logs/
 /data/
 .DS_Store
 tsconfig.tsbuildinfo
+
+# Local Oracle SSH credentials
+/Oracle_key/
