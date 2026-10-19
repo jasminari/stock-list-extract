@@ -28,19 +28,19 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const summaryDates = useMemo(() => {
-    const available = new Set(candles?.map((c) => c.date) ?? []);
-    return [...new Set(articles.filter((a) => a.reason?.trim() && available.has(a.date)).map((a) => a.date))].sort();
-  }, [articles, candles]);
+    return [...new Set(articles.filter((a) => a.reason?.trim() || a.sourceUrl?.trim()).map((a) => a.date))].sort();
+  }, [articles]);
   const activeDate = selectedDate && summaryDates.includes(selectedDate)
     ? selectedDate : summaryDates.at(-1);
-  const activeArticles = articles.filter((a) => a.date === activeDate && a.reason?.trim());
+  const activeArticles = articles.filter((a) => a.date === activeDate);
   useEffect(() => { setSelectedDate(null); }, [code]);
   const activeIndex = activeDate ? summaryDates.indexOf(activeDate) : -1;
   const navigateSummary = (direction: -1 | 1) => {
     const date = summaryDates[activeIndex + direction];
     const chart = chartRef.current;
-    if (!date || !chart || !candles) return;
+    if (!date) return;
     setSelectedDate(date);
+    if (!chart || !candles) return;
     const index = candles.findIndex((c) => c.date === date);
     if (index < 0) return;
     const range = chart.timeScale().getVisibleLogicalRange();
@@ -110,11 +110,11 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
       position: "aboveBar" as const,
       id: date,
       shape: "circle" as const,
-      color: date === activeDate ? "transparent" : summaryDates.includes(date) ? "#10b981" : "#f59e0b",
+      color: date === activeDate ? "transparent" : articles.some((article) => article.date === date && article.reason?.trim()) ? "#10b981" : "#f59e0b",
       size: date === activeDate ? 1.4 : 1,
 
     })));
-  }, [activeDate, candles, articleDates, summaryDates]);
+  }, [activeDate, candles, articleDates, articles]);
 
   // 가격축 확대/이동 중에도 연결선과 선택 점이 같은 캔들을 따라간다.
   useEffect(() => {
@@ -213,6 +213,17 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
                 표시할 차트 데이터가 없습니다
               </div>
             )}
+            {!loading && !error && !activeDate && (
+              <section
+                aria-label="뉴스 요약"
+                aria-live="polite"
+                className="mb-4 rounded-xl border border-gray-200 bg-gray-50/60"
+              >
+                <p className="px-4 py-6 text-center text-sm text-gray-500">
+                  표시할 뉴스 없음
+                </p>
+              </section>
+            )}
             {!loading && !error && activeDate && (
               <section
                 aria-label={`${activeDate} 뉴스 요약`}
@@ -220,9 +231,17 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
                 className="mb-4 rounded-xl border border-gray-200 bg-gray-50/60"
               >
                 <div className="max-h-28 overflow-y-auto px-4 py-3 space-y-2">
-                {activeArticles.filter((article, index, all) => all.findIndex((a) => a.reason?.trim() === article.reason?.trim()) === index).map((article) => (
+                {activeArticles.filter((article, index, all) => all.findIndex((a) => a.reason?.trim() === article.reason?.trim() && a.sourceUrl === article.sourceUrl) === index).map((article) => (
                   <div key={article.entryId} className="flex items-start gap-3">
-                    <p className="min-w-0 flex-1 text-sm leading-relaxed text-gray-700">{article.reason?.trim()}</p>
+                    <div className="min-w-0 flex-1 space-y-1 text-sm leading-relaxed">
+                      {article.reason?.trim() && <p className="whitespace-pre-line text-gray-700">{article.reason.trim()}</p>}
+                      {article.sourceUrl && /^https?:\/\//i.test(article.sourceUrl) && (
+                        <a href={article.sourceUrl} target="_blank" rel="noopener noreferrer"
+                          className="block text-indigo-600 hover:underline">
+                          {article.sourceTitle?.trim() || `${name} 관련 기사 원문`} ↗
+                        </a>
+                      )}
+                    </div>
 
                   </div>
                 ))}
@@ -230,7 +249,7 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
                 <div className="flex items-center justify-between px-3 pb-3 pt-1">
                   <div className="flex items-center gap-1.5">
                     <time dateTime={activeDate} className="pl-1 text-xs tabular-nums font-medium text-indigo-600">{activeDate.replaceAll("-", ". ")}</time>
-                    {activeArticles.filter((article, index, all) => all.findIndex((a) => a.reason?.trim() === article.reason?.trim()) === index).map((article) => (
+                    {activeArticles.filter((article, index, all) => all.findIndex((a) => a.reason?.trim() === article.reason?.trim() && a.sourceUrl === article.sourceUrl) === index).map((article) => (
                       <a
                         key={article.entryId}
                         href={`/dashboard/history?resultId=${article.resultId}&entryId=${article.entryId}`}

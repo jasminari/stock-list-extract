@@ -1,4 +1,4 @@
-import { eq, and, desc, lte, gte, ne, sql } from "drizzle-orm";
+import { eq, and, or, desc, lte, gte, ne, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   users,
@@ -33,7 +33,7 @@ export async function getStockArticleDates(code: string): Promise<string[]> {
   return rows.map((r) => r.date);
 }
 
-/** 기사 링크와 함께 저장된 날짜별 요약. 같은 날짜의 서로 다른 기사도 유지한다. */
+/** 종목코드로 연결된 뉴스 요약과 기사. 링크 없는 요약도 포함한다. */
 export async function getStockChartArticles(code: string) {
   return getDb().selectDistinct({
     date: searchResults.date,
@@ -46,7 +46,10 @@ export async function getStockChartArticles(code: string) {
   }).from(stockEntries)
     .innerJoin(searchResults, eq(stockEntries.searchResultId, searchResults.id))
     .innerJoin(stockAnnotations, eq(stockAnnotations.stockEntryId, stockEntries.id))
-    .where(and(eq(stockEntries.code, code), ne(stockAnnotations.sourceUrl, "")))
+    .where(and(eq(stockEntries.code, code), or(
+      ne(stockAnnotations.sourceUrl, ""),
+      ne(stockAnnotations.reason, ""),
+    )))
     .orderBy(searchResults.date);
 }
 

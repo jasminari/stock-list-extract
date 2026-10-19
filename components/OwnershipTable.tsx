@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { OwnershipRow } from "@/lib/types";
 import WatchlistStar from "./WatchlistStar";
+import StockChartModal from "./StockChartModal";
 
 /** YYYYMMDD → "25-02-13" (표가 좁아 두 자리 연도로 줄인다) */
 function shortDate(s: string) {
@@ -183,6 +184,7 @@ export default function OwnershipTable({
   });
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
+  const [chartTarget, setChartTarget] = useState<{ code: string; name: string } | null>(null);
 
   /** 같은 헤더를 다시 누르면 방향만 뒤집는다 */
   const toggleSort = (col: SortCol) => {
@@ -337,19 +339,27 @@ export default function OwnershipTable({
                           onClick={() => onToggleWatchlist(r.stockCode, r.corpName)}
                         />
                       )}
-                      <a
-                        href={dartUrl(r.rceptNo)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-gray-900 hover:text-indigo-700 hover:underline truncate"
-                        title="DART 원문 보기"
+                      <button
+                        type="button"
+                        onClick={() => setChartTarget({ code: r.stockCode, name: r.corpName })}
+                        disabled={!r.stockCode}
+                        className="text-left text-gray-900 hover:text-indigo-700 hover:underline truncate disabled:cursor-default disabled:no-underline disabled:hover:text-gray-900"
+                        title={r.stockCode ? `${r.corpName} 차트 보기` : "종목코드가 없어 차트를 볼 수 없습니다"}
                       >
                         {r.corpName}
-                      </a>
+                      </button>
                     </div>
                   </td>
                   <td className={`${td} text-gray-600 max-w-[5rem] md:max-w-[13rem] truncate`} title={r.subject}>
-                    {r.subject}
+                    <a
+                      href={dartUrl(r.rceptNo)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-indigo-700 hover:underline"
+                      title="DART 원문 보기"
+                    >
+                      {r.subject}
+                    </a>
                   </td>
                   <td className={`${td} ${hideSm("holderName")} max-w-[11rem] truncate`} title={r.holderName}>
                     {r.holderName}
@@ -412,10 +422,18 @@ export default function OwnershipTable({
       </div>
 
       <p className="mt-2 text-[11px] text-gray-400">
+        종목명을 누르면 차트, 공시주체를 누르면 DART 원문이 열립니다.{" "}
         헤더를 누르면 정렬됩니다. 한 종목의 보고가 흩어지지 않도록 종목 단위로 묶어서 옮깁니다.
         총액 막대는 1백만 · 1천만 · 1억 · 10억 · 100억 · 1천억 구간의 로그 눈금이며,
         칸 하나가 자릿수 하나이고 구간이 높을수록 진하게 표시됩니다.
       </p>
+      {chartTarget && (
+        <StockChartModal
+          code={chartTarget.code}
+          name={chartTarget.name}
+          onClose={() => setChartTarget(null)}
+        />
+      )}
     </div>
   );
 }
