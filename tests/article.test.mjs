@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { extractBody } from '../lib/article.ts';
+import { extractBody } from '../lib/article-core.mjs';
 
 const story = '실제 기사 본문입니다. 수요 증가와 실적 전망을 자세히 설명합니다. '.repeat(6);
 test('prefers dedicated article body over surrounding menus', () => {

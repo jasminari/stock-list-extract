@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test:news": "node --test tests/article.test.mjs tests/article-core.test.mjs tests/news-selection.test.mjs tests/news-search.test.mjs tests/rise-evidence.test.mjs tests/dart-business.test.mjs tests/summary-api.test.mjs tests/related-material.test.mjs",
     "test:push": "node --test tests/price-alerts.test.mjs tests/web-push.test.mjs tests/push-service-worker.test.mjs",
     "alerts:check": "node scripts/check-price-alerts.mjs"
   },

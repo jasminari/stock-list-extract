@@ -42,6 +42,11 @@ export interface DailyCandle {
 
 // === 가공된 종목 데이터 ===
 
+export interface RelatedMaterial {
+  keyword: string; summary: string; sourceUrl: string; sourceTitle: string;
+  eventDate: string; articleDate: string;
+}
+
 export interface BusinessProfile {
   keyword: string;
   summary: string;
@@ -52,6 +57,7 @@ export interface BusinessProfile {
 
 export interface ProcessedStock {
   businessProfile?: BusinessProfile;
+  relatedMaterial?: RelatedMaterial;
   index: number;
   entryId: number | null;
   name: string;
@@ -101,6 +107,7 @@ export interface DbResultMeta {
 
 export interface StockEntryWithAnnotation {
   businessProfile?: BusinessProfile;
+  relatedMaterial?: RelatedMaterial;
   id: number;
   code: string;
   name: string;

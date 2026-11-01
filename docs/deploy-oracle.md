@@ -258,3 +258,28 @@ mTLS나 좀 더 강한 인증으로 교체 고려.
 
 - OCI Always Free Ampere (A1.Flex): 4 OCPU / 24GB RAM 까지 무료. 현재 쓰는 shape 은 x86 Micro(1GB)로 보이므로, 메모리 문제 계속되면 Ampere 로 변경 고려.
 - Reserved Public IP 는 Always Free 1개 무료. 추가 할당 시 과금 — 현재 `stock-cron` 1개만 유지 중 (정상).
+
+## 2026-10-20 — 개별 재료 / DART 사업 소개 자동 처리
+
+- 기존 `stock-extract.timer` 활성화 확인, 수집 후 `runEnrich(dateStr)` 실행 경로 확인.
+- `scripts/enrich-reasons.mjs`, 관련 `scripts/lib` 모듈과 `lib/article-core.mjs` 서버 반영 및 `node --check` 통과. 기존 파일은 서버 `backups/news-before-dart-*.tar.gz`에 백업.
+- 개별 재료 기사 우선, 테마 동반상승 제외, 기사 미채택 시 DART 사업 요약. 같은 종목의 중복 엔트리는 사업 수집/요약을 공유한다.
+- **완료:** 사용자 명시 승인 후 서버 `/etc/stock-extract.env`에 DART_API_KEY 저장. 기존 설정 백업 및 root:root 600 권한 확인. 서버에서 공식 DART 공시 목록 조회 status `000` 확인. 활성 타이머의 다음 실행부터 새 사업 요약 생성 경로가 사용된다. AI API 한도·장애 시 새 요약은 생성되지 않을 수 있으며 기존 소개는 유지한다.
+- 로컬 뉴스/DART 테스트 38개 및 TypeScript 검사 통과. 자동수집을 수동으로 재실행하거나 당일 DB 결과를 덮어쓰지는 않았다.
+
+## 2026-11-01 — 미확인 노출 복구
+
+- 10/30 수집 로그: 기사 채택 0/20, 기존 사업 소개 5개, 신규 사업 소개 15개 생성 실패. 기존 OpenRouter 모델 요청이 HTTP 404로 실패함을 재현.
+- 무료 모델 `nvidia/nemotron-3.5-lightning:free`로 변경. 404/429/502/503 시 검증된 다른 무료 모델로 재시도하는 summary-api 모듈 추가. 실제 응답 모델을 사업 요약 provenance에 기록. 사업 소개 실패도 오류 건수에 포함.
+- 영문 포함 6자리 종목코드를 DART 발행사 매핑과 입력 검증에서 허용. 서버 코드 백업 후 적용.
+- `node scripts/backfill-business.mjs 20261030 --apply`로 누락 사업 소개 15개 복구. 기존 뉴스 annotation은 변경하지 않음. 지니언스 소개는 DART 근거로 간결하게 검토·수정.
+- 웹 운영 버전 c316889에는 DART 표시 변경이 빠져 있었음. 동일 커밋을 바탕으로 표/타입/포맷/결과 API/business-profile 조회 5개 파일만 추가한 배포 dpl_3xX4AochzmV5Ut8fmNhphzdXWWNT를 빌드 후 운영 승격.
+- 운영 화면 resultId=206에서 7열, 20행, DART 출처 20개, 미확인 표시 0 확인. 캡처 `output/business-repair-20261030/production-fixed.png`.
+- 뉴스/DART 테스트 38개, 모델 대체 테스트 2개, TypeScript 및 운영 빌드 통과. 10/30 기사 선택 결과를 다시 크롤링하거나 인과관계 판정을 완화하지는 않았음.
+
+## 2026-11-01 — 상승 배경 / 관련 재료 / 사업 소개
+
+- 상승 연결 기사 → 최근 구체적 개별 사건 기사 → DART 사업 소개 순으로 처리한다. 테마 동반상승 제외, 수동 입력 보호를 유지한다.
+- 관련 재료는 `0008_add_related_materials.sql`의 별도 테이블에 저장한다. 당일 기사 중 최근 7일 이내 명시된 사건만 기본 허용하며, 기사에 명시된 자료 기준일과 보도일을 나눈다.
+- AI가 숫자를 만들거나 계획을 완료로 바꾸는 결과를 거부한다. 요약 실패 시 검증된 짧은 근거를 사용하며, 관련 재료 처리가 실패해도 DART 경로를 시도한다.
+- 웹/Oracle 배포 모두 [dev 우선 배포 절차](release-workflow.md)를 따른다. 기존 timer를 중복 실행하지 않는다.

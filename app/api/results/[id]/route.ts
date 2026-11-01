@@ -1,3 +1,4 @@
+import { getRelatedMaterials } from "@/lib/related-material";
 import { getBusinessProfiles } from "@/lib/business-profile";
 import { getDb } from "@/lib/db";
 import { searchResults } from "@/lib/db/schema";
@@ -27,8 +28,11 @@ export async function GET(
     const stocks = await getSearchResultStocks(searchResultId);
     const [result] = await getDb().select({date:searchResults.date}).from(searchResults).where(eq(searchResults.id,searchResultId)).limit(1);
     if(result) {
-      const profiles = await getBusinessProfiles(stocks.map(s=>s.code),result.date);
-      for(const stock of stocks) stock.businessProfile = profiles.get(stock.code);
+      const [profiles, materials] = await Promise.all([
+        getBusinessProfiles(stocks.map(s=>s.code),result.date),
+        getRelatedMaterials(stocks.map(s=>s.id)),
+      ]);
+      for(const stock of stocks) { stock.businessProfile = profiles.get(stock.code); stock.relatedMaterial = materials.get(stock.id); }
     }
     return NextResponse.json({ stocks });
   } catch (error) {

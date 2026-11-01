@@ -1,0 +1,494 @@
+[
+  {
+    "id": 9943,
+    "code": "000810",
+    "name": "삼성화재",
+    "price": "659000",
+    "changeRate": "00000123",
+    "volume": "93719",
+    "tradingAmount": "61351",
+    "listCount": "44647473",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "손해보험, 자동차보험, 장기보험",
+      "summary": "국내외 손해보험업 및 관련 사업을 영위하는 보험회사",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003992",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260814"
+    }
+  },
+  {
+    "id": 9944,
+    "code": "006400",
+    "name": "삼성SDI",
+    "price": "543000",
+    "changeRate": "00000093",
+    "volume": "754039",
+    "tradingAmount": "409151",
+    "listCount": "80585530",
+    "keyword": "실적 · 3분기 흑자 전환",
+    "reason": "3분기 영업이익 4,078억원으로 전년 동기 대비 흑자 전환. 호실적이 당일 상승 배경으로 보도됨.",
+    "sourceUrl": "https://n.news.naver.com/mnews/article/030/0003480442?sid=101",
+    "sourceTitle": "[ET특징주]삼성SDI, 3분기 호실적에 상승세",
+    "businessProfile": {
+      "keyword": "이차전지·전자재료",
+      "summary": "중대형·소형 리튬이온 이차전지와 반도체·디스플레이 소재를 생산·판매하는 회사임.",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003578",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260814"
+    }
+  },
+  {
+    "id": 9945,
+    "code": "010140",
+    "name": "삼성중공업",
+    "price": "15880",
+    "changeRate": "00000102",
+    "volume": "5014382",
+    "tradingAmount": "79129",
+    "listCount": "880000000",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "조선해양, 토건",
+      "summary": "선박 및 해양플랫폼을 건조·판매하고 건축·토목공사를 수행하는 회사임",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003496",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260814"
+    },
+    "relatedMaterial": {
+      "keyword": "2026년 3분기 실적",
+      "summary": "삼성중공업이 2026년 3분기 연결 기준 매출 3조1504억원, 영업이익 3384억원을 기록했으며, 전년 동기 대비 매출과 영업이익이 각각 19.6%, 42.1% 증가했다.",
+      "sourceUrl": "https://www.vegannews.co.kr/news/article.html?no=398223",
+      "sourceTitle": "삼성중공업 3분기 매출 3조1504억원, 영업익 42.1% 증가",
+      "eventDate": "20261029",
+      "articleDate": "20261030"
+    }
+  },
+  {
+    "id": 9946,
+    "code": "030530",
+    "name": "원익홀딩스",
+    "price": "29500",
+    "changeRate": "00000517",
+    "volume": "4694164",
+    "tradingAmount": "137604",
+    "listCount": "77237981",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "원익홀딩스, 반도체 장비, 가스",
+      "summary": "반도체 및 디스플레이 제조공정에 필요한 원료 가스를 공급하는 장치사업 및 배관공사업을 영위하는 지주회사",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260923000536",
+      "reportName": "[기재정정]사업보고서 (2025.12)",
+      "filingDate": "20260923"
+    }
+  },
+  {
+    "id": 9947,
+    "code": "033780",
+    "name": "KT&G",
+    "price": "196200",
+    "changeRate": "00000161",
+    "volume": "258624",
+    "tradingAmount": "50483",
+    "listCount": "103810456",
+    "keyword": "사업 성장 · 주주환원",
+    "reason": "글로벌 사업 성장과 지속적인 주주환원이 당일 신고가 배경으로 보도됨. 연말 신규 주주환원 정책에 대한 기대도 언급되며, 당일 새로 발표된 정책은 아님.",
+    "sourceUrl": "https://n.news.naver.com/mnews/article/009/0005756709?sid=101",
+    "sourceTitle": "하락장에도 끄떡없다…KT&G, 코스피 급락에도 신고가 갈아치워",
+    "businessProfile": {
+      "keyword": "담배, 건강기능식품, 부동산, 기타",
+      "summary": "KT&G는 담배, 건강기능식품, 부동산, 기타 사업을 영위하는 종합기업임",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814004174",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260814"
+    }
+  },
+  {
+    "id": 9948,
+    "code": "042510",
+    "name": "라온시큐어",
+    "price": "19450",
+    "changeRate": "00001682",
+    "volume": "7638363",
+    "tradingAmount": "145558",
+    "listCount": "11105828",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "AI 보안·인증 플랫폼",
+      "summary": "AI 보안·인증 플랫폼 기업으로, 생체인증 기반 다중인증(MFA), 통합 계정·권한 관리(IAM), 블록체인 기반 분산신원인증(DID) 등을 통해 디지털 자산을 보호하고 안전한 디지털 신원 환경을 구현하는 기술을 제공함",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814002339",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260814"
+    }
+  },
+  {
+    "id": 9949,
+    "code": "046890",
+    "name": "서울반도체",
+    "price": "11640",
+    "changeRate": "00000393",
+    "volume": "5320695",
+    "tradingAmount": "66304",
+    "listCount": "58305400",
+    "keyword": "기술개발 · 탈희토류 LED",
+    "reason": "앞서 발표한 탈희토류 LED 개발 소식이 재부각되며 강세가 이어짐. 당일 신규 발표는 아님.",
+    "sourceUrl": "https://www.etoday.co.kr/news/view/2642104",
+    "sourceTitle": "[특징주] 美 기술주 폭락에도…서울반도체 '탈희토류 LED' 강세",
+    "businessProfile": {
+      "keyword": "LED 패키징, 자동차 조명, 썬라이크",
+      "summary": "LED 칩을 패키징하여 판매하는 회사임",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814002237",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260814"
+    }
+  },
+  {
+    "id": 9950,
+    "code": "051630",
+    "name": "진양화학",
+    "price": "3185",
+    "changeRate": "00003000",
+    "volume": "5096173",
+    "tradingAmount": "14588",
+    "listCount": "21200000",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "인조피혁, 플라스틱 제품",
+      "summary": "자동차용 인조피혁 및 천막지를 제조·판매하는 플라스틱 제품제조기업임",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814000292",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260814"
+    }
+  },
+  {
+    "id": 9951,
+    "code": "053800",
+    "name": "안랩",
+    "price": "118100",
+    "changeRate": "00001798",
+    "volume": "1090595",
+    "tradingAmount": "122752",
+    "listCount": "11126506",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "보안 솔루션, 보안 관제, 보안 컨설팅",
+      "summary": "통합보안 기업으로서 V3 등 보안 솔루션과 보안 관제, 컨설팅 서비스를 영위함",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813000644",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260813"
+    },
+    "relatedMaterial": {
+      "keyword": "3분기 실적 발표",
+      "summary": "안랩이 3분기 매출 795억원, 영업이익 109억원을 발표했다.",
+      "sourceUrl": "https://www.job-post.co.kr/news/articleView.html?idxno=235603",
+      "sourceTitle": "안랩 11만5900원으로 15.78% 급등…3분기 이익 개선에 거래 집중",
+      "eventDate": "20261028",
+      "articleDate": "20261030"
+    }
+  },
+  {
+    "id": 9952,
+    "code": "055550",
+    "name": "신한지주",
+    "price": "89600",
+    "changeRate": "00000124",
+    "volume": "1313204",
+    "tradingAmount": "116961",
+    "listCount": "469450239",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "금융지주회사",
+      "summary": "금융업을 영위하는 회사 등에 대한 지배·경영관리 및 종속회사에 대한 자금지원을 주요 사업목적으로 하는 금융지주회사",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261007000223",
+      "reportName": "[기재정정]반기보고서 (2026.06)",
+      "filingDate": "20261007"
+    },
+    "relatedMaterial": {
+      "keyword": "자사주 매입·소각",
+      "summary": "4500억원 규모의 자사주를 장내 매입한 뒤 전량 소각하기로 결정했다.",
+      "sourceUrl": "https://www.vegannews.co.kr/news/article.html?no=398341",
+      "sourceTitle": "신한지주, 4500억원 자사주 매입 후 전량 소각",
+      "eventDate": "20261027",
+      "articleDate": "20261030"
+    }
+  },
+  {
+    "id": 9953,
+    "code": "068270",
+    "name": "셀트리온",
+    "price": "191600",
+    "changeRate": "00000122",
+    "volume": "512619",
+    "tradingAmount": "98054",
+    "listCount": "232072877",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "바이오시밀러 의약품",
+      "summary": "자가면역질환·종양 치료용 바이오시밀러와 바이오의약품을 개발·생산·상업화하는 회사임.",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003751",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260814"
+    },
+    "relatedMaterial": {
+      "keyword": "분기 최대 실적",
+      "summary": "셀트리온은 올해 3분기 연결 기준 매출 1조5755억원, 영업이익 5253억원을 기록했다. 전년 동기 대비 각각 53.1%, 74.3% 증가하며 분기 기준 역대 최대 실적을 달성했다.",
+      "sourceUrl": "https://theviewers.co.kr/View.aspx?No=4289898",
+      "sourceTitle": "[Biz뷰] 셀트리온, 3분기 역대 최대 실적…다음 성장 주자는 '옴리클로'",
+      "eventDate": "20261030",
+      "articleDate": "20261030"
+    }
+  },
+  {
+    "id": 9954,
+    "code": "086790",
+    "name": "하나금융지주",
+    "price": "120500",
+    "changeRate": "00000067",
+    "volume": "507526",
+    "tradingAmount": "60670",
+    "listCount": "270969910",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "금융지주 관리",
+      "summary": "금융그룹 전략 수립과 은행·증권·카드·보험 등 종속기업의 경영관리·자금지원을 담당하는 금융지주회사임.",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814004019",
+      "reportName": "[기재정정]사업보고서 (2025.12)",
+      "filingDate": "20260814"
+    },
+    "relatedMaterial": {
+      "keyword": "자사주 매입·소각",
+      "summary": "하나금융지주가 보통주 208만5070주를 2500억원 규모로 장내 매입한 뒤 전량 소각하기로 결정했다. 매입 기간은 지난 26일부터 2027년 1월 25일까지다.",
+      "sourceUrl": "https://www.vegannews.co.kr/news/article.html?no=398348",
+      "sourceTitle": "하나금융지주 2500억원 자사주 매입 후 소각",
+      "eventDate": "20261023",
+      "articleDate": "20261030"
+    }
+  },
+  {
+    "id": 9955,
+    "code": "128940",
+    "name": "한미약품",
+    "price": "415000",
+    "changeRate": "00000682",
+    "volume": "242648",
+    "tradingAmount": "99733",
+    "listCount": "12810991",
+    "keyword": "기술수출 · 파브리병 신약",
+    "reason": "GC녹십자와 공동 개발한 파브리병 신약의 바이오마린 기술수출 소식이 당일 상승 배경으로 보도됨.",
+    "sourceUrl": "https://n.news.naver.com/mnews/article/030/0003480444?sid=101",
+    "sourceTitle": "[ET특징주]한미약품, 파브리병 신약 기술수출 소식에 상승세",
+    "businessProfile": {
+      "keyword": "의약품 제조 판매, 원료의약품, 해외의약품",
+      "summary": "한미약품은 의약품 제조·판매를 주력 사업으로 하며, 연결종속회사를 통해 원료의약품 및 해외의약품 사업을 영위하고 있음",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814004181",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260814"
+    }
+  },
+  {
+    "id": 9956,
+    "code": "207940",
+    "name": "삼성바이오로직스",
+    "price": "1487000",
+    "changeRate": "00000886",
+    "volume": "99011",
+    "tradingAmount": "141759",
+    "listCount": "46290951",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "바이오의약품 CDMO",
+      "summary": "바이오의약품 위탁생산과 세포주·공정 위탁개발 서비스를 제공하는 CDMO 회사임.",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003375",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260814"
+    }
+  },
+  {
+    "id": 9957,
+    "code": "232680",
+    "name": "라온로보틱스",
+    "price": "11550",
+    "changeRate": "00002419",
+    "volume": "5322106",
+    "tradingAmount": "56151",
+    "listCount": "13257500",
+    "keyword": "실적 · 영업이익 259% 증가",
+    "reason": "3분기 영업이익 39억원으로 전년 동기 대비 약 259% 증가. 실적 성장 소식에 당일 급등한 것으로 보도됨.",
+    "sourceUrl": "https://www.widedaily.com/news/articleView.html?idxno=302557",
+    "sourceTitle": "[특징주] 라온로보틱스, 3분기 영업익 259% '껑충'…주가 18%대 급등",
+    "businessProfile": {
+      "keyword": "반도체 로봇, 자동화 시스템",
+      "summary": "반도체·LCD·OLED·제약 바이오 제조라인용 로봇과 자동화 시스템을 개발·공급하는 회사임",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813000995",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260813"
+    }
+  },
+  {
+    "id": 9958,
+    "code": "263860",
+    "name": "지니언스",
+    "price": "27750",
+    "changeRate": "00001100",
+    "volume": "3620839",
+    "tradingAmount": "101385",
+    "listCount": "9079600",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "NAC, 지니안 인사이츠 E, 제로 트러스트",
+      "summary": "네트워크 접근제어(NAC), 단말 보안, 제로 트러스트 보안 솔루션을 개발·공급하고 유지관리·기술지원 서비스를 제공하는 회사임.",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814000732",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260814"
+    }
+  },
+  {
+    "id": 9959,
+    "code": "328130",
+    "name": "루닛",
+    "price": "15690",
+    "changeRate": "00000474",
+    "volume": "3932322",
+    "tradingAmount": "61424",
+    "listCount": "74458180",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "의료 인공지능, 암 진단, 영상 판독 보조",
+      "summary": "딥러닝 기반 의료 AI 기업으로, 암 진단 및 치료 솔루션인 Lunit INSIGHT와 Lunit SCOPE를 개발·판매함.",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260811000657",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260811"
+    },
+    "relatedMaterial": {
+      "keyword": "AI 바이오마커 연구계약",
+      "summary": "서밋 테라퓨틱스와 항암제 이보네시맙 연구에 AI 바이오마커를 활용하는 계약을 체결했다. 연구 협력 범위와 매출 인식은 계약 조건·수행 일정에 따라 달라진다.",
+      "sourceUrl": "https://www.job-post.co.kr/news/articleView.html?idxno=235626",
+      "sourceTitle": "루닛 1만5770원으로 5.27% 상승…의료 AI 성장성 주목",
+      "eventDate": "20261026",
+      "articleDate": "20261030"
+    }
+  },
+  {
+    "id": 9960,
+    "code": "329180",
+    "name": "HD현대중공업",
+    "price": "274000",
+    "changeRate": "00000074",
+    "volume": "358714",
+    "tradingAmount": "96748",
+    "listCount": "104961225",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "조선, 해양플랜트, 엔진기계",
+      "summary": "선박 및 해양플랜트, 엔진을 제조·판매하는 회사임",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814002879",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260814"
+    },
+    "relatedMaterial": {
+      "keyword": "3분기 실적 · 기대치 미달",
+      "summary": "3분기 매출 5조7536억원, 영업이익 8992억원으로 전년 동기 대비 각각 30.2%, 61.3% 증가했다. 영업이익은 시장 전망치 약 9792억원을 밑돌았다.",
+      "sourceUrl": "https://dealsite.co.kr/articles/171664",
+      "sourceTitle": "[리포트랩] 목표가 낮춘 HD현대중공업…발전용 엔진이 반전 열쇠 될까",
+      "eventDate": "20261028",
+      "articleDate": "20261030"
+    }
+  },
+  {
+    "id": 9961,
+    "code": "373220",
+    "name": "LG에너지솔루션",
+    "price": "359500",
+    "changeRate": "00000098",
+    "volume": "421683",
+    "tradingAmount": "150746",
+    "listCount": "234000000",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "리튬이온 전지",
+      "summary": "전기차·ESS·IT기기·전동공구 등에 쓰이는 전지 제품을 연구개발·제조·판매하는 회사임.",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813000255",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260813"
+    },
+    "relatedMaterial": {
+      "keyword": "공급 협력 MOU",
+      "summary": "포스코퓨처엠과 차세대 양·음극재 공급 및 기술개발 협력을 위한 MOU를 체결했다. 연내 정식계약 체결을 추진할 계획이다.",
+      "sourceUrl": "https://n.news.naver.com/mnews/article/030/0003480592?sid=101",
+      "sourceTitle": "포스코퓨처엠, LG에너지솔루션과 7년간 72만톤 규모 공급 합의",
+      "eventDate": "20261030",
+      "articleDate": "20261030"
+    }
+  },
+  {
+    "id": 9962,
+    "code": "489790",
+    "name": "한화비전",
+    "price": "51300",
+    "changeRate": "00000448",
+    "volume": "1531084",
+    "tradingAmount": "77584",
+    "listCount": "50488390",
+    "keyword": "미확인",
+    "reason": "미확인",
+    "sourceUrl": "",
+    "sourceTitle": "",
+    "businessProfile": {
+      "keyword": "시큐리티, 산업용장비",
+      "summary": "시큐리티 부문은 네트워크 카메라, 저장장치 등 영상보안 솔루션을, 산업용장비 부문은 칩마운터, 반도체 장비, 공작기계를 제조·판매하는 기업임",
+      "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813001301",
+      "reportName": "반기보고서 (2026.06)",
+      "filingDate": "20260813"
+    },
+    "relatedMaterial": {
+      "keyword": "자회사 실적 성장·영업이익 1000억 돌파",
+      "summary": "한화비전은 올해 3분기 연결 기준 매출 5734억원, 영업이익 1026억원을 기록했다. 자회사 한화세미텍의 반도체 장비 매출이 전 분기 대비 2.4배 증가하고 주력 영상보안 사업도 성장하며 영업이익이 처음으로 1000억원을 넘어섰다.",
+      "sourceUrl": "https://n.news.naver.com/mnews/article/031/0001070798?sid=105",
+      "sourceTitle": "김동선 '반도체 승부수'…한화비전 3분기 영업익 1026억",
+      "eventDate": "20261029",
+      "articleDate": "20261030"
+    }
+  }
+]

@@ -208,3 +208,16 @@ export const stockBusinessProfiles = pgTable("stock_business_profiles", {
   summaryOrigin: text("summary_origin").notNull(),
   updatedAt: timestamp("updated_at", {withTimezone:true}).notNull().defaultNow(),
 }, t=>[primaryKey({columns:[t.stockCode,t.receiptNo]})]);
+
+/** Concrete company events not established as the day's price-rise cause. */
+export const stockRelatedMaterials = pgTable("stock_related_materials", {
+  stockEntryId: integer("stock_entry_id").primaryKey().references(() => stockEntries.id, {onDelete:"cascade"}),
+  keyword: text("keyword").notNull(),
+  summary: text("summary").notNull(),
+  sourceUrl: text("source_url").notNull(),
+  sourceTitle: text("source_title").notNull(),
+  eventDate: varchar("event_date", {length:8}).notNull(),
+  articleDate: varchar("article_date", {length:8}).notNull(),
+  evidence: text("evidence").notNull(),
+  updatedAt: timestamp("updated_at", {withTimezone:true}).notNull().defaultNow(),
+});

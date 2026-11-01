@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+const dir='output/rise-comparison-20261019';
+const result=JSON.parse(fs.readFileSync(`${dir}/comparison.json`));
+const previous=JSON.parse(fs.readFileSync('output/news-comparison-20261019/ai-summary-comparison.json'));
+const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rows=result.results.map(r=>({...r,previous:previous.results.find(p=>p.code===r.code)?.summary||null,display:{keyword:r.after?.category||'미확인',reason:r.after?.rise?.evidence||'미확인'}}));
+const stats={total:rows.length,originalLinked:27,previousRelatedSelected:30,riseAttributed:rows.filter(r=>r.after).length,unconfirmed:rows.filter(r=>!r.after).length,searchIncomplete:rows.filter(r=>r.searchIncomplete).map(r=>r.name),errors:rows.filter(r=>r.status==='error').length};
+fs.writeFileSync(`${dir}/rise-comparison.json`,JSON.stringify({stats,mode:'Same search corpus; re-fetched bodies; deterministic body attribution; no AI API or DB writes',rows},null,2));
+const notice='10월 19일 검색 후보를 유지하고 최대 12개 후보 본문을 다시 확인했습니다. 기사에서 해당 종목의 재료와 당일 상승을 직접 연결한 경우만 채택합니다. 아래 새 상승이유는 AI가 생성한 문장이 아니라 판정에 사용한 기사 근거 문장입니다. 기사 해석을 확인한 것이며 실제 가격 인과관계를 입증한 것은 아닙니다. UI·테이블·운영 DB는 변경하지 않았습니다. 미확인은 재료 부재를 뜻하지 않습니다. SK하이닉스·삼성전자는 기존 검색 한도로 검색 범위가 미완료입니다.';
+let text=['10월 19일 당일 상승 재료 재검증',notice,JSON.stringify(stats,null,2),''];
+const htmlRows=rows.map(r=>{text.push(r.name,'원래: '+(r.before?.keyword||'미등록')+' / '+(r.before?.reason||'미등록'),'직전 관련기사 요약: '+(r.previous?.keyword||'미확인')+' / '+(r.previous?.reason||'미확인'),'새 키워드: '+r.display.keyword,'새 상승이유: '+r.display.reason,'출처: '+(r.after?.url||'-'),'');return `<tr><th>${escape(r.name)}</th><td>${escape(r.previous?.keyword||'미확인')}<p>${escape(r.previous?.reason||'')}</p></td><td><b>${escape(r.display.keyword)}</b><p>${escape(r.display.reason)}</p>${r.after?`<a href="${escape(r.after.url)}">근거 기사</a>`:''}</td></tr>`;}).join('');
+fs.writeFileSync(`${dir}/rise-comparison.txt`,text.join('\n'));
+fs.writeFileSync(`${dir}/rise-comparison.html`,`<!doctype html><html lang="ko"><meta charset="utf-8"><title>당일 상승 재료 비교</title><style>body{font:15px/1.7 system-ui;max-width:1400px;margin:32px auto;padding:0 24px;color:#243043}aside{background:#fff4d9;padding:18px}table{width:100%;border-collapse:collapse;margin-top:24px;table-layout:fixed}th,td{border:1px solid #ddd;padding:15px;vertical-align:top;text-align:left}th:first-child{width:13%}thead{background:#edf1f6}p{white-space:pre-line}a{color:#2155b5}</style><h1>10월 19일 · 당일 상승 근거 중심 비교</h1><p>직전 관련 기사 30종목 → 당일 상승 배경 확인 3종목 / 미확인 51종목</p><aside>${escape(notice)}</aside><table><thead><tr><th>종목</th><th>직전 관련기사 기반 요약</th><th>새 판정 · 상승 근거</th></tr></thead><tbody>${htmlRows}</tbody></table></html>`);
+console.log(stats);

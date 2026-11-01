@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+const dir='output/news-comparison-20261019';
+const input=JSON.parse(fs.readFileSync(`${dir}/verified-comparison.json`));
+const summaries=JSON.parse(fs.readFileSync(`${dir}/assistant-summaries.json`));
+const results=input.results.map(r=>({...r,summary:summaries[r.code]||null,summaryOrigin:summaries[r.code]?'current-conversation-assistant':null,status:summaries[r.code]?'summarized':'article-unconfirmed'}));
+if(results.filter(r=>r.after).length!==Object.keys(summaries).length)throw Error('Summary coverage mismatch');
+for(const r of results)if(r.after&&(!r.summary?.keyword||!r.summary?.reason))throw Error(`Missing summary: ${r.name}`);
+const metadata={date:input.date,summaryOrigin:'current-conversation-assistant',productionApiStatus:'429 free-models-per-day; zero successful generations',productionDatabaseChanged:false,uiChanged:false,notControlledModelComparison:true,total:results.length,summarized:results.filter(r=>r.summary).length,unconfirmed:results.filter(r=>!r.summary).length};
+fs.writeFileSync(`${dir}/ai-summary-comparison.json`,JSON.stringify({metadata,results},null,2));
+const notice='기존 요약 API는 일일 한도 초과(429)로 성공 0건. 개선된 기사 본문을 현재 대화의 AI가 읽어 30건을 대체 작성한 비교 초안입니다. 동일 모델 A/B 테스트나 운영 자동 요약 실행 성공 결과가 아닙니다. 기존 UI·테이블·운영 DB는 변경하지 않았습니다. 기사 미확인 24종목은 요약을 만들지 않았으며 기존 내용을 삭제하지 않았습니다. 검색 미완료 종목도 포함되므로 미확인을 재료 없음으로 해석하면 안 됩니다.';
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const text=['2026-10-19 키워드·상승이유 비교',notice,'','요약: 54종목 중 30종목 대체 작성 / 24종목 미확인. 신규 10종목, 기존 연결 20종목 재작성, 기존 연결 7종목 보류.','평가: 사건·규모·시점·진행상태가 구체화됨. 다만 삼성전자 환경기술, NAVER 테마, 삼성바이오로직스 홍보 활동, HD현대일렉트릭 사고 기사는 상승이유 설명에 한계가 있음. 기사 관련성과 상승 원인 관련성을 분리하는 추가 개선이 필요함.',''];
+for(const r of results){text.push(`${r.name} (${r.code})`,`이전 키워드: ${r.before?.keyword||'미등록'}`,`이전 상승이유: ${r.before?.reason||'미등록'}`,`개선 키워드: ${r.summary?.keyword||'기사 미확인'}`,`개선 상승이유: ${r.summary?.reason||'검증된 기사가 없어 요약 보류. 기존 운영 내용 유지.'}`,`출처: ${r.after?.url||'-'}`,'');}
+fs.writeFileSync(`${dir}/ai-summary-comparison.txt`,text.join('\n'));
+const rows=results.map(r=>`<tr><th>${esc(r.name)}<small>${r.code}</small></th><td>${esc(r.before?.keyword||'미등록')}<p>${esc(r.before?.reason||'미등록')}</p></td><td><strong>${esc(r.summary?.keyword||'기사 미확인')}</strong><p>${esc(r.summary?.reason||'검증된 기사 없어 요약 보류. 운영 내용 유지.')}</p>${r.after?`<a href="${esc(r.after.url)}">근거 기사</a>`:''}</td></tr>`).join('');
+fs.writeFileSync(`${dir}/ai-summary-comparison.html`,`<!doctype html><html lang="ko"><meta charset="utf-8"><title>10월 19일 요약 비교</title><style>body{font:15px/1.65 system-ui,sans-serif;color:#202733;margin:32px auto;max-width:1400px;padding:0 24px}h1{font-size:26px}aside{background:#fff4d9;padding:16px;border-radius:8px}table{border-collapse:collapse;width:100%;margin-top:24px;table-layout:fixed}th,td{border:1px solid #dce1e8;text-align:left;vertical-align:top;padding:16px}thead th{background:#eef2f7}th:first-child{width:13%}p{white-space:pre-line;margin:8px 0}small{display:block;color:#778}a{color:#2355b6}strong{color:#165a43}</style><h1>10월 19일 · 키워드와 상승이유 비교</h1><p>서비스 화면을 변경하지 않은 별도 비교 보고서 · 54종목 / 요약 30종목 / 기사 미확인 24종목</p><aside>${esc(notice)}</aside><p>새 요약은 구체적 사건과 규모, 과거 발표·전망·완료 여부를 구분합니다. 다만 관련 기사를 찾았다고 상승 원인이 입증되는 것은 아닙니다. 특히 환경기술·테마·홍보·사고 기사에는 이 한계를 표시했습니다.</p><table><thead><tr><th>종목</th><th>이전 키워드 · 상승이유</th><th>개선 기사 기반 AI 초안</th></tr></thead><tbody>${rows}</tbody></table></html>`);
+console.log(JSON.stringify(metadata));

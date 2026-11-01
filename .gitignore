@@ -9,3 +9,12 @@ tsconfig.tsbuildinfo
 
 # Local Oracle SSH credentials
 /Oracle_key/
+
+# Public, read-only dev verification fixture
+!/data/
+/data/*
+!/data/dev/
+/data/dev/*
+!/data/dev/market-20261030.json
+
+/output/

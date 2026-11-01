@@ -126,6 +126,7 @@ export function formatDbStocks(
     sourceUrl?: string;
     sourceTitle?: string;
     businessProfile?: import("./types").BusinessProfile;
+    relatedMaterial?: import("./types").RelatedMaterial;
   }[]
 ): ProcessedStock[] {
   return stocks
@@ -152,6 +153,7 @@ export function formatDbStocks(
         sourceUrl: s.sourceUrl || "",
         sourceTitle: s.sourceTitle || "",
         businessProfile: s.businessProfile,
+        relatedMaterial: s.relatedMaterial,
       };
     })
     .sort((a, b) => b.tradingAmountBil - a.tradingAmountBil)

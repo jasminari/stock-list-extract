@@ -36,6 +36,13 @@
       "when": 1792426246585,
       "tag": "0007_add_business_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793508000000,
+      "tag": "0008_add_related_materials",
+      "breakpoints": true
     }
   ]
 }

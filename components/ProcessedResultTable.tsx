@@ -266,10 +266,17 @@ export default function ProcessedResultTable({
               // 하루에 상장주식의 20% 이상 손바뀜 = 단기 과열 신호
               const isHighTurnover = (s.turnoverRate ?? 0) >= 20;
               const unconfirmed = !s.reason.trim() || s.reason === "미확인";
-              const business = unconfirmed ? s.businessProfile : undefined;
-              const keyword = business?.keyword || (unconfirmed ? "" : s.keyword === "미확인" ? "" : s.keyword);
-              const reason = business?.summary || (unconfirmed ? "" : s.reason);
-              const hasThread = !!business || (!unconfirmed && !!(keyword || reason || s.sourceUrl));
+              const related = unconfirmed ? s.relatedMaterial : undefined;
+              const business = unconfirmed && !related ? s.businessProfile : undefined;
+              const sourceUrl = related?.sourceUrl || s.sourceUrl;
+              const sourceTitle = related?.sourceTitle || s.sourceTitle;
+              const label = related ? "관련 재료" : business ? "사업 소개" : !unconfirmed ? "상승 배경" : "";
+              const badgeClass = related ? "bg-blue-50 text-blue-700" : business ? "bg-gray-100 text-gray-600" : "bg-violet-50 text-violet-700";
+              const badge = label ? <span className={`inline-block rounded px-2 py-0.5 text-[10px] md:text-xs font-medium mb-1 ${badgeClass}`}>{label}</span> : null;
+              const dates = related ? `${related.eventDate.slice(4,6)}.${related.eventDate.slice(6)} 자료 기준 · ${related.articleDate.slice(4,6)}.${related.articleDate.slice(6)} 보도` : "";
+              const keyword = related?.keyword || business?.keyword || (unconfirmed ? "" : s.keyword === "미확인" ? "" : s.keyword);
+              const reason = related?.summary || business?.summary || (unconfirmed ? "" : s.reason);
+              const hasThread = !!related || !!business || (!unconfirmed && !!(keyword || reason || s.sourceUrl));
 
               return (
                 <Fragment key={s.index}>
@@ -301,7 +308,7 @@ export default function ProcessedResultTable({
                       value={keyword}
                       entryId={s.entryId}
                       field="keyword"
-                      onSave={business ? undefined : onAnnotationUpdate}
+                      onSave={business || related ? undefined : onAnnotationUpdate}
                     />
                   </td>
                   <td
@@ -340,26 +347,27 @@ export default function ProcessedResultTable({
                     {s.changeRate.toFixed(2)}%
                   </td>
                   <td className="px-2 md:px-3 py-1.5 md:py-3 hidden sm:table-cell">
-                    {business && <span className="block text-[10px] text-gray-400 mb-1">사업 소개</span>}
+                    <div>{badge}</div>
                     <EditableCell
                       value={reason}
                       entryId={s.entryId}
                       field="reason"
-                      onSave={business ? undefined : onAnnotationUpdate}
+                      onSave={business || related ? undefined : onAnnotationUpdate}
                     />
                     {business && <a href={business.sourceUrl} target="_blank" rel="noopener noreferrer" title={`${business.reportName} · ${business.filingDate}`} className="block text-xs text-gray-500 hover:text-indigo-600 hover:underline mt-1">↗ DART · {business.reportName}</a>}
-                    {!unconfirmed && s.sourceUrl && (
+                    {related && <p className="text-[10px] md:text-xs text-gray-400 mt-1">{dates} · 당일 상승과의 연결은 확인되지 않음</p>}
+                    {(!unconfirmed || related) && sourceUrl && (
                       <button
                         onClick={() =>
                           setViewArticle({
-                            url: s.sourceUrl,
-                            title: s.sourceTitle,
+                            url: sourceUrl,
+                            title: sourceTitle,
                           })
                         }
-                        title={s.sourceTitle || s.sourceUrl}
+                        title={sourceTitle || sourceUrl}
                         className="block text-left text-[10px] md:text-xs text-indigo-500 hover:underline truncate max-w-[200px] md:max-w-[280px] mt-0.5"
                       >
-                        ↗ 근거 기사
+                        ↗ {related ? "관련 기사" : "근거 기사"}
                       </button>
                     )}
                   </td>
@@ -374,24 +382,25 @@ export default function ProcessedResultTable({
                             {keyword}
                           </span>
                         )}
-                        {business && <span className="block text-[10px] text-gray-400">사업 소개</span>}
+                        {badge}
                         {reason && (
                           <p className="text-[11px] text-gray-600 leading-snug whitespace-pre-line">
                             {reason}
                           </p>
                         )}
                         {business && <a href={business.sourceUrl} target="_blank" rel="noopener noreferrer" title={business.filingDate} className="block text-[11px] text-gray-500 hover:underline">↗ DART · {business.reportName}</a>}
-                        {!unconfirmed && s.sourceUrl && (
+                        {related && <p className="text-[10px] md:text-xs text-gray-400 mt-1">{dates} · 당일 상승과의 연결은 확인되지 않음</p>}
+                    {(!unconfirmed || related) && sourceUrl && (
                           <button
                             onClick={() =>
                               setViewArticle({
-                                url: s.sourceUrl,
-                                title: s.sourceTitle,
+                                url: sourceUrl,
+                                title: sourceTitle,
                               })
                             }
                             className="block w-full text-left text-[11px] text-indigo-500 hover:underline truncate"
                           >
-                            ↗ 근거 기사
+                            ↗ {related ? "관련 기사" : "근거 기사"}
                           </button>
                         )}
                       </div>
