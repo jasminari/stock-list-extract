@@ -43,6 +43,7 @@ function EditableCell({
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(value);
   const [saving, setSaving] = useState(false);
+  useEffect(() => { setText(value); }, [value]);
 
   const handleSave = useCallback(async () => {
     setEditing(false);
@@ -51,7 +52,7 @@ function EditableCell({
 
     setSaving(true);
     try {
-      await fetch("/api/annotations", {
+      const response = await fetch("/api/annotations", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -59,6 +60,7 @@ function EditableCell({
           [field]: text,
         }),
       });
+      if (!response.ok) throw new Error("저장 실패");
       onSave(entryId, field, text);
     } catch {
       setText(value); // revert on error
@@ -67,8 +69,8 @@ function EditableCell({
     }
   }, [text, value, entryId, field, onSave]);
 
-  if (!entryId) {
-    return <span className="text-gray-300">-</span>;
+  if (!entryId || !onSave) {
+    return <span className={`whitespace-pre-line ${!value || value === "미확인" ? "text-gray-400" : field === "keyword" ? "text-indigo-600 font-semibold" : "text-gray-700"}`}>{value || ""}</span>;
   }
 
   if (editing) {
@@ -95,9 +97,9 @@ function EditableCell({
       onClick={() => setEditing(true)}
       className={`cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5 inline-block min-w-[40px] min-h-[20px] ${
         saving ? "opacity-50" : ""
-      } ${text ? "text-gray-700" : "text-gray-300"}`}
+      } ${!text || text === "미확인" ? "text-gray-400" : field === "keyword" ? "text-indigo-600 font-semibold whitespace-pre-line" : "text-gray-700 whitespace-pre-line leading-relaxed"}`}
     >
-      {text || "-"}
+      {field === "keyword" ? (text || "").replace(/\s*·\s*/, "\n") : text || ""}
     </span>
   );
 }
@@ -263,7 +265,11 @@ export default function ProcessedResultTable({
               const isHighRate = s.changeRate >= 15;
               // 하루에 상장주식의 20% 이상 손바뀜 = 단기 과열 신호
               const isHighTurnover = (s.turnoverRate ?? 0) >= 20;
-              const hasThread = !!(s.keyword || s.reason || s.sourceUrl);
+              const unconfirmed = !s.reason.trim() || s.reason === "미확인";
+              const business = unconfirmed ? s.businessProfile : undefined;
+              const keyword = business?.keyword || (unconfirmed ? "" : s.keyword === "미확인" ? "" : s.keyword);
+              const reason = business?.summary || (unconfirmed ? "" : s.reason);
+              const hasThread = !!business || (!unconfirmed && !!(keyword || reason || s.sourceUrl));
 
               return (
                 <Fragment key={s.index}>
@@ -292,10 +298,10 @@ export default function ProcessedResultTable({
                   </td>
                   <td className="px-2 md:px-3 py-1.5 md:py-3 hidden sm:table-cell">
                     <EditableCell
-                      value={s.keyword}
+                      value={keyword}
                       entryId={s.entryId}
                       field="keyword"
-                      onSave={onAnnotationUpdate}
+                      onSave={business ? undefined : onAnnotationUpdate}
                     />
                   </td>
                   <td
@@ -334,13 +340,15 @@ export default function ProcessedResultTable({
                     {s.changeRate.toFixed(2)}%
                   </td>
                   <td className="px-2 md:px-3 py-1.5 md:py-3 hidden sm:table-cell">
+                    {business && <span className="block text-[10px] text-gray-400 mb-1">사업 소개</span>}
                     <EditableCell
-                      value={s.reason}
+                      value={reason}
                       entryId={s.entryId}
                       field="reason"
-                      onSave={onAnnotationUpdate}
+                      onSave={business ? undefined : onAnnotationUpdate}
                     />
-                    {s.sourceUrl && (
+                    {business && <a href={business.sourceUrl} target="_blank" rel="noopener noreferrer" title={`${business.reportName} · ${business.filingDate}`} className="block text-xs text-gray-500 hover:text-indigo-600 hover:underline mt-1">↗ DART · {business.reportName}</a>}
+                    {!unconfirmed && s.sourceUrl && (
                       <button
                         onClick={() =>
                           setViewArticle({
@@ -351,7 +359,7 @@ export default function ProcessedResultTable({
                         title={s.sourceTitle || s.sourceUrl}
                         className="block text-left text-[10px] md:text-xs text-indigo-500 hover:underline truncate max-w-[200px] md:max-w-[280px] mt-0.5"
                       >
-                        🔗 {s.sourceTitle || "기사 보기"}
+                        ↗ 근거 기사
                       </button>
                     )}
                   </td>
@@ -361,17 +369,19 @@ export default function ProcessedResultTable({
                   <tr className={`sm:hidden !border-t-0 ${s.entryId === highlightedEntryId ? "bg-indigo-50" : ""}`}>
                     <td colSpan={7} className="px-2 pb-2 pt-0">
                       <div className="ml-1 pl-2.5 border-l-2 border-indigo-200 space-y-1">
-                        {s.keyword && (
-                          <span className="inline-block text-[10px] font-medium bg-indigo-50 text-indigo-600 rounded-full px-2 py-0.5">
-                            {s.keyword}
+                        {keyword && (
+                          <span className={`inline-block text-[10px] font-medium rounded-full px-2 py-0.5 ${unconfirmed ? "text-gray-400 bg-gray-50" : "bg-indigo-50 text-indigo-600"}`}>
+                            {keyword}
                           </span>
                         )}
-                        {s.reason && (
+                        {business && <span className="block text-[10px] text-gray-400">사업 소개</span>}
+                        {reason && (
                           <p className="text-[11px] text-gray-600 leading-snug whitespace-pre-line">
-                            {s.reason}
+                            {reason}
                           </p>
                         )}
-                        {s.sourceUrl && (
+                        {business && <a href={business.sourceUrl} target="_blank" rel="noopener noreferrer" title={business.filingDate} className="block text-[11px] text-gray-500 hover:underline">↗ DART · {business.reportName}</a>}
+                        {!unconfirmed && s.sourceUrl && (
                           <button
                             onClick={() =>
                               setViewArticle({
@@ -381,7 +391,7 @@ export default function ProcessedResultTable({
                             }
                             className="block w-full text-left text-[11px] text-indigo-500 hover:underline truncate"
                           >
-                            🔗 {s.sourceTitle || "기사 보기"}
+                            ↗ 근거 기사
                           </button>
                         )}
                       </div>

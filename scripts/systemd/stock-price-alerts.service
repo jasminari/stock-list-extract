@@ -1,0 +1,12 @@
+[Unit]
+Description=Check stock price alerts and deliver push notifications
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=opc
+WorkingDirectory=/home/opc/stock-price-alerts
+EnvironmentFile=/etc/stock-extract.env
+ExecStart=/usr/local/bin/node scripts/check-price-alerts.mjs
+TimeoutStartSec=5min

@@ -42,7 +42,16 @@ export interface DailyCandle {
 
 // === 가공된 종목 데이터 ===
 
+export interface BusinessProfile {
+  keyword: string;
+  summary: string;
+  sourceUrl: string;
+  reportName: string;
+  filingDate: string;
+}
+
 export interface ProcessedStock {
+  businessProfile?: BusinessProfile;
   index: number;
   entryId: number | null;
   name: string;
@@ -91,6 +100,7 @@ export interface DbResultMeta {
 }
 
 export interface StockEntryWithAnnotation {
+  businessProfile?: BusinessProfile;
   id: number;
   code: string;
   name: string;

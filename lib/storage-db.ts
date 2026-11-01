@@ -750,6 +750,7 @@ export interface WatchlistItem {
   alertLow: number | null;
   alertHigh: number | null;
   alertActive: boolean;
+  alertDirection: string;
   alertTriggeredAt: string | null;
   createdAt: string;
 }
@@ -769,6 +770,7 @@ export async function listWatchlist(userId: number): Promise<WatchlistItem[]> {
     alertLow: r.alertLow,
     alertHigh: r.alertHigh,
     alertActive: r.alertActive,
+    alertDirection: r.alertDirection,
     alertTriggeredAt: r.alertTriggeredAt?.toISOString() ?? null,
     createdAt: r.createdAt?.toISOString() ?? "",
   }));
@@ -800,13 +802,15 @@ export async function setPriceAlert(
   userId: number,
   code: string,
   low: number,
-  high: number
-): Promise<void> {
+  high: number,
+  direction: "range" | "above" | "below" = "range"
+): Promise<boolean> {
   const db = getDb();
-  await db
+  const rows = await db
     .update(watchlistItems)
-    .set({ alertLow: low, alertHigh: high, alertActive: true, alertTriggeredAt: null })
-    .where(and(eq(watchlistItems.userId, userId), eq(watchlistItems.code, code)));
+    .set({ alertLow: low, alertHigh: high, alertDirection: direction, alertVersion: sql`${watchlistItems.alertVersion} + 1`, alertActive: true, alertTriggeredAt: null })
+    .where(and(eq(watchlistItems.userId, userId), eq(watchlistItems.code, code))).returning({ id: watchlistItems.id });
+  return rows.length > 0;
 }
 
 export async function clearPriceAlert(
@@ -816,7 +820,7 @@ export async function clearPriceAlert(
   const db = getDb();
   await db
     .update(watchlistItems)
-    .set({ alertLow: null, alertHigh: null, alertActive: false, alertTriggeredAt: null })
+    .set({ alertLow: null, alertHigh: null, alertActive: false, alertTriggeredAt: null, alertVersion: sql`${watchlistItems.alertVersion} + 1` })
     .where(and(eq(watchlistItems.userId, userId), eq(watchlistItems.code, code)));
 }
 

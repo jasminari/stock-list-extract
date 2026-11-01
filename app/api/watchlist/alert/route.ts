@@ -14,22 +14,17 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const { code, low, high } = await req.json();
-    if (!code || typeof low !== "number" || typeof high !== "number") {
-      return NextResponse.json(
-        { error: "code, low, high가 필요합니다." },
-        { status: 400 }
-      );
+    const { code, low, high, direction = "range" } = await req.json();
+    if (typeof code !== "string" || !/^\d{6}$/.test(code) ||
+        !Number.isInteger(low) || !Number.isInteger(high) ||
+        low <= 0 || high > 2147483647 || low > high ||
+        !["range", "above", "below"].includes(direction) ||
+        (direction !== "range" && low !== high)) {
+      return NextResponse.json({ error: "종목코드와 양의 정수 가격, 알림 조건을 확인해주세요." }, { status: 400 });
     }
-    if (low >= high) {
-      return NextResponse.json(
-        { error: "하한가는 상한가보다 낮아야 합니다." },
-        { status: 400 }
-      );
-    }
-
     const userId = Number(session.user.id);
-    await setPriceAlert(userId, code, Math.round(low), Math.round(high));
+    const updated = await setPriceAlert(userId, code, low, high, direction);
+    if (!updated) return NextResponse.json({ error: "관심종목을 먼저 등록해주세요." }, { status: 404 });
     return NextResponse.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "알 수 없는 오류";

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoadingIcon } from "@/components/ui/loading-icon";
+import PushNotifications from "@/components/PushNotifications";
 
 interface Notification {
   id: number;
@@ -59,6 +60,8 @@ export default function NotificationsPage() {
             관심종목에 설정한 가격대에 도달하면 여기에 표시됩니다.
           </p>
         </div>
+
+        <PushNotifications />
 
         {loading ? (
           <div className="border border-gray-200 rounded-xl p-8 text-center">

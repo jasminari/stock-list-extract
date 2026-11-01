@@ -7,6 +7,7 @@ import {
   integer,
   unique,
   boolean,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable(
@@ -140,11 +141,7 @@ export const feedbacks = pgTable("feedbacks", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-/**
- * 관심종목. 가격 알림 범위는 종목당 하나만 유지한다(다시 그리면 덮어씀) —
- * 실시간 시세가 없어 매일 장마감 배치 때 종가로만 검사하므로,
- * 여러 범위를 동시에 감시할 근거가 약하다.
- */
+/** 관심종목별 일회성 가격 알림. 수정 버전으로 감시 중 설정 변경을 보호한다. */
 export const watchlistItems = pgTable(
   "watchlist_items",
   {
@@ -154,6 +151,8 @@ export const watchlistItems = pgTable(
       .notNull(),
     code: varchar("code", { length: 10 }).notNull(),
     name: varchar("name", { length: 100 }).notNull(),
+    alertDirection: varchar("alert_direction", { length: 10 }).default("range").notNull(),
+    alertVersion: integer("alert_version").default(0).notNull(),
     alertLow: integer("alert_low"),
     alertHigh: integer("alert_high"),
     alertActive: boolean("alert_active").default(false).notNull(),
@@ -175,3 +174,37 @@ export const notifications = pgTable("notifications", {
   read: boolean("read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  endpoint: text("endpoint").unique().notNull(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  lastTestAt: timestamp("last_test_at"),
+});
+
+export const pushDeliveries = pgTable("push_deliveries", {
+  id: serial("id").primaryKey(),
+  notificationId: integer("notification_id").references(() => notifications.id, { onDelete: "cascade" }).notNull(),
+  subscriptionId: integer("subscription_id").references(() => pushSubscriptions.id, { onDelete: "cascade" }).notNull(),
+  attempts: integer("attempts").default(0).notNull(),
+  nextAttemptAt: timestamp("next_attempt_at").defaultNow().notNull(),
+  deliveredAt: timestamp("delivered_at"),
+  lastError: text("last_error"),
+}, (t) => [unique().on(t.notificationId, t.subscriptionId)]);
+
+/** DART business descriptions, versioned independently from daily price catalysts. */
+export const stockBusinessProfiles = pgTable("stock_business_profiles", {
+  stockCode: varchar("stock_code", {length:10}).notNull(),
+  receiptNo: varchar("receipt_no", {length:14}).notNull(),
+  filingDate: varchar("filing_date", {length:8}).notNull(),
+  reportName: text("report_name").notNull(),
+  keyword: text("keyword").notNull(),
+  summary: text("summary").notNull(),
+  sourceUrl: text("source_url").notNull(),
+  evidence: text("evidence").notNull(),
+  summaryOrigin: text("summary_origin").notNull(),
+  updatedAt: timestamp("updated_at", {withTimezone:true}).notNull().defaultNow(),
+}, t=>[primaryKey({columns:[t.stockCode,t.receiptNo]})]);

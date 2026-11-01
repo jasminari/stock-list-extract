@@ -22,6 +22,20 @@
       "when": 1788666300183,
       "tag": "0005_add_watchlist_and_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792423889113,
+      "tag": "0006_add_web_push",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792426246585,
+      "tag": "0007_add_business_profiles",
+      "breakpoints": true
     }
   ]
 }

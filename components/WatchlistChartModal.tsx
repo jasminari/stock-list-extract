@@ -26,6 +26,7 @@ type DragTarget = "low" | "high" | "band" | null;
 
 /** 드래그로 가격 범위를 잡을 때 상/하한이 붙어버리지 않게 두는 최소 간격 */
 const MIN_GAP_RATIO = 0.005;
+const MAX_PRICE = 2147483647;
 
 export default function WatchlistChartModal({
   code,
@@ -51,7 +52,7 @@ export default function WatchlistChartModal({
   rangeRef.current = range;
 
   // 렌더에 쓸 픽셀 좌표. 차트 확대/축소·리사이즈 때마다 다시 계산해 넣는다
-  const [pixels, setPixels] = useState<{ lowY: number; highY: number } | null>(null);
+  const [pixels, setPixels] = useState<{ lowY: number; highY: number; width: number; height: number } | null>(null);
   const dragRef = useRef<{ target: DragTarget; startY: number; startRange: { low: number; high: number } } | null>(null);
 
   const [saving, setSaving] = useState(false);
@@ -64,11 +65,19 @@ export default function WatchlistChartModal({
     const lowY = series.priceToCoordinate(r.low);
     const highY = series.priceToCoordinate(r.high);
     if (lowY === null || highY === null) return;
-    setPixels({ lowY, highY });
+    const chart = chartRef.current;
+    if (!chart) return;
+    const width = chart.timeScale().width();
+    const height = chart.panes()[0].getHeight();
+    setPixels((previous) =>
+      previous?.lowY === lowY && previous.highY === highY && previous.width === width && previous.height === height
+        ? previous
+        : { lowY, highY, width, height }
+    );
   }, []);
 
   useEffect(() => {
-    if (!candles || candles.length === 0 || !containerRef.current) return;
+    if (loading || error || !candles || candles.length === 0 || !containerRef.current) return;
 
     const chart = createChart(
       containerRef.current,
@@ -100,17 +109,27 @@ export default function WatchlistChartModal({
       });
       recomputePixels();
     };
-    window.addEventListener("resize", handleResize);
-    chart.timeScale().subscribeVisibleTimeRangeChange(recomputePixels);
+    const resizeObserver = new ResizeObserver(handleResize);
+    resizeObserver.observe(containerRef.current);
+
+    // Price coordinates become available after the chart's first paint. Keep the
+    // overlay aligned during price-axis scaling too (no scale-change event exists).
+    let animationFrame: number;
+    const syncOverlay = () => {
+      recomputePixels();
+      animationFrame = requestAnimationFrame(syncOverlay);
+    };
+    animationFrame = requestAnimationFrame(syncOverlay);
 
     return () => {
-      window.removeEventListener("resize", handleResize);
-      chart.timeScale().unsubscribeVisibleTimeRangeChange(recomputePixels);
+      resizeObserver.disconnect();
+      cancelAnimationFrame(animationFrame);
+      dragRef.current = null;
       chart.remove();
       chartRef.current = null;
       seriesRef.current = null;
     };
-  }, [candles, recomputePixels]);
+  }, [candles, loading, error, recomputePixels]);
 
   // range 값이 바뀔 때(초기 설정 포함)마다 픽셀 좌표 갱신
   useEffect(() => {
@@ -151,7 +170,9 @@ export default function WatchlistChartModal({
         const newLow = priceAtY(lowY0 + dy);
         const newHigh = priceAtY(highY0 + dy);
         if (newLow === null || newHigh === null) return;
-        setRange({ low: Math.round(newLow), high: Math.round(newHigh) });
+        const span = drag.startRange.high - drag.startRange.low;
+        const low = Math.max(1, Math.min(MAX_PRICE - span, Math.round(newLow)));
+        setRange({ low, high: low + span });
         return;
       }
 
@@ -162,10 +183,10 @@ export default function WatchlistChartModal({
       const minGap = Math.max(1, cur.high * MIN_GAP_RATIO);
 
       if (drag.target === "low") {
-        const low = Math.min(Math.round(price), Math.round(cur.high - minGap));
+        const low = Math.max(1, Math.min(Math.round(price), Math.floor(cur.high - minGap)));
         setRange({ low, high: cur.high });
       } else if (drag.target === "high") {
-        const high = Math.max(Math.round(price), Math.round(cur.low + minGap));
+        const high = Math.min(MAX_PRICE, Math.max(Math.round(price), Math.ceil(cur.low + minGap)));
         setRange({ low: cur.low, high });
       }
     },
@@ -261,14 +282,18 @@ export default function WatchlistChartModal({
 
                   {pixels && range && (
                     <div
-                      className="absolute inset-0"
+                      className="absolute left-0 top-0 z-10 pointer-events-none overflow-hidden"
+                      style={{ width: pixels.width, height: pixels.height }}
                       onPointerMove={onPointerMove}
                       onPointerUp={onPointerUp}
+                      onPointerCancel={onPointerUp}
+                      onLostPointerCapture={onPointerUp}
                     >
                       {/* 범위 밴드 — 드래그하면 통째로 이동 */}
                       <div
                         onPointerDown={onPointerDown("band")}
-                        className="absolute left-0 right-0 bg-indigo-500/10 border-y border-indigo-400 cursor-move"
+                        aria-label="가격 알림 범위 이동"
+                        className="absolute left-0 right-0 pointer-events-auto touch-none bg-indigo-500/[0.15] border-2 border-indigo-500 cursor-move"
                         style={{
                           top: Math.min(pixels.lowY, pixels.highY),
                           height: Math.abs(pixels.lowY - pixels.highY),
@@ -278,11 +303,12 @@ export default function WatchlistChartModal({
                       {/* 상한선 */}
                       <div
                         onPointerDown={onPointerDown("high")}
-                        className="absolute left-0 right-0 h-3 -mt-1.5 cursor-ns-resize flex items-center"
+                        className="absolute left-0 right-0 h-6 -mt-6 pointer-events-auto touch-none cursor-ns-resize flex items-end"
                         style={{ top: pixels.highY }}
                       >
                         <div className="w-full h-0.5 bg-indigo-500" />
-                        <span className="absolute right-1 -top-4 text-[10px] font-semibold text-indigo-700 bg-white/90 px-1 rounded">
+                        <span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 h-2 w-8 rounded-full border-2 border-indigo-500 bg-white" />
+                        <span className="absolute right-1 bottom-2 text-[10px] font-semibold text-indigo-700 bg-white/90 px-1 rounded">
                           상한 {range.high.toLocaleString("ko-KR")}
                         </span>
                       </div>
@@ -290,17 +316,23 @@ export default function WatchlistChartModal({
                       {/* 하한선 */}
                       <div
                         onPointerDown={onPointerDown("low")}
-                        className="absolute left-0 right-0 h-3 -mt-1.5 cursor-ns-resize flex items-center"
+                        className="absolute left-0 right-0 h-6 pointer-events-auto touch-none cursor-ns-resize flex items-start"
                         style={{ top: pixels.lowY }}
                       >
                         <div className="w-full h-0.5 bg-indigo-500" />
-                        <span className="absolute right-1 top-1.5 text-[10px] font-semibold text-indigo-700 bg-white/90 px-1 rounded">
+                        <span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 h-2 w-8 rounded-full border-2 border-indigo-500 bg-white" />
+                        <span className="absolute right-1 top-2 text-[10px] font-semibold text-indigo-700 bg-white/90 px-1 rounded">
                           하한 {range.low.toLocaleString("ko-KR")}
                         </span>
                       </div>
                     </div>
                   )}
                 </div>
+                {range && (
+                  <p className="mt-3 text-center text-sm font-semibold text-indigo-700">
+                    {range.low.toLocaleString("ko-KR")}원 ~ {range.high.toLocaleString("ko-KR")}원
+                  </p>
+                )}
               </>
             )}
 

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import WatchlistChartModal from "@/components/WatchlistChartModal";
 import { LoadingIcon } from "@/components/ui/loading-icon";
+import PushNotifications from "@/components/PushNotifications";
 
 interface WatchlistItem {
   id: number;
@@ -10,6 +11,7 @@ interface WatchlistItem {
   name: string;
   alertLow: number | null;
   alertHigh: number | null;
+  alertDirection?: "range" | "above" | "below";
   alertActive: boolean;
   alertTriggeredAt: string | null;
   createdAt: string;
@@ -21,6 +23,9 @@ export default function WatchlistPage() {
   const [error, setError] = useState<string | null>(null);
   const [alertTarget, setAlertTarget] = useState<WatchlistItem | null>(null);
   const [removingCode, setRemovingCode] = useState<string | null>(null);
+  const [directPrice, setDirectPrice] = useState<Record<string, string>>({});
+  const [directDirection, setDirectDirection] = useState<Record<string, "above" | "below">>({});
+  const [savingDirect, setSavingDirect] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -65,7 +70,7 @@ export default function WatchlistPage() {
       body: JSON.stringify({ code, low, high }),
     });
     const data = await res.json();
-    if (data.error) throw new Error(data.error);
+    if (!res.ok || data.error) throw new Error(data.error || "가격 알림을 저장하지 못했습니다.");
     await load();
   };
 
@@ -76,8 +81,22 @@ export default function WatchlistPage() {
       body: JSON.stringify({ code }),
     });
     const data = await res.json();
-    if (data.error) throw new Error(data.error);
+    if (!res.ok || data.error) throw new Error(data.error || "가격 알림을 해제하지 못했습니다.");
     await load();
+  };
+
+  const handleDirectAlert = async (code: string) => {
+    const price = Number(directPrice[code]);
+    if (!Number.isInteger(price) || price <= 0) { setError("1원 단위의 올바른 목표 가격을 입력해 주세요."); return; }
+    setSavingDirect(code);
+    try {
+      const response = await fetch("/api/watchlist/alert", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, low: price, high: price, direction: directDirection[code] ?? "above" }) });
+      const data = await response.json();
+      if (!response.ok || data.error) throw new Error(data.error || "가격 알림을 저장하지 못했습니다.");
+      setDirectPrice((current) => ({ ...current, [code]: "" }));
+      await load();
+    } catch (e) { setError(e instanceof Error ? e.message : "가격 알림을 저장하지 못했습니다."); }
+    finally { setSavingDirect(null); }
   };
 
   return (
@@ -89,6 +108,8 @@ export default function WatchlistPage() {
             공시·시장 공부하기 탭에서 종목명 옆 별표를 눌러 등록할 수 있습니다.
           </p>
         </div>
+
+        <PushNotifications />
 
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
@@ -115,28 +136,40 @@ export default function WatchlistPage() {
             {items.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-xl bg-white"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border border-gray-200 rounded-xl bg-white"
               >
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-900">{item.name}</p>
                   <p className="text-xs text-gray-400 mt-0.5">{item.code}</p>
-                  {item.alertActive && item.alertLow !== null && item.alertHigh !== null ? (
+                  {item.alertActive && item.alertDirection === "above" && item.alertLow !== null ? (
+                    <p className="text-xs text-indigo-600 font-medium mt-1.5">{item.alertLow.toLocaleString("ko-KR")}원 이상 도달 시 알림 대기 중</p>
+                  ) : item.alertActive && item.alertDirection === "below" && item.alertLow !== null ? (
+                    <p className="text-xs text-indigo-600 font-medium mt-1.5">{item.alertLow.toLocaleString("ko-KR")}원 이하 도달 시 알림 대기 중</p>
+                  ) : item.alertActive && item.alertLow !== null && item.alertHigh !== null ? (
                     <p className="text-xs text-indigo-600 font-medium mt-1.5">
                       {item.alertLow.toLocaleString("ko-KR")} ~ {item.alertHigh.toLocaleString("ko-KR")}원 알림 대기 중
                     </p>
                   ) : item.alertTriggeredAt ? (
-                    <p className="text-xs text-gray-400 mt-1.5">알림을 이미 보냈습니다 · 다시 설정하려면 범위를 그리세요</p>
+                    <p className="text-xs text-gray-400 mt-1.5">조건에 도달했습니다 · 다시 받으려면 가격을 재설정하세요</p>
                   ) : (
                     <p className="text-xs text-gray-400 mt-1.5">설정된 가격 알림 없음</p>
                   )}
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex flex-wrap items-center gap-2 sm:flex-shrink-0">
+                  <div className="flex flex-wrap items-center gap-1">
+                    <select aria-label={`${item.name} 목표 방향`} value={directDirection[item.code] ?? "above"} onChange={(event) => setDirectDirection((current) => ({ ...current, [item.code]: event.target.value as "above" | "below" }))} className="px-2 py-1.5 text-xs border border-gray-300 rounded-lg bg-white">
+                      <option value="above">이상</option><option value="below">이하</option>
+                    </select>
+                    <input aria-label={`${item.name} 목표 가격`} type="number" min="1" step="1" value={directPrice[item.code] ?? ""} onChange={(event) => setDirectPrice((current) => ({ ...current, [item.code]: event.target.value }))} placeholder="목표가" className="w-24 px-2 py-1.5 text-xs border border-gray-300 rounded-lg" />
+                    <button onClick={() => void handleDirectAlert(item.code)} disabled={savingDirect === item.code || !directPrice[item.code]} className="px-2.5 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50 disabled:opacity-40">저장</button>
+                  </div>
                   <button
                     onClick={() => setAlertTarget(item)}
                     className="px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50 transition-colors"
                   >
                     가격 알림 설정
                   </button>
+                  {item.alertActive && <button onClick={() => void handleClearAlert(item.code)} className="px-3 py-1.5 text-xs text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-50">알림 끄기</button>}
                   <button
                     onClick={() => handleRemove(item.code)}
                     disabled={removingCode === item.code}
@@ -155,8 +188,8 @@ export default function WatchlistPage() {
         <WatchlistChartModal
           code={alertTarget.code}
           name={alertTarget.name}
-          initialLow={alertTarget.alertActive ? alertTarget.alertLow : null}
-          initialHigh={alertTarget.alertActive ? alertTarget.alertHigh : null}
+          initialLow={alertTarget.alertActive && (!alertTarget.alertDirection || alertTarget.alertDirection === "range") ? alertTarget.alertLow : null}
+          initialHigh={alertTarget.alertActive && (!alertTarget.alertDirection || alertTarget.alertDirection === "range") ? alertTarget.alertHigh : null}
           onClose={() => setAlertTarget(null)}
           onSave={(low, high) => handleSaveAlert(alertTarget.code, low, high)}
           onClearAlert={() => handleClearAlert(alertTarget.code)}

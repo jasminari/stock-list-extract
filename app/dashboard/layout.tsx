@@ -243,7 +243,22 @@ export default function DashboardLayout({
             <div className="flex items-center gap-2 md:gap-3">
               <span className="text-sm text-gray-600 hidden md:block">{userName}</span>
               <button
-                onClick={() => signOut()}
+                onClick={async () => {
+                  // End this browser subscription before changing accounts.
+                  try {
+                    if ("serviceWorker" in navigator) {
+                      const registration = await navigator.serviceWorker.getRegistration("/");
+                      const subscription = await registration?.pushManager?.getSubscription();
+                      if (subscription) {
+                        await Promise.allSettled([
+                          fetch("/api/push", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: subscription.endpoint }), signal: AbortSignal.timeout(5000) }),
+                          subscription.unsubscribe(),
+                        ]);
+                      }
+                    }
+                  }
+                  finally { await signOut(); }
+                }}
                 className="px-2 md:px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
               >
                 로그아웃
