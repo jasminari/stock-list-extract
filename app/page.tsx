@@ -1,21 +1,11 @@
-import ComingSoonNav from "@/components/landing/ComingSoonNav";
-import ComingSoonHero from "@/components/landing/ComingSoonHero";
-import ScreensSection from "@/components/landing/ScreensSection";
-import AppFeaturesSection from "@/components/landing/AppFeaturesSection";
-import RoadmapSection from "@/components/landing/RoadmapSection";
-import ComingSoonCTA from "@/components/landing/ComingSoonCTA";
-import Footer from "@/components/landing/Footer";
+import type { Metadata } from "next";
+import NotifoldLanding from "@/components/landing/NotifoldLanding";
+
+export const metadata: Metadata = {
+  title: "StockExtract — 오늘 오른 종목, 왜 올랐는지까지",
+  description: "장 마감 후 급등주와 상승이유를 한눈에. 근거 기사와 매일 퀴즈로 오늘의 시장을 공부하세요.",
+};
 
 export default function LandingPage() {
-  return (
-    <>
-      <ComingSoonNav />
-      <ComingSoonHero />
-      <ScreensSection />
-      <AppFeaturesSection />
-      <RoadmapSection />
-      <ComingSoonCTA />
-      <Footer />
-    </>
-  );
+  return <NotifoldLanding />;
 }
