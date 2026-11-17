@@ -14,7 +14,7 @@ export default function HistoryPage() {
   return (
     <Suspense fallback={
       <div className="flex-1 flex items-center justify-center">
-        <LoadingIcon className="h-20 w-20 text-indigo-600" label="기록 불러오는 중" />
+        <LoadingIcon className="h-20 w-20 text-primary" label="기록 불러오는 중" />
       </div>
     }>
       <HistoryContent />
@@ -163,7 +163,7 @@ function HistoryContent() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <LoadingIcon className="h-20 w-20 text-indigo-600" label="기록 불러오는 중" />
+        <LoadingIcon className="h-20 w-20 text-primary" label="기록 불러오는 중" />
       </div>
     );
   }
@@ -171,13 +171,13 @@ function HistoryContent() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="border-b border-gray-200 px-3 md:px-6 py-2 md:py-3 flex-shrink-0">
-        <div className="hidden md:flex items-center gap-2 text-sm text-gray-500 mb-3">
+      <div className="border-b border-border px-3 md:px-6 py-2 md:py-3 flex-shrink-0">
+        <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground mb-3">
           <span>내 검색</span>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-900 font-medium">시장 공부하기</span>
+          <span className="text-foreground font-medium">시장 공부하기</span>
         </div>
 
         <div className="flex items-center gap-2 md:gap-3 flex-wrap">
@@ -201,8 +201,8 @@ function HistoryContent() {
                   onClick={() => setSelectedResult(r)}
                   className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg text-[11px] md:text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                     selectedResult?.id === r.id
-                      ? "bg-indigo-600 text-white"
-                      : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                      ? "bg-primary text-white"
+                      : "bg-background border border-border text-foreground/80 hover:bg-muted/50"
                   }`}
                 >
                   {r.conditionName}
@@ -217,7 +217,7 @@ function HistoryContent() {
       <div className="flex-1 overflow-auto px-2 md:px-6 py-2 md:py-4">
         {stocksLoading ? (
           <div role="status" className="flex flex-col items-center justify-center py-16">
-            <LoadingIcon className="h-20 w-20 text-indigo-600" decorative />
+            <LoadingIcon className="h-20 w-20 text-primary" decorative />
             <span className="sr-only">종목 데이터 불러오는 중...</span>
           </div>
         ) : stocks.length > 0 && selectedResult ? (
@@ -232,12 +232,12 @@ function HistoryContent() {
           />
         ) : (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-muted-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <p className="text-sm text-gray-500">해당 날짜에 저장된 데이터가 없습니다</p>
+            <p className="text-sm text-muted-foreground">해당 날짜에 저장된 데이터가 없습니다</p>
           </div>
         )}
       </div>

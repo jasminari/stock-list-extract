@@ -238,8 +238,8 @@ export default function DataPage() {
       <div className="max-w-5xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">수집 데이터</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">수집 데이터</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             매일 자동으로 수집된 조건검색 결과 목록입니다.
           </p>
         </div>
@@ -247,12 +247,12 @@ export default function DataPage() {
         {/* 내 수집 현황 — 항상 3칸 표시 */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-900">내 수집 현황</h2>
+            <h2 className="text-sm font-semibold text-foreground">내 수집 현황</h2>
             {session?.user?.role === "admin" && (
               <button
                 onClick={handleExtractNow}
                 disabled={extracting}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
               >
                 {extracting ? (
                   <>
@@ -271,12 +271,12 @@ export default function DataPage() {
             )}
           </div>
           {extractResult && (
-            <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-              <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-3 p-3 bg-success-surface border border-success/30 rounded-lg flex items-center gap-2">
+              <svg className="w-4 h-4 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <p className="text-xs text-green-800">{extractResult}</p>
-              <button onClick={() => setExtractResult(null)} className="ml-auto text-green-400 hover:text-green-600">
+              <p className="text-xs text-success">{extractResult}</p>
+              <button onClick={() => setExtractResult(null)} className="ml-auto text-success/60 hover:text-success">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -295,33 +295,33 @@ export default function DataPage() {
                     key={cond.seq}
                     className={`relative p-4 border rounded-xl ${
                       condStatus.status === "success"
-                        ? "border-green-200 bg-green-50"
+                        ? "border-success/30 bg-success-surface"
                         : condStatus.status === "error"
-                        ? "border-red-200 bg-red-50"
-                        : "border-gray-200 bg-white"
+                        ? "border-destructive/30 bg-destructive/10"
+                        : "border-border bg-background"
                     }`}
                   >
                     <button
                       onClick={() => handleUnsubscribe(cond.seq)}
                       disabled={togglingSeq === cond.seq}
-                      className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gray-200 hover:bg-red-200 flex items-center justify-center transition-colors disabled:opacity-40"
+                      className="absolute top-2 right-2 w-5 h-5 rounded-full bg-border hover:bg-destructive/20 flex items-center justify-center transition-colors disabled:opacity-40"
                       title="선택 해제"
                     >
-                      <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                     <div className="flex items-center gap-2 mb-2 pr-5">
                       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                         condStatus.status === "success"
-                          ? "bg-green-500"
+                          ? "bg-success"
                           : condStatus.status === "error"
-                          ? "bg-red-500"
-                          : "bg-gray-300"
+                          ? "bg-destructive"
+                          : "bg-muted-foreground/30"
                       }`} />
-                      <p className="text-sm font-medium text-gray-900 truncate">{cond.name}</p>
+                      <p className="text-sm font-medium text-foreground truncate">{cond.name}</p>
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {condStatus.status === "success"
                         ? `${formatDate(condStatus.date)} · ${condStatus.count}종목`
                         : condStatus.status === "error"
@@ -338,19 +338,19 @@ export default function DataPage() {
                   <button
                     onClick={() => setOpenDropdown(openDropdown === i ? null : i)}
                     disabled={unsubscribedConditions.length === 0}
-                    className="w-full p-4 border border-dashed border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 hover:border-gray-400 transition-colors text-left disabled:hover:bg-gray-50 disabled:hover:border-gray-300 disabled:cursor-default"
+                    className="w-full p-4 border border-dashed border-input rounded-xl bg-muted/50 hover:bg-muted hover:border-muted-foreground/50 transition-colors text-left disabled:hover:bg-muted/50 disabled:hover:border-input disabled:cursor-default"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-border flex items-center justify-center flex-shrink-0">
                         {unsubscribedConditions.length > 0 ? (
-                          <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-3 h-3 text-muted-foreground/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                           </svg>
                         ) : (
-                          <span className="text-xs text-gray-400">{i + 1}</span>
+                          <span className="text-xs text-muted-foreground/80">{i + 1}</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted-foreground/80">
                         {unsubscribedConditions.length > 0 ? "클릭하여 선택" : "미선택"}
                       </p>
                     </div>
@@ -358,13 +358,13 @@ export default function DataPage() {
 
                   {/* 드롭다운 */}
                   {openDropdown === i && unsubscribedConditions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 overflow-hidden">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-xl shadow-lg z-10 overflow-hidden">
                       {unsubscribedConditions.map((uc) => (
                         <button
                           key={uc.seq}
                           onClick={() => handleSubscribe(uc.seq)}
                           disabled={togglingSeq === uc.seq}
-                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors border-b border-gray-100 last:border-b-0 disabled:opacity-40"
+                          className="w-full px-4 py-3 text-left text-sm text-foreground/90 hover:bg-accent hover:text-primary-hover transition-colors border-b border-border/60 last:border-b-0 disabled:opacity-40"
                         >
                           {togglingSeq === uc.seq ? "추가 중..." : uc.name}
                         </button>
@@ -379,12 +379,12 @@ export default function DataPage() {
 
         {/* 에러 메시지 */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
-            <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-xl flex items-center gap-3">
+            <svg className="w-5 h-5 text-destructive flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-sm text-red-800 flex-1">{error}</p>
-            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+            <p className="text-sm text-destructive flex-1">{error}</p>
+            <button onClick={() => setError(null)} className="text-destructive/60 hover:text-destructive">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -394,40 +394,40 @@ export default function DataPage() {
 
         {loading ? (
           <div role="status" className="flex flex-col items-center justify-center py-20">
-            <LoadingIcon className="h-20 w-20 text-indigo-600" decorative />
+            <LoadingIcon className="h-20 w-20 text-primary" decorative />
             <span className="sr-only">수집 데이터를 불러오는 중...</span>
           </div>
         ) : data.length === 0 ? (
-          <div className="border border-dashed border-gray-300 rounded-xl p-12 text-center">
-            <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="border border-dashed border-input rounded-xl p-12 text-center">
+            <svg className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
             </svg>
-            <p className="text-sm text-gray-500">수집된 데이터가 없습니다.</p>
-            <p className="text-xs text-gray-400 mt-1">설정에서 조건검색식을 등록하면 매일 자동으로 수집됩니다.</p>
+            <p className="text-sm text-muted-foreground">수집된 데이터가 없습니다.</p>
+            <p className="text-xs text-muted-foreground/80 mt-1">설정에서 조건검색식을 등록하면 매일 자동으로 수집됩니다.</p>
           </div>
         ) : (
           <>
             {/* 요약 카드 */}
             <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="p-4 bg-white border border-gray-200 rounded-xl">
-                <p className="text-xs text-gray-500">전체 수집</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{totalCount}건</p>
+              <div className="p-4 bg-background border border-border rounded-xl">
+                <p className="text-xs text-muted-foreground">전체 수집</p>
+                <p className="text-2xl font-bold text-foreground mt-1">{totalCount}건</p>
               </div>
-              <div className="p-4 bg-white border border-gray-200 rounded-xl">
-                <p className="text-xs text-gray-500">성공</p>
-                <p className="text-2xl font-bold text-green-600 mt-1">{successCount}건</p>
+              <div className="p-4 bg-background border border-border rounded-xl">
+                <p className="text-xs text-muted-foreground">성공</p>
+                <p className="text-2xl font-bold text-success mt-1">{successCount}건</p>
               </div>
-              <div className="p-4 bg-white border border-gray-200 rounded-xl">
-                <p className="text-xs text-gray-500">실패</p>
-                <p className="text-2xl font-bold text-red-500 mt-1">{totalCount - successCount}건</p>
+              <div className="p-4 bg-background border border-border rounded-xl">
+                <p className="text-xs text-muted-foreground">실패</p>
+                <p className="text-2xl font-bold text-destructive mt-1">{totalCount - successCount}건</p>
               </div>
             </div>
 
             {/* 데이터 리스트 */}
-            <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
+            <div className="bg-background border border-border rounded-xl overflow-x-auto">
               <table className="w-full text-sm whitespace-nowrap">
                 <thead>
-                  <tr className="bg-gray-50 text-gray-500 text-xs border-b border-gray-200">
+                  <tr className="bg-muted/50 text-muted-foreground text-xs border-b border-border">
                     <th className="px-4 py-3 text-left font-medium">날짜</th>
                     <th className="px-4 py-3 text-left font-medium">조건검색식</th>
                     <th className="px-4 py-3 text-right font-medium">종목수</th>
@@ -443,39 +443,39 @@ export default function DataPage() {
                       <tr
                         key={item.id}
                         onClick={() => item.count > 0 && handleViewResult(item)}
-                        className={`border-b border-gray-100 transition-colors ${
+                        className={`border-b border-border/60 transition-colors ${
                           item.count > 0
-                            ? "cursor-pointer hover:bg-indigo-50"
-                            : "hover:bg-gray-50"
+                            ? "cursor-pointer hover:bg-accent"
+                            : "hover:bg-muted/50"
                         }`}
                       >
                         <td className="px-4 py-3">
                           {idx === 0 ? (
-                            <span className="font-medium text-gray-900">{formatDate(item.date)}</span>
+                            <span className="font-medium text-foreground">{formatDate(item.date)}</span>
                           ) : (
-                            <span className="text-gray-300">-</span>
+                            <span className="text-muted-foreground/50">-</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-700">{item.conditionName}</td>
+                        <td className="px-4 py-3 text-foreground/90">{item.conditionName}</td>
                         <td className="px-4 py-3 text-right">
-                          <span className={`font-medium ${item.count > 0 ? "text-indigo-600" : "text-gray-400"}`}>
+                          <span className={`font-medium ${item.count > 0 ? "text-primary" : "text-muted-foreground/80"}`}>
                             {item.count}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-center">
                           {item.count > 0 ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-full">
-                              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-success-surface text-success text-xs rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-success" />
                               성공
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-700 text-xs rounded-full">
-                              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-destructive/10 text-destructive text-xs rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
                               실패
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right text-gray-400 text-xs">
+                        <td className="px-4 py-3 text-right text-muted-foreground/80 text-xs">
                           {formatTime(item.createdAt)}
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -485,7 +485,7 @@ export default function DataPage() {
                                 e.stopPropagation();
                                 handleViewResult(item);
                               }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-indigo-300 rounded-md hover:bg-indigo-50 transition-colors text-indigo-600"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-primary/40 rounded-md hover:bg-accent transition-colors text-primary"
                             >
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -503,10 +503,10 @@ export default function DataPage() {
                                 handleDownload(item);
                               }}
                               disabled={downloadingId === item.id}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-gray-600 disabled:opacity-40"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-input rounded-md hover:bg-muted/50 transition-colors text-foreground/80 disabled:opacity-40"
                             >
                               {downloadingId === item.id ? (
-                                <LoadingIcon className="h-5 w-5 text-gray-400" decorative />
+                                <LoadingIcon className="h-5 w-5 text-muted-foreground/80" decorative />
                               ) : (
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -526,7 +526,7 @@ export default function DataPage() {
         )}
 
         {/* 안내 */}
-        <p className="text-xs text-gray-400 mt-4 text-center">
+        <p className="text-xs text-muted-foreground/80 mt-4 text-center">
           데이터는 매일 평일 20:10(KST)에 자동 수집됩니다. 행을 클릭하면 시장 공부하기 탭에서 상세 종목을 확인할 수 있습니다.
         </p>
       </div>

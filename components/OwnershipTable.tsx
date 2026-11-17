@@ -232,15 +232,15 @@ export default function OwnershipTable({
   }, [rows, sort, filter, query]);
 
   const th =
-    "px-1 md:px-2 py-1.5 font-semibold text-gray-800 border border-amber-300/70 whitespace-nowrap";
-  const td = "px-1 md:px-2 py-1.5 border border-gray-200 whitespace-nowrap";
+    "px-1 md:px-2 py-1.5 font-semibold text-foreground border border-amber-300/70 whitespace-nowrap";
+  const td = "px-1 md:px-2 py-1.5 border border-border whitespace-nowrap";
   // 총액 칸은 막대를 셀 가장자리까지 채워야 해서 안쪽 span이 여백을 맡는다
-  const tdBar = "border border-gray-200 whitespace-nowrap";
+  const tdBar = "border border-border whitespace-nowrap";
 
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2 mb-3">
-        <div className="flex rounded-lg border border-gray-300 overflow-hidden text-xs">
+        <div className="flex rounded-lg border border-input overflow-hidden text-xs">
           {(
             [
               ["all", "전체"],
@@ -253,8 +253,8 @@ export default function OwnershipTable({
               onClick={() => setFilter(id)}
               className={`px-3 py-1.5 transition-colors ${
                 filter === id
-                  ? "bg-indigo-600 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50"
+                  ? "bg-primary text-white"
+                  : "bg-background text-foreground/80 hover:bg-muted/50"
               }`}
             >
               {label}
@@ -265,7 +265,7 @@ export default function OwnershipTable({
         {sort && (
           <button
             onClick={() => setSort(null)}
-            className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-600 hover:bg-gray-50 transition-colors"
+            className="px-3 py-1.5 text-xs border border-input rounded-lg bg-background text-foreground/80 hover:bg-muted/50 transition-colors"
             title="공시 접수 순으로 되돌립니다"
           >
             {COLUMNS.find((c) => c.col === sort.col)!.label}{" "}
@@ -277,15 +277,15 @@ export default function OwnershipTable({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="종목·이름 검색"
-          className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg w-40 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="px-3 py-1.5 text-xs border border-input rounded-lg w-40 focus:outline-none focus:ring-2 focus:ring-ring"
         />
 
-        <span className="text-xs text-gray-500 ml-auto">
+        <span className="text-xs text-muted-foreground ml-auto">
           {view.length}건 / 전체 {rows.length}건
         </span>
       </div>
 
-      <div className="overflow-x-auto border border-gray-200 rounded-lg">
+      <div className="overflow-x-auto border border-border rounded-lg">
         <table className="min-w-full text-[10px] md:text-xs border-collapse">
           <thead className="bg-amber-200/80 sticky top-0">
             <tr>
@@ -297,8 +297,8 @@ export default function OwnershipTable({
                   }>
                     <button
                       onClick={() => toggleSort(col)}
-                      className={`w-full flex items-center justify-center gap-1 hover:text-indigo-800 transition-colors ${
-                        active ? "text-indigo-800" : ""
+                      className={`w-full flex items-center justify-center gap-1 hover:text-primary-hover transition-colors ${
+                        active ? "text-primary-hover" : ""
                       }`}
                       title={`${label} 기준 정렬 (종목 단위로 묶여 이동합니다)`}
                     >
@@ -313,7 +313,7 @@ export default function OwnershipTable({
                       {/* 정렬 안 걸린 컬럼의 ⇅는 모바일에서 감춘다.
                           아이콘 하나가 14px씩 먹어 6칸이면 한 화면을 넘긴다 */}
                       <span
-                        className={active ? "" : "hidden md:inline text-gray-400/70"}
+                        className={active ? "" : "hidden md:inline text-muted-foreground/55"}
                       >
                         {active ? (sort!.dir === "asc" ? "▲" : "▼") : "⇅"}
                       </span>
@@ -329,7 +329,7 @@ export default function OwnershipTable({
               return (
                 <tr
                   key={`${r.rceptNo}-${r.holderName}-${r.method}-${i}`}
-                  className={isSell ? "bg-rose-50" : "bg-white"}
+                  className={isSell ? "bg-rose-50" : "bg-background"}
                 >
                   <td className={`${td} max-w-[4.5rem] md:max-w-none truncate`} title={r.corpName}>
                     <div className="flex items-center gap-1">
@@ -343,19 +343,19 @@ export default function OwnershipTable({
                         type="button"
                         onClick={() => setChartTarget({ code: r.stockCode, name: r.corpName })}
                         disabled={!r.stockCode}
-                        className="text-left text-gray-900 hover:text-indigo-700 hover:underline truncate disabled:cursor-default disabled:no-underline disabled:hover:text-gray-900"
+                        className="text-left text-foreground hover:text-primary-hover hover:underline truncate disabled:cursor-default disabled:no-underline disabled:hover:text-foreground"
                         title={r.stockCode ? `${r.corpName} 차트 보기` : "종목코드가 없어 차트를 볼 수 없습니다"}
                       >
                         {r.corpName}
                       </button>
                     </div>
                   </td>
-                  <td className={`${td} text-gray-600 max-w-[5rem] md:max-w-[13rem] truncate`} title={r.subject}>
+                  <td className={`${td} text-foreground/80 max-w-[5rem] md:max-w-[13rem] truncate`} title={r.subject}>
                     <a
                       href={dartUrl(r.rceptNo)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:text-indigo-700 hover:underline"
+                      className="hover:text-primary-hover hover:underline"
                       title="DART 원문 보기"
                     >
                       {r.subject}
@@ -364,17 +364,17 @@ export default function OwnershipTable({
                   <td className={`${td} ${hideSm("holderName")} max-w-[11rem] truncate`} title={r.holderName}>
                     {r.holderName}
                   </td>
-                  <td className={`${td} ${hideSm("firstDate")} text-center text-gray-600`}>{shortDate(r.firstDate)}</td>
-                  <td className={`${td} ${hideSm("lastDate")} text-center text-gray-600`}>{shortDate(r.lastDate)}</td>
+                  <td className={`${td} ${hideSm("firstDate")} text-center text-foreground/80`}>{shortDate(r.firstDate)}</td>
+                  <td className={`${td} ${hideSm("lastDate")} text-center text-foreground/80`}>{shortDate(r.lastDate)}</td>
                   <td className={`${td} text-center`}>
                     <span className="md:hidden">{shortMethod(r.method)}</span>
                     <span className="hidden md:inline">{r.method}</span>
                   </td>
-                  <td className={`${td} ${hideSm("delta")} text-right tabular-nums font-medium ${isSell ? "text-blue-700" : "text-red-600"}`}>
+                  <td className={`${td} ${hideSm("delta")} text-right tabular-nums font-medium ${isSell ? "text-fall" : "text-rise"}`}>
                     {int(r.delta)}
                   </td>
                   <td className={`${td} ${hideSm("after")} text-right tabular-nums`}>{int(r.after)}</td>
-                  <td className={`${td} text-right tabular-nums text-gray-600`}>{pct(r.ratioBefore)}</td>
+                  <td className={`${td} text-right tabular-nums text-foreground/80`}>{pct(r.ratioBefore)}</td>
                   <td className={`${td} text-right tabular-nums`}>{pct(r.ratioAfter)}</td>
                   <td className={`${td} ${hideSm("unitPrice")} text-right tabular-nums`}>{int(r.unitPrice)}</td>
                   <td
@@ -412,7 +412,7 @@ export default function OwnershipTable({
             })}
             {view.length === 0 && (
               <tr>
-                <td colSpan={12} className="px-3 py-10 text-center text-gray-400">
+                <td colSpan={12} className="px-3 py-10 text-center text-muted-foreground/80">
                   조건에 맞는 공시가 없습니다
                 </td>
               </tr>
@@ -421,7 +421,7 @@ export default function OwnershipTable({
         </table>
       </div>
 
-      <p className="mt-2 text-[11px] text-gray-400">
+      <p className="mt-2 text-[11px] text-muted-foreground/80">
         종목명을 누르면 차트, 공시주체를 누르면 DART 원문이 열립니다.{" "}
         헤더를 누르면 정렬됩니다. 한 종목의 보고가 흩어지지 않도록 종목 단위로 묶어서 옮깁니다.
         총액 막대는 1백만 · 1천만 · 1억 · 10억 · 100억 · 1천억 구간의 로그 눈금이며,

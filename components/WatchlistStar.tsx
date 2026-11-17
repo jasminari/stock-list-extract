@@ -19,7 +19,7 @@ export default function WatchlistStar({
       aria-label={active ? "관심종목 해제" : "관심종목 등록"}
       title={active ? "관심종목 해제" : "관심종목 등록"}
       className={`inline-flex items-center justify-center flex-shrink-0 ${
-        active ? "text-amber-400" : "text-gray-300 hover:text-amber-400"
+        active ? "text-amber-400" : "text-muted-foreground/50 hover:text-amber-400"
       } transition-colors ${className}`}
     >
       <svg

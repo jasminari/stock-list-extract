@@ -144,34 +144,34 @@ export default function AdminFeedbackPage() {
         <div className="mb-6">
           <button
             onClick={() => router.push("/dashboard/admin")}
-            className="text-xs text-gray-500 hover:text-gray-700 mb-2 flex items-center gap-1"
+            className="text-xs text-muted-foreground hover:text-foreground/90 mb-2 flex items-center gap-1"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             관리로 돌아가기
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">의견 · 만족도</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">의견 · 만족도</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             사용자가 보낸 만족도와 의견을 확인합니다.
           </p>
         </div>
 
         {/* 요약 */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="p-4 bg-white border border-gray-200 rounded-xl">
-            <p className="text-xs text-gray-500">전체 의견</p>
-            <p className="text-xl font-bold text-gray-900 mt-1">{stats.total}</p>
+          <div className="p-4 bg-background border border-border rounded-xl">
+            <p className="text-xs text-muted-foreground">전체 의견</p>
+            <p className="text-xl font-bold text-foreground mt-1">{stats.total}</p>
           </div>
-          <div className="p-4 bg-white border border-gray-200 rounded-xl">
-            <p className="text-xs text-gray-500">미확인</p>
-            <p className="text-xl font-bold text-orange-500 mt-1">{stats.newCount}</p>
+          <div className="p-4 bg-background border border-border rounded-xl">
+            <p className="text-xs text-muted-foreground">미확인</p>
+            <p className="text-xl font-bold text-warning mt-1">{stats.newCount}</p>
           </div>
-          <div className="p-4 bg-white border border-gray-200 rounded-xl">
-            <p className="text-xs text-gray-500">평균 만족도</p>
-            <p className="text-xl font-bold text-indigo-600 mt-1">
+          <div className="p-4 bg-background border border-border rounded-xl">
+            <p className="text-xs text-muted-foreground">평균 만족도</p>
+            <p className="text-xl font-bold text-primary mt-1">
               {stats.ratedCount > 0 ? stats.avg.toFixed(1) : "-"}
-              <span className="text-xs font-normal text-gray-400 ml-1">
+              <span className="text-xs font-normal text-muted-foreground/80 ml-1">
                 / 5 ({stats.ratedCount}명)
               </span>
             </p>
@@ -180,8 +180,8 @@ export default function AdminFeedbackPage() {
 
         {/* 만족도 분포 */}
         {stats.ratedCount > 0 && (
-          <div className="mb-6 p-4 bg-white border border-gray-200 rounded-xl">
-            <p className="text-sm font-semibold text-gray-900 mb-3">만족도 분포</p>
+          <div className="mb-6 p-4 bg-background border border-border rounded-xl">
+            <p className="text-sm font-semibold text-foreground mb-3">만족도 분포</p>
             <div className="space-y-1.5">
               {[5, 4, 3, 2, 1].map((v) => {
                 const count = stats.dist[v - 1];
@@ -189,14 +189,14 @@ export default function AdminFeedbackPage() {
                 return (
                   <div key={v} className="flex items-center gap-2">
                     <span className="text-base w-6 text-center">{RATING_EMOJI[v]}</span>
-                    <span className="text-xs text-gray-500 w-16">{RATING_LABEL[v]}</span>
-                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <span className="text-xs text-muted-foreground w-16">{RATING_LABEL[v]}</span>
+                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-indigo-500 rounded-full"
+                        className="h-full bg-primary rounded-full"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="text-xs text-gray-500 w-12 text-right">
+                    <span className="text-xs text-muted-foreground w-12 text-right">
                       {count}건
                     </span>
                   </div>
@@ -208,12 +208,12 @@ export default function AdminFeedbackPage() {
 
         {/* 에러 */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
-            <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-xl flex items-center gap-3">
+            <svg className="w-5 h-5 text-destructive flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-sm text-red-800 flex-1">{error}</p>
-            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+            <p className="text-sm text-destructive flex-1">{error}</p>
+            <button onClick={() => setError(null)} className="text-destructive/60 hover:text-destructive">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -222,9 +222,9 @@ export default function AdminFeedbackPage() {
         )}
 
         {/* 목록 */}
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-gray-900">받은 의견</h2>
+        <div className="bg-background border border-border rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-foreground">받은 의견</h2>
             <div className="flex items-center gap-1">
               {([
                 { id: "all", label: "전체" },
@@ -236,8 +236,8 @@ export default function AdminFeedbackPage() {
                   onClick={() => setFilter(tab.id)}
                   className={`px-2.5 py-1 text-xs rounded-lg transition-colors ${
                     filter === tab.id
-                      ? "bg-indigo-50 text-indigo-700 font-medium"
-                      : "text-gray-500 hover:bg-gray-100"
+                      ? "bg-accent text-primary-hover font-medium"
+                      : "text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   {tab.label}
@@ -247,16 +247,16 @@ export default function AdminFeedbackPage() {
           </div>
 
           {loading ? (
-            <div role="status" className="flex flex-col items-center px-4 py-12 text-center text-sm text-gray-400">
-              <LoadingIcon className="h-20 w-20 text-indigo-600" decorative />
+            <div role="status" className="flex flex-col items-center px-4 py-12 text-center text-sm text-muted-foreground/80">
+              <LoadingIcon className="h-20 w-20 text-primary" decorative />
               <span className="sr-only">불러오는 중...</span>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="px-4 py-12 text-center text-sm text-gray-400">
+            <div className="px-4 py-12 text-center text-sm text-muted-foreground/80">
               {items.length === 0 ? "받은 의견이 없습니다." : "해당하는 의견이 없습니다."}
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-border/60">
               {filtered.map((item) => (
                 <div key={item.id} className="px-4 py-3.5">
                   <div className="flex items-start gap-3">
@@ -265,26 +265,26 @@ export default function AdminFeedbackPage() {
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-foreground">
                           {item.displayName || item.username}
                         </span>
                         {item.rating && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted-foreground">
                             {RATING_LABEL[item.rating]}
                           </span>
                         )}
                         {item.status === "new" && (
-                          <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-medium rounded-full">
+                          <span className="px-1.5 py-0.5 bg-warning-surface text-warning text-[10px] font-medium rounded-full">
                             미확인
                           </span>
                         )}
                       </div>
                       {item.message && (
-                        <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap break-words">
+                        <p className="text-sm text-foreground/90 mt-1 whitespace-pre-wrap break-words">
                           {item.message}
                         </p>
                       )}
-                      <div className="flex items-center gap-2 mt-1.5 text-[11px] text-gray-400">
+                      <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground/80">
                         <span>{formatDateTime(item.createdAt)}</span>
                         {item.pagePath && (
                           <>
@@ -299,8 +299,8 @@ export default function AdminFeedbackPage() {
                       disabled={updatingId === item.id}
                       className={`flex-shrink-0 px-2.5 py-1 text-xs border rounded-md transition-colors disabled:opacity-40 ${
                         item.status === "done"
-                          ? "text-gray-400 border-gray-200 hover:bg-gray-50"
-                          : "text-indigo-600 border-indigo-300 hover:bg-indigo-50"
+                          ? "text-muted-foreground/80 border-border hover:bg-muted/50"
+                          : "text-primary border-primary/40 hover:bg-accent"
                       }`}
                     >
                       {item.status === "done" ? "되돌리기" : "확인"}

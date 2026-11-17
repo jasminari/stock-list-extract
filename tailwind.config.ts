@@ -62,6 +62,14 @@ const config: Config = {
           DEFAULT: "hsl(var(--fall))",
           surface: "hsl(var(--fall-surface))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          surface: "hsl(var(--success-surface))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          surface: "hsl(var(--warning-surface))",
+        },
         reason: {
           DEFAULT: "hsl(var(--reason))",
           surface: "hsl(var(--reason-surface))",

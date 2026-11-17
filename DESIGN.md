@@ -19,12 +19,16 @@ colors:
   rise-surface: "#fbeeee"
   fall: "#1065cc"
   fall-surface: "#e8f3ff"
-  reason: "#007738"
-  reason-surface: "#e8f5ee"
-  news: "#666b75"
-  news-surface: "#f4f4f6"
-  memo: "#594cc0"
-  memo-surface: "#f1efff"
+  success: "#007738"
+  success-surface: "#e8f5ee"
+  warning: "#92400e"
+  warning-surface: "#fef3c7"
+  reason: "#594cc0"
+  reason-surface: "#f1efff"
+  news: "#1065cc"
+  news-surface: "#e8f3ff"
+  memo: "#92400e"
+  memo-surface: "#fef3c7"
   positive-rate: "#b43e3c"
 typography:
   display:
@@ -157,9 +161,11 @@ Dark mode is not supported. The product hardcodes light surfaces, so no dark tok
 | Quiet fill (inputs, stages, hover) | `stage` | `bg-muted` | `#f4f4f6` |
 | Lines | `border` | `border-border`, `border-input` | `#e5e7eb` |
 | Focus ring | `focus` | `ring-ring` | `#8e87ef` |
-| Errors, destructive actions | `destructive` | `text-destructive`, `bg-destructive` | `#d12d3a` |
+| Errors, destructive actions | `destructive` | `text-destructive`, `bg-destructive/10` | `#d12d3a` |
+| Success, completed | `success` | `text-success`, `bg-success-surface` | `#007738` on `#e8f5ee` |
+| Caution, notices | `warning` | `text-warning`, `bg-warning-surface` | `#92400e` on `#fef3c7` |
 
-Supporting text must be `muted` or darker. Lighter greys (Tailwind `gray-400`) fail contrast on white for body-size text; use them only for decorative marks.
+Text hierarchy uses four steps: `text-foreground`, `text-foreground/80`, `text-muted-foreground`, and `text-muted-foreground/80` for tertiary hints. Anything lighter (`/50`) is for decorative marks and disabled states only.
 
 ### Market colours
 
@@ -171,36 +177,31 @@ Korean market convention: **rise is red, fall is blue**. Never swap them, and ne
 | Falling price / rate | `text-fall`, `bg-fall-surface` | `#1065cc` on `#e8f3ff` |
 | Unchanged | `text-muted-foreground` | `#666b75` |
 
-Always pair the colour with a sign or arrow (`+`, `−`, ▲, ▼). Numbers use `tabular-nums`.
+Always pair the colour with a sign or arrow (`+`, `−`, ▲, ▼). Numbers use `tabular-nums`. Chart candles use the same two colours (`lib/dailyChart.ts`).
 
 ### Record types
 
-The product distinguishes three kinds of record. They must stay visually and verbally separate, and colour alone is never the only cue: each carries an icon and a text label.
+The product distinguishes these kinds of record. They must stay visually and verbally separate, and colour alone is never the only cue: each carries a text label. The colours follow the live market-study table.
 
 | Record | Meaning | Tailwind class | Value |
 |---|---|---|---|
-| Confirmed rise reason (상승 배경) | An article explicitly ties the company-specific event to that day's rise | `text-reason`, `bg-reason-surface` | `#007738` on `#e8f5ee` |
-| Related news (관련 재료) | A concrete company event near the date; link to the rise is not confirmed | `text-news`, `bg-news-surface` | `#666b75` on `#f4f4f6` |
-| My note (내 메모) | Written by the user | `text-memo`, `bg-memo-surface` | `#594cc0` on `#f1efff` |
+| Confirmed rise reason (상승 배경) | An article explicitly ties the company-specific event to that day's rise | `text-reason`, `bg-reason-surface` | `#594cc0` on `#f1efff` |
+| Related news (관련 재료) | A concrete company event near the date; link to the rise is not confirmed | `text-news`, `bg-news-surface` | `#1065cc` on `#e8f3ff` |
+| Business profile (사업 소개) | Company information from DART, not an event | `text-muted-foreground`, `bg-muted` | `#666b75` on `#f4f4f6` |
+| My note (내 메모) | Written by the user | `text-memo`, `bg-memo-surface` | `#92400e` on `#fef3c7` |
 
-DART business profiles (사업 소개) are company information, not events. Show them in a separate context, never as a record on a date. Theme co-movement is excluded. Do not present a news item's timing as the cause of a price move.
+Show DART business profiles as company information, never as a record on a date. Theme co-movement is excluded. Do not present a news item's timing as the cause of a price move.
 
-### Legacy Tailwind colours
+### Raw palette exceptions
 
-Most product screens still use raw Tailwind palette classes. They are visually equivalent to the tokens and should be migrated when a file is touched, not in bulk:
+Product code uses the tokens above, not raw Tailwind palette classes (`indigo-600`, `gray-500`, …). The only places that keep raw colours are data encodings and decoration:
 
-| Legacy class | Use instead |
-|---|---|
-| `indigo-600` | `primary` |
-| `indigo-700` | `primary-hover` |
-| `indigo-50`, `indigo-100` | `accent` |
-| `gray-900`, `gray-800` | `foreground` |
-| `gray-700`, `gray-600` | `foreground/80` |
-| `gray-500`, `gray-400` | `muted-foreground` |
-| `gray-50`, `gray-100` | `muted` |
-| `gray-200`, `gray-300` | `border` |
-| `red-600` (errors) | `destructive` |
-| `bg-white` | `background` |
+- Heat highlights in the market-study table (orange for trading value, purple for turnover) and their copy in the login preview.
+- The ownership table's spreadsheet-style amber header and pink sell rows.
+- The watchlist star (amber).
+- The contribution graph's five-step indigo scale and the chart's article markers (amber, emerald, indigo).
+- Third-party brand colours such as the Kakao button.
+- The unused legacy landing components in `components/landing/` other than `NotifoldLanding`.
 
 ## Typography
 
@@ -341,7 +342,7 @@ Under `prefers-reduced-motion: reduce`, animations and transitions stop, stock c
 ## Do's and Don'ts
 
 - **Do** take colour, typeface, and tone from the brand layer on every route.
-- **Do** use the tokens and `components/ui/` components for new work; migrate legacy classes when a file is touched.
+- **Do** use the tokens and `components/ui/` components; do not introduce raw palette classes outside the listed exceptions.
 - **Do** keep rise red and fall blue, with a sign or arrow beside the colour.
 - **Do** keep confirmed rise reasons, related news, and user notes distinct by icon, label, and colour.
 - **Do** preserve clear Korean phrasing, visible keyboard focus, and reduced-motion behaviour.

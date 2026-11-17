@@ -20,11 +20,11 @@ const fromInput = (s: string) => s.replace(/-/g, "");
 function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
     // 모바일에선 4개가 한 줄에 들어가야 해서 최소폭을 걸지 않는다 (min-w-0)
-    <div className="min-w-0 px-1.5 py-1.5 md:px-3 md:py-2 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200 md:min-w-[7rem]">
-      <div className="text-[10px] md:text-[11px] leading-tight text-gray-500">{label}</div>
+    <div className="min-w-0 px-1.5 py-1.5 md:px-3 md:py-2 rounded-lg md:rounded-xl bg-muted/50 border border-border md:min-w-[7rem]">
+      <div className="text-[10px] md:text-[11px] leading-tight text-muted-foreground">{label}</div>
       {/* "-1,234억원"까지는 잘리지 않아야 한다 — 헤드라인 숫자가 잘리면 카드가 무의미해진다 */}
       <div
-        className={`truncate text-[11px] md:text-sm font-semibold tabular-nums ${tone ?? "text-gray-800"}`}
+        className={`truncate text-[11px] md:text-sm font-semibold tabular-nums ${tone ?? "text-foreground"}`}
       >
         {value}
       </div>
@@ -82,10 +82,10 @@ export default function DisclosurePage() {
       <div className="max-w-[1600px] mx-auto px-4 py-5">
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <div>
-            <h1 className="text-lg font-semibold text-gray-800">
+            <h1 className="text-lg font-semibold text-foreground">
               임원ㆍ주요주주 특정증권 등 소유상황보고서
             </h1>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               DART 전자공시 원문에서 장내ㆍ장외ㆍ시간외 매매 내역만 추려 정리했습니다
             </p>
           </div>
@@ -96,12 +96,12 @@ export default function DisclosurePage() {
               value={toInput(date)}
               max={toInput(getCollectionDateStr())}
               onChange={(e) => e.target.value && setDate(fromInput(e.target.value))}
-              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-3 py-1.5 text-sm border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <button
               onClick={() => load(date)}
               disabled={loading}
-              className="px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              className="px-3 py-1.5 text-sm rounded-lg bg-primary text-white hover:bg-primary-hover disabled:opacity-50 transition-colors"
             >
               {loading ? "불러오는 중" : "새로고침"}
             </button>
@@ -109,38 +109,38 @@ export default function DisclosurePage() {
         </div>
 
         <div className="flex flex-col gap-2 mb-4 md:flex-row md:flex-wrap md:items-center">
-          <span className="text-sm text-gray-700 font-medium md:mr-1">
+          <span className="text-sm text-foreground/90 font-medium md:mr-1">
             {formatDateKorean(date)}
           </span>
           {/* 카드 4개는 어떤 폭에서도 한 줄 — 두 줄로 접히면 무엇의 숫자인지 읽기 어려워진다 */}
           <div className="grid grid-cols-4 gap-1.5 md:flex md:gap-2">
             <Stat label="보고 건수" value={`${rows.length}건`} />
-            <Stat label="매수" value={`${buys.length}건`} tone="text-red-600" />
-            <Stat label="매도" value={`${sells.length}건`} tone="text-blue-700" />
+            <Stat label="매수" value={`${buys.length}건`} tone="text-rise" />
+            <Stat label="매도" value={`${sells.length}건`} tone="text-fall" />
             <Stat
               label="순매수"
               value={shortMoney(net)}
-              tone={net >= 0 ? "text-red-600" : "text-blue-700"}
+              tone={net >= 0 ? "text-destructive" : "text-blue-700"}
             />
           </div>
         </div>
 
         {error && (
-          <div className="px-4 py-3 mb-4 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+          <div className="px-4 py-3 mb-4 rounded-lg bg-destructive/10 border border-destructive/30 text-sm text-destructive">
             {error}
           </div>
         )}
 
         {failures.length > 0 && (
-          <div className="px-4 py-3 mb-4 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
+          <div className="px-4 py-3 mb-4 rounded-lg bg-warning-surface border border-warning/30 text-xs text-warning">
             원문을 읽지 못한 공시 {failures.length}건은 표에서 빠졌습니다 (
             {failures.map((f) => f.corpName).join(", ")})
           </div>
         )}
 
         {loading ? (
-          <div role="status" className="flex flex-col items-center py-20 text-center text-sm text-gray-400">
-            <LoadingIcon className="h-20 w-20 text-indigo-600" decorative />
+          <div role="status" className="flex flex-col items-center py-20 text-center text-sm text-muted-foreground/80">
+            <LoadingIcon className="h-20 w-20 text-primary" decorative />
             <span className="sr-only">공시 원문을 하나씩 읽는 중입니다…</span>
           </div>
         ) : (

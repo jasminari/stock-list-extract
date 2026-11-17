@@ -112,11 +112,11 @@ export default function ContributionGraph({ year }: ContributionGraphProps) {
 
   return (
     <div>
-      <h2 className="text-base font-medium text-gray-800 mb-4">
-        {year}년에 <span className="font-bold text-gray-900">{totalContributions}건</span>의 상승이유를 등록했습니다
+      <h2 className="text-base font-medium text-foreground mb-4">
+        {year}년에 <span className="font-bold text-foreground">{totalContributions}건</span>의 상승이유를 등록했습니다
       </h2>
 
-      <div className="border border-gray-200 rounded-lg p-4">
+      <div className="border border-border rounded-lg p-4">
         <svg
           width="100%"
           viewBox={`0 0 ${totalWidth + 8} ${STEP * 7 + 24 + 8}`}

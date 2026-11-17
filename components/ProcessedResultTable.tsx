@@ -70,7 +70,7 @@ function EditableCell({
   }, [text, value, entryId, field, onSave]);
 
   if (!entryId || !onSave) {
-    return <span className={`whitespace-pre-line ${!value || value === "미확인" ? "text-gray-400" : field === "keyword" ? "text-indigo-600 font-semibold" : "text-gray-700"}`}>{value || ""}</span>;
+    return <span className={`whitespace-pre-line ${!value || value === "미확인" ? "text-muted-foreground/80" : field === "keyword" ? "text-primary font-semibold" : "text-foreground/90"}`}>{value || ""}</span>;
   }
 
   if (editing) {
@@ -87,7 +87,7 @@ function EditableCell({
             setEditing(false);
           }
         }}
-        className="w-full px-1 py-0.5 text-sm border border-indigo-400 rounded outline-none bg-indigo-50"
+        className="w-full px-1 py-0.5 text-sm border border-primary/60 rounded outline-none bg-accent"
       />
     );
   }
@@ -95,9 +95,9 @@ function EditableCell({
   return (
     <span
       onClick={() => setEditing(true)}
-      className={`cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5 inline-block min-w-[40px] min-h-[20px] ${
+      className={`cursor-pointer hover:bg-muted rounded px-1 py-0.5 inline-block min-w-[40px] min-h-[20px] ${
         saving ? "opacity-50" : ""
-      } ${!text || text === "미확인" ? "text-gray-400" : field === "keyword" ? "text-indigo-600 font-semibold whitespace-pre-line" : "text-gray-700 whitespace-pre-line leading-relaxed"}`}
+      } ${!text || text === "미확인" ? "text-muted-foreground/80" : field === "keyword" ? "text-primary font-semibold whitespace-pre-line" : "text-foreground/90 whitespace-pre-line leading-relaxed"}`}
     >
       {field === "keyword" ? (text || "").replace(/\s*·\s*/, "\n") : text || ""}
     </span>
@@ -126,16 +126,16 @@ function SortHeader({
         onClick={() => onSort(sortKey)}
         title={title}
         aria-label={`${label} 정렬`}
-        className={`inline-flex items-center gap-1 hover:text-gray-700 transition-colors ${
-          activeDir ? "text-indigo-600" : ""
+        className={`inline-flex items-center gap-1 hover:text-foreground/90 transition-colors ${
+          activeDir ? "text-primary" : ""
         }`}
       >
         {label}
         <span className="flex flex-col leading-[0.6] text-[7px] md:text-[8px]">
-          <span className={activeDir === "asc" ? "text-indigo-600" : "text-gray-300"}>
+          <span className={activeDir === "asc" ? "text-primary" : "text-muted-foreground/50"}>
             ▲
           </span>
-          <span className={activeDir === "desc" ? "text-indigo-600" : "text-gray-300"}>
+          <span className={activeDir === "desc" ? "text-primary" : "text-muted-foreground/50"}>
             ▼
           </span>
         </span>
@@ -207,26 +207,26 @@ export default function ProcessedResultTable({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+      className="bg-background rounded-xl border border-border overflow-hidden"
     >
-      <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-100">
+      <div className="px-4 md:px-6 py-3 md:py-4 border-b border-border/60">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm md:text-base font-semibold text-gray-800">
+          <h2 className="text-sm md:text-base font-semibold text-foreground">
             가공 데이터{" "}
-            <span className="text-indigo-600 font-bold">{stocks.length}</span>
+            <span className="text-primary font-bold">{stocks.length}</span>
             종목
           </h2>
-          <span className="text-[10px] md:text-xs text-gray-400">{conditionName}</span>
+          <span className="text-[10px] md:text-xs text-muted-foreground/80">{conditionName}</span>
         </div>
         {formattedDate && (
-          <p className="text-[10px] md:text-xs text-gray-400 mt-0.5 md:mt-1">{formattedDate}</p>
+          <p className="text-[10px] md:text-xs text-muted-foreground/80 mt-0.5 md:mt-1">{formattedDate}</p>
         )}
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-xs md:text-sm">
           <thead>
-            <tr className="bg-gray-50 text-gray-500 text-[10px] md:text-xs">
+            <tr className="bg-muted/50 text-muted-foreground text-[10px] md:text-xs">
               <th className="px-2 md:px-3 py-2 md:py-3 text-left font-medium">종목명</th>
               <th className="px-2 md:px-3 py-2 md:py-3 text-left font-medium w-20 md:w-28 hidden sm:table-cell">키워드</th>
               <SortHeader
@@ -259,7 +259,7 @@ export default function ProcessedResultTable({
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-border/40">
             {sortedStocks.map((s) => {
               const isHighVolume = s.tradingAmountBil >= 2000;
               const isHighRate = s.changeRate >= 15;
@@ -271,7 +271,7 @@ export default function ProcessedResultTable({
               const sourceUrl = related?.sourceUrl || s.sourceUrl;
               const sourceTitle = related?.sourceTitle || s.sourceTitle;
               const label = related ? "관련 재료" : business ? "사업 소개" : !unconfirmed ? "상승 배경" : "";
-              const badgeClass = related ? "bg-blue-50 text-blue-700" : business ? "bg-gray-100 text-gray-600" : "bg-violet-50 text-violet-700";
+              const badgeClass = related ? "bg-news-surface text-news" : business ? "bg-muted text-muted-foreground" : "bg-reason-surface text-reason";
               const badge = label ? <span className={`inline-block rounded px-2 py-0.5 text-[10px] md:text-xs font-medium mb-1 ${badgeClass}`}>{label}</span> : null;
               const dates = related ? `${related.eventDate.slice(4,6)}.${related.eventDate.slice(6)} 자료 기준 · ${related.articleDate.slice(4,6)}.${related.articleDate.slice(6)} 보도` : "";
               const keyword = related?.keyword || business?.keyword || (unconfirmed ? "" : s.keyword === "미확인" ? "" : s.keyword);
@@ -284,7 +284,7 @@ export default function ProcessedResultTable({
                   ref={s.entryId === highlightedEntryId ? highlightedRowRef : undefined}
                   tabIndex={s.entryId === highlightedEntryId ? -1 : undefined}
                   aria-label={s.entryId === highlightedEntryId ? `${s.name} 원본 데이터` : undefined}
-                  className={s.entryId === highlightedEntryId ? "bg-indigo-50 outline outline-2 -outline-offset-2 outline-indigo-300" : "hover:bg-gray-50 transition-colors"}
+                  className={s.entryId === highlightedEntryId ? "bg-accent outline outline-2 -outline-offset-2 outline-ring" : "hover:bg-muted/50 transition-colors"}
                 >
                   <td className="px-2 md:px-3 py-1.5 md:py-3 font-medium whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
@@ -297,7 +297,7 @@ export default function ProcessedResultTable({
                       <button
                         type="button"
                         onClick={() => setChartTarget({ code: s.code, name: s.name })}
-                        className="text-gray-900 hover:text-indigo-600 hover:underline"
+                        className="text-foreground hover:text-primary hover:underline"
                       >
                         {s.name}
                       </button>
@@ -315,7 +315,7 @@ export default function ProcessedResultTable({
                     className={`px-2 md:px-3 py-1.5 md:py-3 text-right font-medium whitespace-nowrap ${
                       isHighVolume
                         ? "bg-orange-100 text-orange-800"
-                        : "text-gray-700"
+                        : "text-foreground/90"
                     }`}
                   >
                     {s.tradingAmountBil.toLocaleString()}억
@@ -324,7 +324,7 @@ export default function ProcessedResultTable({
                     className={`px-2 md:px-3 py-1.5 md:py-3 text-right whitespace-nowrap ${
                       isHighTurnover
                         ? "bg-purple-100 text-purple-800 font-medium"
-                        : "text-gray-700"
+                        : "text-foreground/90"
                     }`}
                     title={
                       s.marketCapBil
@@ -336,12 +336,12 @@ export default function ProcessedResultTable({
                       ? "-"
                       : `${s.turnoverRate.toFixed(s.turnoverRate < 1 ? 2 : 1)}%`}
                   </td>
-                  <td className="px-2 md:px-3 py-1.5 md:py-3 text-right text-gray-700 whitespace-nowrap">
+                  <td className="px-2 md:px-3 py-1.5 md:py-3 text-right text-foreground/90 whitespace-nowrap">
                     {s.closingPrice.toLocaleString()}
                   </td>
                   <td
                     className={`px-2 md:px-3 py-1.5 md:py-3 text-right font-medium whitespace-nowrap ${
-                      isHighRate ? "text-red-600" : "text-gray-700"
+                      isHighRate ? "text-rise" : "text-foreground/90"
                     }`}
                   >
                     {s.changeRate.toFixed(2)}%
@@ -354,8 +354,8 @@ export default function ProcessedResultTable({
                       field="reason"
                       onSave={business || related ? undefined : onAnnotationUpdate}
                     />
-                    {business && <a href={business.sourceUrl} target="_blank" rel="noopener noreferrer" title={`${business.reportName} · ${business.filingDate}`} className="block text-xs text-gray-500 hover:text-indigo-600 hover:underline mt-1">↗ DART · {business.reportName}</a>}
-                    {related && <p className="text-[10px] md:text-xs text-gray-400 mt-1">{dates} · 당일 상승과의 연결은 확인되지 않음</p>}
+                    {business && <a href={business.sourceUrl} target="_blank" rel="noopener noreferrer" title={`${business.reportName} · ${business.filingDate}`} className="block text-xs text-muted-foreground hover:text-primary hover:underline mt-1">↗ DART · {business.reportName}</a>}
+                    {related && <p className="text-[10px] md:text-xs text-muted-foreground/80 mt-1">{dates} · 당일 상승과의 연결은 확인되지 않음</p>}
                     {(!unconfirmed || related) && sourceUrl && (
                       <button
                         onClick={() =>
@@ -365,7 +365,7 @@ export default function ProcessedResultTable({
                           })
                         }
                         title={sourceTitle || sourceUrl}
-                        className="block text-left text-[10px] md:text-xs text-indigo-500 hover:underline truncate max-w-[200px] md:max-w-[280px] mt-0.5"
+                        className="block text-left text-[10px] md:text-xs text-primary hover:underline truncate max-w-[200px] md:max-w-[280px] mt-0.5"
                       >
                         ↗ {related ? "관련 기사" : "근거 기사"}
                       </button>
@@ -374,22 +374,22 @@ export default function ProcessedResultTable({
                 </tr>
                 {/* 모바일 전용: 종목 아래 스레드형 서브 행 (키워드/상승이유/기사 링크) */}
                 {hasThread && (
-                  <tr className={`sm:hidden !border-t-0 ${s.entryId === highlightedEntryId ? "bg-indigo-50" : ""}`}>
+                  <tr className={`sm:hidden !border-t-0 ${s.entryId === highlightedEntryId ? "bg-accent" : ""}`}>
                     <td colSpan={7} className="px-2 pb-2 pt-0">
-                      <div className="ml-1 pl-2.5 border-l-2 border-indigo-200 space-y-1">
+                      <div className="ml-1 pl-2.5 border-l-2 border-primary/25 space-y-1">
                         {keyword && (
-                          <span className={`inline-block text-[10px] font-medium rounded-full px-2 py-0.5 ${unconfirmed ? "text-gray-400 bg-gray-50" : "bg-indigo-50 text-indigo-600"}`}>
+                          <span className={`inline-block text-[10px] font-medium rounded-full px-2 py-0.5 ${unconfirmed ? "text-muted-foreground/80 bg-muted/50" : "bg-accent text-primary"}`}>
                             {keyword}
                           </span>
                         )}
                         {badge}
                         {reason && (
-                          <p className="text-[11px] text-gray-600 leading-snug whitespace-pre-line">
+                          <p className="text-[11px] text-foreground/80 leading-snug whitespace-pre-line">
                             {reason}
                           </p>
                         )}
-                        {business && <a href={business.sourceUrl} target="_blank" rel="noopener noreferrer" title={business.filingDate} className="block text-[11px] text-gray-500 hover:underline">↗ DART · {business.reportName}</a>}
-                        {related && <p className="text-[10px] md:text-xs text-gray-400 mt-1">{dates} · 당일 상승과의 연결은 확인되지 않음</p>}
+                        {business && <a href={business.sourceUrl} target="_blank" rel="noopener noreferrer" title={business.filingDate} className="block text-[11px] text-muted-foreground hover:underline">↗ DART · {business.reportName}</a>}
+                        {related && <p className="text-[10px] md:text-xs text-muted-foreground/80 mt-1">{dates} · 당일 상승과의 연결은 확인되지 않음</p>}
                     {(!unconfirmed || related) && sourceUrl && (
                           <button
                             onClick={() =>
@@ -398,7 +398,7 @@ export default function ProcessedResultTable({
                                 title: sourceTitle,
                               })
                             }
-                            className="block w-full text-left text-[11px] text-indigo-500 hover:underline truncate"
+                            className="block w-full text-left text-[11px] text-primary hover:underline truncate"
                           >
                             ↗ {related ? "관련 기사" : "근거 기사"}
                           </button>

@@ -204,7 +204,7 @@ export default function QuizPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <LoadingIcon className="h-20 w-20 text-indigo-600" label="퀴즈 불러오는 중" />
+        <LoadingIcon className="h-20 w-20 text-primary" label="퀴즈 불러오는 중" />
       </div>
     );
   }
@@ -212,15 +212,15 @@ export default function QuizPage() {
   if (error || !data) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+          <svg className="w-8 h-8 text-muted-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
           </svg>
         </div>
-        <p className="text-sm text-gray-500 mb-4">퀴즈를 불러오지 못했습니다</p>
+        <p className="text-sm text-muted-foreground mb-4">퀴즈를 불러오지 못했습니다</p>
         <button
           onClick={() => window.location.reload()}
-          className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          className="px-5 py-2.5 rounded-xl border border-border text-sm font-medium text-foreground/80 hover:bg-muted/50 transition-colors"
         >
           다시 시도
         </button>
@@ -231,7 +231,7 @@ export default function QuizPage() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="border-b border-gray-200 px-3 md:px-6 py-2 md:py-3 flex-shrink-0">
+      <div className="border-b border-border px-3 md:px-6 py-2 md:py-3 flex-shrink-0">
         <div className="flex items-center gap-3">
           {stage !== "playing" && <StreakBadge streak={streak} />}
           {stage === "playing" ? (
@@ -245,22 +245,22 @@ export default function QuizPage() {
                     aria-current={i === index ? "step" : undefined}
                     disabled={i === index || i > answers.length || submitting}
                     onClick={() => setJumpTarget(i)}
-                    className="flex min-h-11 flex-1 items-center rounded-full focus-visible:outline-indigo-600 disabled:cursor-default"
+                    className="flex min-h-11 flex-1 items-center rounded-full focus-visible:outline-primary disabled:cursor-default"
                   >
                     <span className={`h-2.5 w-full rounded-full transition-colors ${
                       answers[i] !== undefined
-                        ? answers[i] === questions[i].answerIndex ? "bg-indigo-500" : "bg-rose-400"
-                        : i === index ? "bg-indigo-200" : "bg-gray-200"
+                        ? answers[i] === questions[i].answerIndex ? "bg-primary" : "bg-destructive/70"
+                        : i === index ? "bg-primary/25" : "bg-border"
                     }`} />
                   </button>
                 ))}
               </div>
-              <span className="text-xs text-gray-400 tabular-nums flex-shrink-0">
+              <span className="text-xs text-muted-foreground/80 tabular-nums flex-shrink-0">
                 {index + 1}/{total}
               </span>
             </>
           ) : (
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-muted-foreground/80">
               {formatDateKorean(data.quizDate)}
             </span>
           )}
@@ -292,27 +292,27 @@ export default function QuizPage() {
                   onSelect={setSelected}
                 />
                 {!checked && (
-                  <button onClick={handleSkip} className="mt-4 min-h-11 flex items-center gap-2 mx-auto px-4 text-sm text-gray-500 hover:text-indigo-600">
+                  <button onClick={handleSkip} className="mt-4 min-h-11 flex items-center gap-2 mx-auto px-4 text-sm text-muted-foreground hover:text-primary">
                     <CircleHelp className="w-4 h-4" aria-hidden="true" />모르겠어요
                   </button>
                 )}
                 {checked && (
-                  <div ref={feedbackRef} className={`mt-6 rounded-2xl p-4 md:p-5 ${selected === current.answerIndex ? "bg-emerald-50" : selected === -1 ? "bg-indigo-50" : "bg-rose-50"}`}>
+                  <div ref={feedbackRef} className={`mt-6 rounded-2xl p-4 md:p-5 ${selected === current.answerIndex ? "bg-success-surface" : selected === -1 ? "bg-accent" : "bg-destructive/10"}`}>
                     {selected !== -1 && (
                       <div role="status" className="flex items-start gap-2.5">
-                        {selected === current.answerIndex ? <CheckCircle2 className="w-6 h-6 shrink-0 text-emerald-600" aria-hidden="true" /> : <XCircle className="w-6 h-6 shrink-0 text-rose-500" aria-hidden="true" />}
+                        {selected === current.answerIndex ? <CheckCircle2 className="w-6 h-6 shrink-0 text-success" aria-hidden="true" /> : <XCircle className="w-6 h-6 shrink-0 text-destructive" aria-hidden="true" />}
                         <div className="min-w-0">
-                          <h3 className="font-bold text-gray-900">{selected === current.answerIndex ? "맞았어요!" : "정답을 확인해봐요"}</h3>
-                          {selected !== current.answerIndex && <p className="mt-2 text-sm font-semibold text-gray-900">{(current.revealedChoices ?? current.choices)[current.answerIndex]}</p>}
+                          <h3 className="font-bold text-foreground">{selected === current.answerIndex ? "맞았어요!" : "정답을 확인해봐요"}</h3>
+                          {selected !== current.answerIndex && <p className="mt-2 text-sm font-semibold text-foreground">{(current.revealedChoices ?? current.choices)[current.answerIndex]}</p>}
                         </div>
                       </div>
                     )}
-                    <p className={`${selected === -1 ? "" : "mt-3 "}text-sm md:text-base text-gray-700 leading-relaxed whitespace-pre-line`}>{current.explanation}</p>
+                    <p className={`${selected === -1 ? "" : "mt-3 "}text-sm md:text-base text-foreground/90 leading-relaxed whitespace-pre-line`}>{current.explanation}</p>
                     {current.article && (
-                      <button onClick={() => setArticleOpen(true)} aria-haspopup="dialog" className="mt-4 flex w-full items-center gap-3 rounded-xl bg-white p-3 text-left hover:bg-white/80">
-                        <Newspaper className="w-5 h-5 shrink-0 text-indigo-600" aria-hidden="true" />
-                        <span className="min-w-0 flex-1"><span className="block text-xs text-gray-500">관련 기사</span><span className="block mt-1 text-sm font-medium text-gray-900">{current.article.title}</span></span>
-                        <ChevronRight className="w-5 h-5 shrink-0 text-gray-400" aria-hidden="true" />
+                      <button onClick={() => setArticleOpen(true)} aria-haspopup="dialog" className="mt-4 flex w-full items-center gap-3 rounded-xl bg-background p-3 text-left hover:bg-background/80">
+                        <Newspaper className="w-5 h-5 shrink-0 text-primary" aria-hidden="true" />
+                        <span className="min-w-0 flex-1"><span className="block text-xs text-muted-foreground">관련 기사</span><span className="block mt-1 text-sm font-medium text-foreground">{current.article.title}</span></span>
+                        <ChevronRight className="w-5 h-5 shrink-0 text-muted-foreground/80" aria-hidden="true" />
                       </button>
                     )}
                   </div>
@@ -338,12 +338,12 @@ export default function QuizPage() {
       </div>
 
       {stage === "playing" && current && (
-        <div className="shrink-0 border-t border-gray-100 bg-white px-4 py-3 safe-area-bottom">
+        <div className="shrink-0 border-t border-border/60 bg-background px-4 py-3 safe-area-bottom">
           <div className="max-w-2xl mx-auto">
             <button
               onClick={checked ? handleNext : handleCheck}
               disabled={selected === null || submitting}
-              className="w-full min-h-12 rounded-xl bg-indigo-600 px-6 py-3 text-base font-bold text-white hover:bg-indigo-700 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+              className="w-full min-h-12 rounded-xl bg-primary px-6 py-3 text-base font-bold text-white hover:bg-primary-hover disabled:bg-muted disabled:text-muted-foreground/80 transition-colors"
             >
               {submitting ? "저장 중…" : checked ? index + 1 >= total ? "완료" : "다음" : "확인"}
             </button>
@@ -360,7 +360,7 @@ function StreakBadge({ streak }: { streak: number }) {
   return (
     <div
       className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg flex-shrink-0 ${
-        streak > 0 ? "bg-orange-50 text-orange-600" : "bg-gray-100 text-gray-400"
+        streak > 0 ? "bg-warning-surface text-warning" : "bg-muted text-muted-foreground/80"
       }`}
       title="연속 학습일"
     >
@@ -384,45 +384,45 @@ function StartCard({
 
   return (
     <div className="text-center py-6">
-      <div className="w-20 h-20 rounded-3xl bg-indigo-50 flex items-center justify-center mx-auto mb-5">
-        <svg className="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="w-20 h-20 rounded-3xl bg-accent flex items-center justify-center mx-auto mb-5">
+        <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">퀴즈로 배우는 시황</h1>
-      <p className="text-sm text-gray-500 mb-1">
+      <h1 className="text-2xl font-bold text-foreground mb-2">퀴즈로 배우는 시황</h1>
+      <p className="text-sm text-muted-foreground mb-1">
         {data.dataDate
           ? `${formatDateKorean(data.dataDate)} 시장 데이터로 만든 문제예요`
           : "시장 데이터를 준비하고 있어요"}
       </p>
-      <p className="text-xs text-gray-400 mb-8">{data.questions.length ? `${data.questions.length}문제 · 약 3분 · 처음이어도 괜찮아요` : "출제할 시황 데이터가 아직 부족해요"}</p>
+      <p className="text-xs text-muted-foreground/80 mb-8">{data.questions.length ? `${data.questions.length}문제 · 약 3분 · 처음이어도 괜찮아요` : "출제할 시황 데이터가 아직 부족해요"}</p>
 
       <button
         onClick={onStart}
         disabled={data.questions.length === 0}
-        className="w-full md:w-64 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full md:w-64 py-4 rounded-2xl bg-primary hover:bg-primary-hover text-white font-bold text-base transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
       >
         시작
       </button>
 
       {data.history.length > 0 && (
         <div className="mt-10 text-left">
-          <div className="text-xs font-medium text-gray-400 mb-3">
+          <div className="text-xs font-medium text-muted-foreground/80 mb-3">
             최근 기록 · 만점 {best}회
           </div>
           <div className="space-y-1.5">
             {data.history.map((h) => (
               <div
                 key={h.quizDate}
-                className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-gray-50"
+                className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-muted/50"
               >
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-foreground/80">
                   {formatDateKorean(h.quizDate)}
                 </span>
                 <span
                   className={`text-sm font-bold tabular-nums ${
-                    h.score === h.total ? "text-indigo-600" : "text-gray-500"
+                    h.score === h.total ? "text-primary" : "text-muted-foreground"
                   }`}
                 >
                   {h.score}/{h.total}
@@ -453,21 +453,21 @@ function QuestionCard({
 
   return (
     <div>
-      <div className="inline-block px-2.5 py-1 rounded-lg bg-gray-100 text-[11px] font-medium text-gray-500 mb-3">
+      <div className="inline-block px-2.5 py-1 rounded-lg bg-muted text-[11px] font-medium text-muted-foreground mb-3">
         {question.tag}
       </div>
       {context && (
-        <div className="mb-5 flex items-start gap-3 rounded-2xl bg-indigo-50 px-4 py-4">
-          <Newspaper className="mt-0.5 w-5 h-5 shrink-0 text-indigo-500" aria-hidden="true" />
-          <p className="text-sm md:text-base text-gray-700 leading-relaxed whitespace-pre-line">{context}</p>
+        <div className="mb-5 flex items-start gap-3 rounded-2xl bg-accent px-4 py-4">
+          <Newspaper className="mt-0.5 w-5 h-5 shrink-0 text-primary" aria-hidden="true" />
+          <p className="text-sm md:text-base text-foreground/90 leading-relaxed whitespace-pre-line">{context}</p>
         </div>
       )}
-      <h2 className="text-lg md:text-xl font-bold text-gray-900 leading-snug mb-4">
+      <h2 className="text-lg md:text-xl font-bold text-foreground leading-snug mb-4">
         {question.prompt}
       </h2>
 
       {passage && (
-        <div className="mb-5 px-4 py-3 rounded-xl bg-gray-50 border-l-4 border-indigo-200 text-sm text-gray-600 leading-relaxed">
+        <div className="mb-5 px-4 py-3 rounded-xl bg-muted/50 border-l-4 border-primary/25 text-sm text-foreground/80 leading-relaxed">
           {passage}
         </div>
       )}
@@ -477,13 +477,13 @@ function QuestionCard({
           const isSelected = selected === i;
           const isAnswer = i === question.answerIndex;
 
-          let style = "border-gray-200 bg-white hover:bg-gray-50 text-gray-700";
+          let style = "border-border bg-background hover:bg-muted/50 text-foreground/90";
           if (checked && isAnswer)
-            style = "border-emerald-500 bg-emerald-50 text-emerald-800";
+            style = "border-success bg-success-surface text-success";
           else if (checked && isSelected)
-            style = "border-rose-400 bg-rose-50 text-rose-800";
+            style = "border-destructive/70 bg-destructive/10 text-destructive";
           else if (isSelected)
-            style = "border-indigo-500 bg-indigo-50 text-indigo-800";
+            style = "border-primary bg-accent text-primary-hover";
 
           return (
             <button
@@ -498,20 +498,20 @@ function QuestionCard({
               <span
                 className={`w-6 h-6 mt-0.5 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                   isSelected || (checked && isAnswer)
-                    ? "bg-white/70 text-current"
-                    : "bg-gray-100 text-gray-400"
+                    ? "bg-background/70 text-current"
+                    : "bg-muted text-muted-foreground/80"
                 }`}
               >
                 {i + 1}
               </span>
               <span className="flex-1">{choice}</span>
               {checked && isAnswer && (
-                <svg className="w-5 h-5 mt-0.5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mt-0.5 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               )}
               {checked && isSelected && !isAnswer && (
-                <svg className="w-5 h-5 mt-0.5 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mt-0.5 text-destructive flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               )}
@@ -558,23 +558,23 @@ function ResultCard({
       <div className="text-center mb-8">
         <div
           className={`w-24 h-24 rounded-full flex flex-col items-center justify-center mx-auto mb-4 ${
-            perfect ? "bg-indigo-50" : "bg-gray-100"
+            perfect ? "bg-accent" : "bg-muted"
           }`}
         >
           <span
             className={`text-3xl font-bold tabular-nums ${
-              perfect ? "text-indigo-600" : "text-gray-700"
+              perfect ? "text-primary" : "text-foreground/90"
             }`}
           >
             {score}
           </span>
-          <span className="text-xs text-gray-400">/ {total}</span>
+          <span className="text-xs text-muted-foreground/80">/ {total}</span>
         </div>
-        <h1 className="text-xl font-bold text-gray-900 mb-1.5">{message}</h1>
+        <h1 className="text-xl font-bold text-foreground mb-1.5">{message}</h1>
         {practice ? (
-          <p className="text-sm text-gray-400">연습 모드 · 기록에는 반영되지 않아요</p>
+          <p className="text-sm text-muted-foreground/80">연습 모드 · 기록에는 반영되지 않아요</p>
         ) : (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             {streak > 0 ? `${streak}일 연속 학습 중이에요` : "내일도 이어가볼까요?"}
           </p>
         )}
@@ -582,7 +582,7 @@ function ResultCard({
 
       {reviewed ? (
         <div className="space-y-3">
-          <div className="text-xs font-medium text-gray-400">문제 다시 보기</div>
+          <div className="text-xs font-medium text-muted-foreground/80">문제 다시 보기</div>
           {questions.map((q, i) => {
             const mine = answers[i];
             const ok = mine === q.answerIndex;
@@ -590,13 +590,13 @@ function ResultCard({
               <div
                 key={q.id}
                 className={`px-4 py-3.5 rounded-2xl border ${
-                  ok ? "border-gray-200 bg-white" : "border-rose-100 bg-rose-50/40"
+                  ok ? "border-border bg-background" : "border-destructive/20 bg-destructive/5"
                 }`}
               >
                 <div className="flex items-start gap-2.5 mb-2">
                   <span
                     className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                      ok ? "bg-indigo-100 text-indigo-600" : "bg-rose-100 text-rose-500"
+                      ok ? "bg-primary/15 text-primary" : "bg-destructive/15 text-destructive"
                     }`}
                   >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -609,21 +609,21 @@ function ResultCard({
                     </svg>
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 leading-snug">
+                    <p className="text-sm font-semibold text-foreground leading-snug">
                       {q.prompt}
                     </p>
-                    <p className="text-sm text-indigo-700 mt-1">
+                    <p className="text-sm text-primary-hover mt-1">
                       정답 · {(q.revealedChoices ?? q.choices)[q.answerIndex]}
                     </p>
                     {!ok && mine >= 0 && mine !== undefined && (
-                      <p className="text-xs text-rose-500 mt-0.5">
+                      <p className="text-xs text-destructive mt-0.5">
                         내 답 · {(q.revealedChoices ?? q.choices)[mine]}
                       </p>
                     )}
                   </div>
                 </div>
-                {q.revealedPassage && <p className="mb-3 rounded-xl bg-gray-50 p-3 text-sm leading-relaxed text-gray-700 whitespace-pre-line">{q.revealedPassage}</p>}
-                <p className="text-xs text-gray-500 leading-relaxed pl-8 whitespace-pre-line">
+                {q.revealedPassage && <p className="mb-3 rounded-xl bg-muted/50 p-3 text-sm leading-relaxed text-foreground/90 whitespace-pre-line">{q.revealedPassage}</p>}
+                <p className="text-xs text-muted-foreground leading-relaxed pl-8 whitespace-pre-line">
                   {q.explanation}
                 </p>
               </div>
@@ -631,7 +631,7 @@ function ResultCard({
           })}
         </div>
       ) : (
-        <p className="text-center text-sm text-gray-400 mb-6">
+        <p className="text-center text-sm text-muted-foreground/80 mb-6">
           오늘 퀴즈는 이미 완료했어요. 내일 새로운 문제로 만나요!
         </p>
       )}
@@ -639,7 +639,7 @@ function ResultCard({
       {(alreadyDone || practice) && (
         <button
           onClick={onPractice}
-          className="w-full mt-8 py-3.5 rounded-2xl border-2 border-b-4 border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+          className="w-full mt-8 py-3.5 rounded-2xl border-2 border-b-4 border-border text-sm font-bold text-foreground/80 hover:bg-muted/50 transition-colors"
         >
           다시 풀어보기 (연습)
         </button>
@@ -668,12 +668,12 @@ function QuestionJumpDialog({ target, backward, onCancel, onConfirm }: {
   return (
     <dialog ref={dialog} aria-labelledby="quiz-jump-title" aria-describedby="quiz-jump-description"
       onCancel={(event) => { event.preventDefault(); onCancel(); }}
-      className="fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-sm rounded-2xl bg-white p-6 text-gray-900 shadow-xl backdrop:bg-black/40">
+      className="fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-sm rounded-2xl bg-background p-6 text-foreground shadow-xl backdrop:bg-black/40">
       <h2 id="quiz-jump-title" className="text-lg font-bold">{target + 1}번 문제로 {backward ? "돌아가시겠어요?" : "이동하시겠어요?"}</h2>
-      <p id="quiz-jump-description" className="mt-2 text-sm text-gray-500">선택한 답과 풀이 기록은 유지돼요.</p>
+      <p id="quiz-jump-description" className="mt-2 text-sm text-muted-foreground">선택한 답과 풀이 기록은 유지돼요.</p>
       <div className="mt-6 flex gap-3">
-        <button autoFocus onClick={onCancel} className="min-h-11 flex-1 rounded-xl bg-gray-100 font-semibold text-gray-600">취소</button>
-        <button onClick={onConfirm} className="min-h-11 flex-1 rounded-xl bg-indigo-600 font-semibold text-white">이동</button>
+        <button autoFocus onClick={onCancel} className="min-h-11 flex-1 rounded-xl bg-muted font-semibold text-foreground/80">취소</button>
+        <button onClick={onConfirm} className="min-h-11 flex-1 rounded-xl bg-primary font-semibold text-white">이동</button>
       </div>
     </dialog>
   );

@@ -225,8 +225,8 @@ export default function AdminPage() {
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">관리</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">관리</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             키움 API 연결 상태, 수집 조건검색식 관리, 자동 수집 이력을 확인합니다.
           </p>
         </div>
@@ -234,41 +234,41 @@ export default function AdminPage() {
         {/* 키움 API 연결 상태 */}
         <div role={tokenStatus.status === "loading" ? "status" : undefined} className={`mb-6 p-4 rounded-xl border flex items-center justify-between ${
           tokenStatus.status === "connected"
-            ? "bg-green-50 border-green-200"
+            ? "bg-success-surface border-success/30"
             : tokenStatus.status === "error"
-            ? "bg-red-50 border-red-200"
-            : "bg-gray-50 border-gray-200"
+            ? "bg-destructive/10 border-destructive/30"
+            : "bg-muted/50 border-border"
         }`}>
           <div className="flex items-center gap-3">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
               tokenStatus.status === "connected"
-                ? "bg-green-100"
+                ? "bg-success/15"
                 : tokenStatus.status === "error"
-                ? "bg-red-100"
-                : "bg-gray-100"
+                ? "bg-destructive/15"
+                : "bg-muted"
             }`}>
               {tokenStatus.status === "loading" ? (
-                <LoadingIcon className="h-5 w-5 text-gray-600" decorative />
+                <LoadingIcon className="h-5 w-5 text-foreground/80" decorative />
               ) : tokenStatus.status === "connected" ? (
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               ) : (
-                <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               )}
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">키움 API 연결 상태</p>
+              <p className="text-sm font-medium text-foreground">키움 API 연결 상태</p>
               {tokenStatus.status === "loading" ? (
-                <p className="text-xs text-gray-500 mt-0.5">연결 확인 중...</p>
+                <p className="text-xs text-muted-foreground mt-0.5">연결 확인 중...</p>
               ) : tokenStatus.status === "connected" ? (
-                <p className="text-xs text-green-700 mt-0.5">
+                <p className="text-xs text-success mt-0.5">
                   연결됨 · 토큰 만료: {tokenStatus.expiresAt ?? "-"}
                 </p>
               ) : (
-                <p className="text-xs text-red-700 mt-0.5">
+                <p className="text-xs text-destructive mt-0.5">
                   {tokenStatus.message?.includes("지정단말기")
                     ? "연결 실패 · 키움 지정단말기 IP를 확인하세요"
                     : `연결 실패 · ${tokenStatus.message ?? "알 수 없는 오류"}`}
@@ -281,8 +281,8 @@ export default function AdminPage() {
               onClick={checkTokenStatus}
               className={`px-3 py-1.5 text-xs border rounded-lg transition-colors ${
                 tokenStatus.status === "connected"
-                  ? "text-green-700 border-green-300 hover:bg-green-100"
-                  : "text-red-700 border-red-300 hover:bg-red-100"
+                  ? "text-success border-success/40 hover:bg-success/15"
+                  : "text-destructive border-destructive/40 hover:bg-destructive/15"
               }`}
             >
               다시 확인
@@ -292,12 +292,12 @@ export default function AdminPage() {
 
         {/* 에러 */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
-            <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-xl flex items-center gap-3">
+            <svg className="w-5 h-5 text-destructive flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-sm text-red-800 flex-1">{error}</p>
-            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+            <p className="text-sm text-destructive flex-1">{error}</p>
+            <button onClick={() => setError(null)} className="text-destructive/60 hover:text-destructive">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -308,22 +308,22 @@ export default function AdminPage() {
         {/* 가입자 관리 진입 */}
         <button
           onClick={() => router.push("/dashboard/admin/users")}
-          className="w-full mb-3 p-4 bg-white border border-gray-200 rounded-xl flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
+          className="w-full mb-3 p-4 bg-background border border-border rounded-xl flex items-center justify-between hover:bg-muted/50 transition-colors text-left"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
-              <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">가입자 관리</p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-sm font-medium text-foreground">가입자 관리</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 가입자 조회 및 관리자 권한 부여
               </p>
             </div>
           </div>
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-muted-foreground/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
@@ -331,40 +331,40 @@ export default function AdminPage() {
         {/* 의견 · 만족도 진입 */}
         <button
           onClick={() => router.push("/dashboard/admin/feedback")}
-          className="w-full mb-6 p-4 bg-white border border-gray-200 rounded-xl flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
+          className="w-full mb-6 p-4 bg-background border border-border rounded-xl flex items-center justify-between hover:bg-muted/50 transition-colors text-left"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
-              <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4-.8L3 20l1.3-3.2A7.6 7.6 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">의견 · 만족도</p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-sm font-medium text-foreground">의견 · 만족도</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 사용자가 보낸 만족도와 의견 확인
                 {newFeedbackCount > 0 && (
-                  <span className="ml-1.5 px-1.5 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-medium rounded-full">
+                  <span className="ml-1.5 px-1.5 py-0.5 bg-warning-surface text-warning text-[10px] font-medium rounded-full">
                     미확인 {newFeedbackCount}
                   </span>
                 )}
               </p>
             </div>
           </div>
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-muted-foreground/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
 
         {/* 수집 조건검색식 관리 */}
-        <div className="mb-6 bg-white border border-gray-200 rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+        <div className="mb-6 bg-background border border-border rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-gray-900">수집 조건검색식</h2>
+              <h2 className="text-sm font-semibold text-foreground">수집 조건검색식</h2>
               <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                 registered.length >= MAX_CONDITIONS
-                  ? "bg-orange-100 text-orange-700"
-                  : "bg-indigo-100 text-indigo-700"
+                  ? "bg-warning-surface text-warning"
+                  : "bg-primary/15 text-primary-hover"
               }`}>
                 {registered.length}/{MAX_CONDITIONS}
               </span>
@@ -372,9 +372,9 @@ export default function AdminPage() {
             <button
               onClick={handleLoadConditions}
               disabled={loadingConditions}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-xs text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-background border border-input text-xs text-foreground/90 rounded-lg hover:bg-muted/50 disabled:opacity-40 transition-colors"
             >
-              {loadingConditions ? <LoadingIcon className="h-5 w-5 text-gray-700" decorative /> : <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {loadingConditions ? <LoadingIcon className="h-5 w-5 text-foreground/90" decorative /> : <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>}
               {loadingConditions ? "불러오는 중..." : "키움에서 불러오기"}
@@ -385,28 +385,28 @@ export default function AdminPage() {
             {/* 등록된 조건검색식 */}
             {registered.length === 0 ? (
               <div className="py-4 text-center">
-                <p className="text-sm text-gray-400">등록된 수집 조건검색식이 없습니다.</p>
-                <p className="text-xs text-gray-400 mt-1">키움에서 불러오기 버튼으로 조건검색식을 추가하세요.</p>
+                <p className="text-sm text-muted-foreground/80">등록된 수집 조건검색식이 없습니다.</p>
+                <p className="text-xs text-muted-foreground/80 mt-1">키움에서 불러오기 버튼으로 조건검색식을 추가하세요.</p>
               </div>
             ) : (
               registered.map((cond) => (
                 <div
                   key={cond.seq}
-                  className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-200 rounded-lg"
+                  className="flex items-center justify-between p-3 bg-accent border border-primary/25 rounded-lg"
                 >
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{cond.name}</p>
-                      <p className="text-xs text-gray-500">seq: {cond.seq}</p>
+                      <p className="text-sm font-medium text-foreground">{cond.name}</p>
+                      <p className="text-xs text-muted-foreground">seq: {cond.seq}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => handleUnregister(cond.seq)}
                     disabled={unregisteringSeq === cond.seq}
-                    className="px-2.5 py-1 text-xs text-gray-500 border border-gray-300 rounded-md hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors disabled:opacity-40"
+                    className="px-2.5 py-1 text-xs text-muted-foreground border border-input rounded-md hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40 transition-colors disabled:opacity-40"
                   >
                     {unregisteringSeq === cond.seq ? "해제 중..." : "해제"}
                   </button>
@@ -416,23 +416,23 @@ export default function AdminPage() {
 
             {/* 추가 가능한 조건검색식 */}
             {available.length > 0 && (
-              <div className="pt-2 border-t border-gray-100 space-y-2">
-                <p className="text-xs text-gray-500 font-medium">추가 가능</p>
+              <div className="pt-2 border-t border-border/60 space-y-2">
+                <p className="text-xs text-muted-foreground font-medium">추가 가능</p>
                 {available.map((cond) => (
                   <div
                     key={cond.seq}
-                    className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-muted/50 border border-border rounded-lg"
                   >
                     <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-muted-foreground/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
-                      <p className="text-sm text-gray-700">{cond.name}</p>
+                      <p className="text-sm text-foreground/90">{cond.name}</p>
                     </div>
                     <button
                       onClick={() => handleRegister(cond)}
                       disabled={registeringSeq === cond.seq || registered.length >= MAX_CONDITIONS}
-                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-indigo-600 border border-indigo-300 rounded-md hover:bg-indigo-50 transition-colors disabled:opacity-40"
+                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-primary border border-primary/40 rounded-md hover:bg-accent transition-colors disabled:opacity-40"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -448,45 +448,45 @@ export default function AdminPage() {
 
         {/* 요약 카드 */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="p-4 bg-white border border-gray-200 rounded-xl">
-            <p className="text-xs text-gray-500">전체 수집</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{logs.length}건</p>
+          <div className="p-4 bg-background border border-border rounded-xl">
+            <p className="text-xs text-muted-foreground">전체 수집</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{logs.length}건</p>
           </div>
-          <div className="p-4 bg-white border border-gray-200 rounded-xl">
-            <p className="text-xs text-gray-500">성공</p>
-            <p className="text-2xl font-bold text-green-600 mt-1">{successCount}건</p>
+          <div className="p-4 bg-background border border-border rounded-xl">
+            <p className="text-xs text-muted-foreground">성공</p>
+            <p className="text-2xl font-bold text-success mt-1">{successCount}건</p>
           </div>
-          <div className="p-4 bg-white border border-gray-200 rounded-xl">
-            <p className="text-xs text-gray-500">실패</p>
-            <p className="text-2xl font-bold text-red-500 mt-1">{errorCount}건</p>
+          <div className="p-4 bg-background border border-border rounded-xl">
+            <p className="text-xs text-muted-foreground">실패</p>
+            <p className="text-2xl font-bold text-destructive mt-1">{errorCount}건</p>
           </div>
         </div>
 
         {/* 수집 로그 테이블 */}
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">수집 로그</h2>
+        <div className="bg-background border border-border rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-foreground">수집 로그</h2>
             <button
               onClick={loadLogs}
-              className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-xs text-muted-foreground hover:text-foreground/90 transition-colors"
             >
               새로고침
             </button>
           </div>
           {loading ? (
             <div role="status" className="p-8 text-center">
-              <LoadingIcon className="mx-auto h-20 w-20 text-indigo-600" decorative />
+              <LoadingIcon className="mx-auto h-20 w-20 text-primary" decorative />
               <span className="sr-only">로그를 불러오는 중...</span>
             </div>
           ) : logs.length === 0 ? (
             <div className="p-8 text-center">
-              <p className="text-sm text-gray-400">수집 로그가 없습니다.</p>
-              <p className="text-xs text-gray-400 mt-1">스크립트가 실행되면 여기에 기록됩니다.</p>
+              <p className="text-sm text-muted-foreground/80">수집 로그가 없습니다.</p>
+              <p className="text-xs text-muted-foreground/80 mt-1">스크립트가 실행되면 여기에 기록됩니다.</p>
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs border-b border-gray-200">
+                <tr className="bg-muted/50 text-muted-foreground text-xs border-b border-border">
                   <th className="px-4 py-3 text-left font-medium">날짜</th>
                   <th className="px-4 py-3 text-left font-medium">조건검색식</th>
                   <th className="px-4 py-3 text-right font-medium">종목수</th>
@@ -497,31 +497,31 @@ export default function AdminPage() {
               </thead>
               <tbody>
                 {logs.map((log) => (
-                  <tr key={log.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-900">{formatDate(log.date)}</td>
-                    <td className="px-4 py-3 text-gray-700">{log.conditionName}</td>
+                  <tr key={log.id} className="border-b border-border/60 hover:bg-muted/50">
+                    <td className="px-4 py-3 text-foreground">{formatDate(log.date)}</td>
+                    <td className="px-4 py-3 text-foreground/90">{log.conditionName}</td>
                     <td className="px-4 py-3 text-right">
-                      <span className={`font-medium ${log.stockCount > 0 ? "text-indigo-600" : "text-gray-400"}`}>
+                      <span className={`font-medium ${log.stockCount > 0 ? "text-primary" : "text-muted-foreground/80"}`}>
                         {log.stockCount}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
                       {log.status === "success" ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-success-surface text-success text-xs rounded-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-success" />
                           성공
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-700 text-xs rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-destructive/10 text-destructive text-xs rounded-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
                           실패
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-xs text-red-500 max-w-[200px] truncate">
+                    <td className="px-4 py-3 text-xs text-destructive max-w-[200px] truncate">
                       {log.errorMessage || "-"}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-400 text-xs">
+                    <td className="px-4 py-3 text-right text-muted-foreground/80 text-xs">
                       {formatTime(log.createdAt)}
                     </td>
                   </tr>

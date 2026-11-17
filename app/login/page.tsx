@@ -45,34 +45,34 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex">
       {/* 왼쪽 - 로그인 폼 */}
-      <div className="w-full lg:w-1/2 flex flex-col bg-white">
+      <div className="w-full lg:w-1/2 flex flex-col bg-background">
         <div className="px-8 py-6">
-          <Link href="/" className="text-lg font-bold text-gray-900 tracking-tight">
+          <Link href="/" className="text-lg font-bold text-foreground tracking-tight">
             StockExtract
           </Link>
         </div>
 
         <div className="flex-1 flex items-center justify-center px-8">
           <div className="w-full max-w-md">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               다시 만나서 반가워요!
             </h1>
             <Link
               href="/register"
-              className="text-sm text-indigo-600 hover:underline"
+              className="text-sm text-primary hover:underline"
             >
               처음이신가요? 가입하기
             </Link>
 
             {error && (
-              <div className="mt-6 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+              <div className="mt-6 px-4 py-3 bg-destructive/10 border border-destructive/30 rounded-lg text-sm text-destructive">
                 {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <label className="block text-sm font-semibold text-foreground mb-2">
                   아이디
                 </label>
                 <input
@@ -80,13 +80,13 @@ export default function LoginPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+                  className="w-full px-4 py-3 border-2 border-border rounded-lg text-sm focus:outline-none focus:border-primary transition-colors"
                   placeholder="아이디 입력"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <label className="block text-sm font-semibold text-foreground mb-2">
                   비밀번호
                 </label>
                 <div className="relative">
@@ -95,13 +95,13 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 transition-colors pr-12"
+                    className="w-full px-4 py-3 border-2 border-border rounded-lg text-sm focus:outline-none focus:border-primary transition-colors pr-12"
                     placeholder="비밀번호 입력"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/80 hover:text-foreground/80"
                   >
                     {showPassword ? (
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -120,7 +120,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+                className="w-full py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary-hover disabled:opacity-40 transition-colors"
               >
                 {loading ? "로그인 중..." : "로그인"}
               </button>
@@ -129,9 +129,9 @@ export default function LoginPage() {
             {/* 소셜 로그인 */}
             <div className="mt-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex-1 h-px bg-gray-200" />
-                <span className="text-xs text-gray-400">또는</span>
-                <div className="flex-1 h-px bg-gray-200" />
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground/80">또는</span>
+                <div className="flex-1 h-px bg-border" />
               </div>
               <button
                 type="button"
@@ -152,58 +152,58 @@ export default function LoginPage() {
       </div>
 
       {/* 오른쪽 - 소개 영역 */}
-      <div className="hidden lg:flex w-1/2 bg-gray-50 flex-col items-center justify-center px-12">
-        <h2 className="text-2xl font-bold text-gray-900 text-center leading-relaxed">
+      <div className="hidden lg:flex w-1/2 bg-muted/50 flex-col items-center justify-center px-12">
+        <h2 className="text-2xl font-bold text-foreground text-center leading-relaxed">
           조건검색 결과를 자동으로 정리하고
           <br />
           팀원과 함께 분석하세요.
         </h2>
 
         {/* 미리보기 카드 */}
-        <div className="mt-10 w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+        <div className="mt-10 w-full max-w-md bg-background rounded-2xl border border-border shadow-sm p-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
             <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
             <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-            <span className="ml-2 text-[11px] text-gray-400">가공 뷰</span>
+            <span className="ml-2 text-[11px] text-muted-foreground/80">가공 뷰</span>
           </div>
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-gray-400 border-b border-gray-100">
+              <tr className="text-muted-foreground/80 border-b border-border/60">
                 <th className="py-2 text-left font-medium">종목명</th>
                 <th className="py-2 text-left font-medium">키워드</th>
                 <th className="py-2 text-right font-medium">거래대금</th>
                 <th className="py-2 text-right font-medium">등락률</th>
               </tr>
             </thead>
-            <tbody className="text-gray-700">
-              <tr className="border-b border-gray-50">
+            <tbody className="text-foreground/90">
+              <tr className="border-b border-border/40">
                 <td className="py-2 font-medium">삼성전자</td>
-                <td className="py-2 text-indigo-500">반도체</td>
+                <td className="py-2 text-primary">반도체</td>
                 <td className="py-2 text-right">
                   <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded text-[11px]">3,200억</span>
                 </td>
-                <td className="py-2 text-right text-red-500">+5.2%</td>
+                <td className="py-2 text-right text-destructive">+5.2%</td>
               </tr>
-              <tr className="border-b border-gray-50">
+              <tr className="border-b border-border/40">
                 <td className="py-2 font-medium">SK하이닉스</td>
-                <td className="py-2 text-indigo-500">HBM</td>
+                <td className="py-2 text-primary">HBM</td>
                 <td className="py-2 text-right">
                   <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded text-[11px]">2,800억</span>
                 </td>
-                <td className="py-2 text-right text-red-500 font-bold">+18.3%</td>
+                <td className="py-2 text-right text-destructive font-bold">+18.3%</td>
               </tr>
               <tr>
                 <td className="py-2 font-medium">에코프로</td>
-                <td className="py-2 text-indigo-500">2차전지</td>
-                <td className="py-2 text-right text-gray-600">1,500억</td>
+                <td className="py-2 text-primary">2차전지</td>
+                <td className="py-2 text-right text-foreground/80">1,500억</td>
                 <td className="py-2 text-right">+7.1%</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <p className="mt-6 text-sm text-gray-400 text-center">
+        <p className="mt-6 text-sm text-muted-foreground/80 text-center">
           거래대금 자동 정렬 · 등락률 컬러코딩 · 키워드 메모
         </p>
       </div>

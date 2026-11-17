@@ -117,14 +117,14 @@ export default function PushNotifications() {
     } catch (error) { setState("error"); setMessage(error instanceof Error ? error.message : "테스트 알림을 보내지 못했습니다."); }
   };
 
-  return <section className="mb-6 p-4 border border-gray-200 rounded-xl bg-white">
+  return <section className="mb-6 p-4 border border-border rounded-xl bg-background">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><h2 className="text-sm font-semibold text-gray-900">기기 푸시 알림</h2><p className="text-xs text-gray-500 mt-1">{state === "unsupported" ? "지원하지 않는 브라우저입니다. iPhone/iPad는 홈 화면에 설치한 앱에서 사용할 수 있습니다." : state === "denied" ? "브라우저 설정에서 알림 권한을 허용해 주세요." : state === "enabled" ? "이 기기에서 푸시 알림을 받을 수 있습니다." : state === "pending" || state === "loading" ? "푸시 설정을 확인하고 있습니다…" : state === "error" ? message : "가격 알림을 이 기기의 푸시로 받아보세요."}</p></div>
+      <div><h2 className="text-sm font-semibold text-foreground">기기 푸시 알림</h2><p className="text-xs text-muted-foreground mt-1">{state === "unsupported" ? "지원하지 않는 브라우저입니다. iPhone/iPad는 홈 화면에 설치한 앱에서 사용할 수 있습니다." : state === "denied" ? "브라우저 설정에서 알림 권한을 허용해 주세요." : state === "enabled" ? "이 기기에서 푸시 알림을 받을 수 있습니다." : state === "pending" || state === "loading" ? "푸시 설정을 확인하고 있습니다…" : state === "error" ? message : "가격 알림을 이 기기의 푸시로 받아보세요."}</p></div>
       <div className="flex gap-2">
-        {state === "enabled" ? <><button onClick={test} className="px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50">테스트 보내기</button><button onClick={() => void disable()} className="px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">해제</button></> : <button onClick={enable} disabled={state === "pending" || state === "loading" || state === "unsupported" || state === "denied"} className="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-40">알림 켜기</button>}
+        {state === "enabled" ? <><button onClick={test} className="px-3 py-1.5 text-xs font-medium text-primary border border-primary/40 rounded-lg hover:bg-accent">테스트 보내기</button><button onClick={() => void disable()} className="px-3 py-1.5 text-xs text-foreground/80 border border-input rounded-lg hover:bg-muted/50">해제</button></> : <button onClick={enable} disabled={state === "pending" || state === "loading" || state === "unsupported" || state === "denied"} className="px-3 py-1.5 text-xs font-medium text-white bg-primary rounded-lg hover:bg-primary-hover disabled:opacity-40">알림 켜기</button>}
       </div>
     </div>
-    {message && state !== "error" && <p className="text-xs text-green-700 mt-2">{message}</p>}
-    <p className="text-[11px] text-gray-400 mt-2">가격은 장중 1분 간격으로 확인합니다. 조건마다 한 번 알림을 보낸 뒤 멈추며, 다시 받으려면 가격을 재설정해 주세요. 실시간 체결 감시가 아니며 푸시 도착 시각은 정확히 보장되지 않습니다.</p>
+    {message && state !== "error" && <p className="text-xs text-success mt-2">{message}</p>}
+    <p className="text-[11px] text-muted-foreground/80 mt-2">가격은 장중 1분 간격으로 확인합니다. 조건마다 한 번 알림을 보낸 뒤 멈추며, 다시 받으려면 가격을 재설정해 주세요. 실시간 체결 감시가 아니며 푸시 도착 시각은 정확히 보장되지 않습니다.</p>
   </section>;
 }

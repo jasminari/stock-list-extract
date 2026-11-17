@@ -104,9 +104,9 @@ function NewFeatureTip({ align }: { align: "center" | "row" }) {
   if (align === "row") {
     return (
       <span className="pointer-events-none absolute right-2 top-1/2 z-20 -translate-y-1/2">
-        <span className="animate-new-tip-x relative block whitespace-nowrap rounded-full bg-indigo-600 px-2 py-1 text-[10px] font-bold leading-none text-white shadow-lg shadow-indigo-600/30">
+        <span className="animate-new-tip-x relative block whitespace-nowrap rounded-full bg-primary px-2 py-1 text-[10px] font-bold leading-none text-white shadow-lg shadow-primary/30">
           새로운 기능
-          <span className="absolute right-full top-1/2 -mr-1 -mt-1 h-2 w-2 rotate-45 bg-indigo-600" />
+          <span className="absolute right-full top-1/2 -mr-1 -mt-1 h-2 w-2 rotate-45 bg-primary" />
         </span>
       </span>
     );
@@ -114,9 +114,9 @@ function NewFeatureTip({ align }: { align: "center" | "row" }) {
 
   return (
     <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2">
-      <span className="animate-new-tip relative block whitespace-nowrap rounded-full bg-indigo-600 px-2 py-1 text-[10px] font-bold leading-none text-white shadow-lg shadow-indigo-600/30">
+      <span className="animate-new-tip relative block whitespace-nowrap rounded-full bg-primary px-2 py-1 text-[10px] font-bold leading-none text-white shadow-lg shadow-primary/30">
         새로운 기능
-        <span className="absolute left-1/2 top-full -ml-1 -mt-1 h-2 w-2 rotate-45 bg-indigo-600" />
+        <span className="absolute left-1/2 top-full -ml-1 -mt-1 h-2 w-2 rotate-45 bg-primary" />
       </span>
     </span>
   );
@@ -212,27 +212,27 @@ export default function DashboardLayout({
   );
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="h-screen flex flex-col bg-background">
       {/* Top Header */}
-      <header className="h-14 md:h-16 border-b border-gray-200 flex items-center justify-between px-3 md:px-4 flex-shrink-0">
+      <header className="h-14 md:h-16 border-b border-border flex items-center justify-between px-3 md:px-4 flex-shrink-0">
         <div className="flex items-center gap-3 md:gap-4 flex-1">
           <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary flex items-center justify-center text-white">
               <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <span className="text-lg text-gray-700 font-medium hidden md:block">주식 조건검색</span>
+            <span className="text-lg text-foreground/90 font-medium hidden md:block">주식 조건검색</span>
           </div>
           <div className="flex-1 max-w-2xl hidden sm:block">
             <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
                 type="text"
                 placeholder="종목명 또는 키워드 검색"
-                className="w-full pl-10 pr-4 h-11 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-colors"
+                className="w-full pl-10 pr-4 h-11 bg-muted border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:bg-background transition-colors"
               />
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function DashboardLayout({
         <div className="flex items-center gap-2 ml-2 md:ml-4">
           {session?.user && (
             <div className="flex items-center gap-2 md:gap-3">
-              <span className="text-sm text-gray-600 hidden md:block">{userName}</span>
+              <span className="text-sm text-foreground/80 hidden md:block">{userName}</span>
               <button
                 onClick={async () => {
                   // End this browser subscription before changing accounts.
@@ -259,7 +259,7 @@ export default function DashboardLayout({
                   }
                   finally { await signOut(); }
                 }}
-                className="px-2 md:px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+                className="px-2 md:px-3 py-1.5 text-xs border border-input rounded-lg text-foreground/80 hover:bg-muted/50 transition-colors"
               >
                 로그아웃
               </button>
@@ -268,11 +268,11 @@ export default function DashboardLayout({
                   onClick={() => setProfileOpen((v) => !v)}
                   aria-label="프로필 메뉴"
                   aria-expanded={profileOpen}
-                  className="relative w-8 h-8 md:w-9 md:h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-medium hover:bg-indigo-600 transition-colors"
+                  className="relative w-8 h-8 md:w-9 md:h-9 rounded-full bg-primary flex items-center justify-center text-white text-sm font-medium hover:bg-primary transition-colors"
                 >
                   {userInitial}
                   {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white" />
+                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-destructive border-2 border-background" />
                   )}
                 </button>
 
@@ -284,12 +284,12 @@ export default function DashboardLayout({
                       exit={{ opacity: 0, scaleY: 0.85, y: -8 }}
                       transition={{ duration: 0.18, ease: "easeOut" }}
                       style={{ transformOrigin: "top right" }}
-                      className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden"
+                      className="absolute right-0 top-full mt-2 w-56 bg-background rounded-xl shadow-lg border border-border/60 z-50 overflow-hidden"
                     >
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-sm font-medium text-gray-900 truncate">{userName}</p>
+                      <div className="px-4 py-3 border-b border-border/60">
+                        <p className="text-sm font-medium text-foreground truncate">{userName}</p>
                         {session?.user?.email && (
-                          <p className="text-xs text-gray-400 truncate mt-0.5">{session.user.email}</p>
+                          <p className="text-xs text-muted-foreground/80 truncate mt-0.5">{session.user.email}</p>
                         )}
                       </div>
 
@@ -298,14 +298,14 @@ export default function DashboardLayout({
                           setProfileOpen(false);
                           router.push("/dashboard/notifications");
                         }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground/90 hover:bg-muted/50 transition-colors"
                       >
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-muted-foreground/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
                         알림
                         {unreadCount > 0 && (
-                          <span className="ml-auto px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white bg-red-500 rounded-full">
+                          <span className="ml-auto px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white bg-destructive rounded-full">
                             {unreadCount}
                           </span>
                         )}
@@ -315,9 +315,9 @@ export default function DashboardLayout({
                           setProfileOpen(false);
                           router.push("/dashboard/settings");
                         }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground/90 hover:bg-muted/50 transition-colors"
                       >
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-muted-foreground/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
@@ -334,7 +334,7 @@ export default function DashboardLayout({
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar — Desktop only */}
-        <aside className="hidden md:flex w-60 border-r border-gray-200 flex-col flex-shrink-0">
+        <aside className="hidden md:flex w-60 border-r border-border flex-col flex-shrink-0">
           <nav className="flex-1 px-3 pt-3 space-y-0.5">
             {visibleMenuItems.map((item) => (
               <button
@@ -342,8 +342,8 @@ export default function DashboardLayout({
                 onClick={() => router.push(item.href)}
                 className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${
                   activeMenu === item.id
-                    ? "bg-indigo-50 text-indigo-700 font-medium"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "bg-accent text-primary-hover font-medium"
+                    : "text-foreground/80 hover:bg-muted"
                 }`}
               >
                 {item.icon}
@@ -353,9 +353,9 @@ export default function DashboardLayout({
             ))}
           </nav>
 
-          <div className="p-4 border-t border-gray-100">
-            <div className="text-xs text-gray-400 mb-1">시장 공부하기</div>
-            <div className="text-sm text-gray-600">{resultsCount}개 결과 저장됨</div>
+          <div className="p-4 border-t border-border/60">
+            <div className="text-xs text-muted-foreground/80 mb-1">시장 공부하기</div>
+            <div className="text-sm text-foreground/80">{resultsCount}개 결과 저장됨</div>
           </div>
         </aside>
 
@@ -369,18 +369,18 @@ export default function DashboardLayout({
       {session?.user && <FeedbackButton />}
 
       {/* Bottom Tab Bar — Mobile only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex items-center justify-around px-1 py-1 z-50 safe-area-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border flex items-center justify-around px-1 py-1 z-50 safe-area-bottom">
         {visibleMenuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => router.push(item.href)}
             className={`relative flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[56px] transition-colors ${
               activeMenu === item.id
-                ? "text-indigo-600"
-                : "text-gray-400"
+                ? "text-primary"
+                : "text-muted-foreground/80"
             }`}
           >
-            <span className={activeMenu === item.id ? "text-indigo-600" : "text-gray-400"}>
+            <span className={activeMenu === item.id ? "text-primary" : "text-muted-foreground/80"}>
               {item.icon}
             </span>
             {newBadges.includes(item.id) && <NewFeatureTip align="center" />}

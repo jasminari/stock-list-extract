@@ -43,23 +43,23 @@ export default function SearchPage() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Breadcrumb + View Toggle */}
-      <div className="border-b border-gray-200 px-6 py-3 flex-shrink-0">
+      <div className="border-b border-border px-6 py-3 flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>내 검색</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            <span className="text-gray-900 font-medium">조건검색 실행</span>
+            <span className="text-foreground font-medium">조건검색 실행</span>
           </div>
           {search.stocks.length > 0 && (
-            <div className="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
+            <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
               <button
                 onClick={() => setViewMode("processed")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                   viewMode === "processed"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground/90"
                 }`}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,8 +71,8 @@ export default function SearchPage() {
                 onClick={() => setViewMode("raw")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                   viewMode === "raw"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground/90"
                 }`}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,11 +86,11 @@ export default function SearchPage() {
 
         {/* Condition Selection */}
         <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <span className="text-xs text-gray-500 flex-shrink-0">조건검색식:</span>
+          <span className="text-xs text-muted-foreground flex-shrink-0">조건검색식:</span>
           {cond.loading ? (
-            <span role="status" className="inline-flex items-center gap-1.5 text-xs text-gray-400"><LoadingIcon className="h-5 w-5 text-gray-400" decorative />불러오는 중...</span>
+            <span role="status" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/80"><LoadingIcon className="h-5 w-5 text-muted-foreground/80" decorative />불러오는 중...</span>
           ) : cond.error ? (
-            <span className="text-xs text-red-500">{cond.error}</span>
+            <span className="text-xs text-destructive">{cond.error}</span>
           ) : cond.conditions.length > 0 ? (
             cond.conditions.map((c) => (
               <button
@@ -98,20 +98,20 @@ export default function SearchPage() {
                 onClick={() => handleSelectCondition(c.seq, c.name)}
                 className={`px-3 py-1 rounded-full text-xs border transition-all ${
                   cond.selectedSeq === c.seq
-                    ? "bg-indigo-600 border-indigo-600 text-white"
-                    : "bg-white border-gray-300 text-gray-600 hover:border-indigo-400"
+                    ? "bg-primary border-primary text-white"
+                    : "bg-background border-input text-foreground/80 hover:border-primary/60"
                 }`}
               >
                 {c.name}
               </button>
             ))
           ) : (
-            <span className="text-xs text-gray-400">조건검색식이 없습니다</span>
+            <span className="text-xs text-muted-foreground/80">조건검색식이 없습니다</span>
           )}
           <button
             onClick={cond.load}
             disabled={cond.loading}
-            className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-40 transition-colors"
+            className="p-1 text-muted-foreground/80 hover:text-foreground/80 disabled:opacity-40 transition-colors"
             title="새로고침"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,7 +125,7 @@ export default function SearchPage() {
           <button
             onClick={handleSearch}
             disabled={!cond.selectedSeq || search.searching}
-            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -142,7 +142,7 @@ export default function SearchPage() {
                 });
                 search.downloadFile(search.lastFileName);
               }}
-              className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 border border-input text-foreground/90 text-sm rounded-lg hover:bg-muted/50 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -155,17 +155,17 @@ export default function SearchPage() {
 
       {/* Info Banner */}
       {cond.selectedName && showInfoBanner && (
-        <div className="mx-6 mt-3 px-4 py-3 bg-indigo-50 border border-indigo-200 rounded-xl flex items-start gap-3 flex-shrink-0">
-          <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <div className="mx-6 mt-3 px-4 py-3 bg-accent border border-primary/25 rounded-xl flex items-start gap-3 flex-shrink-0">
+          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
             <span className="text-white text-xs font-bold">i</span>
           </div>
-          <p className="flex-1 text-sm text-indigo-900">
+          <p className="flex-1 text-sm text-primary-hover">
             선택한 조건검색식 <span className="font-semibold">&apos;{cond.selectedName}&apos;</span>에 대한 결과를 표시합니다.
             키움증권 REST API를 통해 실시간으로 종목을 추출합니다.
           </p>
           <button
             onClick={() => setShowInfoBanner(false)}
-            className="text-indigo-400 hover:text-indigo-600 transition-colors flex-shrink-0"
+            className="text-primary/70 hover:text-primary transition-colors flex-shrink-0"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -176,24 +176,24 @@ export default function SearchPage() {
 
       {/* Error */}
       {search.searchError && (
-        <div className="mx-6 mt-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 flex-shrink-0">
+        <div className="mx-6 mt-3 px-4 py-3 bg-destructive/10 border border-destructive/30 rounded-xl text-sm text-destructive flex-shrink-0">
           {search.searchError}
         </div>
       )}
 
       {/* Filter Bar */}
       {search.stocks.length > 0 && (
-        <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-2 flex-shrink-0">
-          <button className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+        <div className="px-6 py-2 border-b border-border/60 flex items-center gap-2 flex-shrink-0">
+          <button className="flex items-center gap-1 px-3 py-1.5 text-xs text-foreground/80 hover:bg-muted rounded-lg transition-colors">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
             필터
           </button>
-          <button className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">거래대금</button>
-          <button className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">등락률</button>
+          <button className="px-3 py-1.5 text-xs text-foreground/80 hover:bg-muted rounded-lg transition-colors">거래대금</button>
+          <button className="px-3 py-1.5 text-xs text-foreground/80 hover:bg-muted rounded-lg transition-colors">등락률</button>
           <div className="flex-1" />
-          <span className="text-xs text-gray-400">{search.stocks.length}개 종목</span>
+          <span className="text-xs text-muted-foreground/80">{search.stocks.length}개 종목</span>
         </div>
       )}
 
@@ -201,17 +201,17 @@ export default function SearchPage() {
       <div className="flex-1 overflow-auto px-6 py-4">
         {search.stocks.length === 0 && !search.searching ? (
           <div className="h-full flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-muted-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <p className="text-gray-500 text-sm">조건검색식을 선택하고 실행해주세요</p>
-            <p className="text-gray-400 text-xs mt-1">키움증권 REST API를 통해 종목을 추출합니다</p>
+            <p className="text-muted-foreground text-sm">조건검색식을 선택하고 실행해주세요</p>
+            <p className="text-muted-foreground/80 text-xs mt-1">키움증권 REST API를 통해 종목을 추출합니다</p>
           </div>
         ) : search.searching ? (
           <div role="status" className="h-full flex flex-col items-center justify-center">
-            <LoadingIcon className="h-20 w-20 text-indigo-600" decorative />
+            <LoadingIcon className="h-20 w-20 text-primary" decorative />
             <span className="sr-only">종목을 검색하는 중입니다...</span>
           </div>
         ) : (

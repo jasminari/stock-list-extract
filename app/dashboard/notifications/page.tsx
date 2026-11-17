@@ -55,8 +55,8 @@ export default function NotificationsPage() {
     <div className="flex-1 overflow-auto">
       <div className="max-w-3xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">알림</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">알림</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             관심종목에 설정한 가격대에 도달하면 여기에 표시됩니다.
           </p>
         </div>
@@ -64,16 +64,16 @@ export default function NotificationsPage() {
         <PushNotifications />
 
         {loading ? (
-          <div className="border border-gray-200 rounded-xl p-8 text-center">
-            <LoadingIcon className="mx-auto h-20 w-20 text-indigo-600" label="알림 불러오는 중" />
+          <div className="border border-border rounded-xl p-8 text-center">
+            <LoadingIcon className="mx-auto h-20 w-20 text-primary" label="알림 불러오는 중" />
           </div>
         ) : notifications.length === 0 ? (
-          <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center">
-            <svg className="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="border border-dashed border-input rounded-xl p-8 text-center">
+            <svg className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            <p className="text-sm text-gray-500">아직 알림이 없습니다.</p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-sm text-muted-foreground">아직 알림이 없습니다.</p>
+            <p className="text-xs text-muted-foreground/80 mt-1">
               관심종목 탭에서 종목을 등록하고 가격대를 설정해보세요.
             </p>
           </div>
@@ -85,18 +85,18 @@ export default function NotificationsPage() {
                 onClick={() => n.link && router.push(n.link)}
                 className={`w-full text-left p-4 border rounded-xl transition-colors ${
                   n.read
-                    ? "bg-white border-gray-200 hover:border-gray-300"
-                    : "bg-indigo-50 border-indigo-200"
+                    ? "bg-background border-border hover:border-input"
+                    : "bg-accent border-primary/25"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm font-medium text-gray-900">{n.title}</p>
-                  <span className="text-[11px] text-gray-400 whitespace-nowrap flex-shrink-0">
+                  <p className="text-sm font-medium text-foreground">{n.title}</p>
+                  <span className="text-[11px] text-muted-foreground/80 whitespace-nowrap flex-shrink-0">
                     {formatWhen(n.createdAt)}
                   </span>
                 </div>
                 {n.body && (
-                  <p className="text-sm text-gray-600 mt-1 leading-snug">{n.body}</p>
+                  <p className="text-sm text-foreground/80 mt-1 leading-snug">{n.body}</p>
                 )}
               </button>
             ))}

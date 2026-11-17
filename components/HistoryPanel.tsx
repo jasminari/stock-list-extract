@@ -61,16 +61,16 @@ export default function HistoryPanel({
   );
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-background rounded-xl border border-border overflow-hidden">
       {results.length === 0 ? (
-        <div className="px-6 py-12 text-center text-sm text-gray-400">
+        <div className="px-6 py-12 text-center text-sm text-muted-foreground/80">
           저장된 결과가 없습니다.
         </div>
       ) : (
         <div>
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-gray-500 text-xs">
+              <tr className="bg-muted/50 text-muted-foreground text-xs">
                 <th className="px-4 py-3 text-left font-medium">날짜</th>
                 <th className="px-4 py-3 text-left font-medium">조건검색식</th>
                 <th className="px-4 py-3 text-right font-medium">종목 수</th>
@@ -78,28 +78,28 @@ export default function HistoryPanel({
                 <th className="px-4 py-3 text-center font-medium">다운로드</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-border/40">
               {results.map((r, i) => (
                 <tr
                   key={i}
                   onClick={() => toggleDetail(r)}
-                  className={`hover:bg-gray-50 transition-colors ${
+                  className={`hover:bg-muted/50 transition-colors ${
                     r.id ? "cursor-pointer" : ""
-                  } ${expandedId === r.id ? "bg-indigo-50" : ""}`}
+                  } ${expandedId === r.id ? "bg-accent" : ""}`}
                 >
-                  <td className="px-4 py-3 text-gray-700">{r.date}</td>
-                  <td className="px-4 py-3 font-medium text-gray-900">
+                  <td className="px-4 py-3 text-foreground/90">{r.date}</td>
+                  <td className="px-4 py-3 font-medium text-foreground">
                     {r.conditionName}
                     {r.id && (
-                      <span className="ml-2 text-xs text-gray-400">
+                      <span className="ml-2 text-xs text-muted-foreground/80">
                         {expandedId === r.id ? "▲" : "▼"}
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right text-indigo-600 font-medium">
+                  <td className="px-4 py-3 text-right text-primary font-medium">
                     {r.count}
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-400 text-xs">
+                  <td className="px-4 py-3 text-right text-muted-foreground/80 text-xs">
                     {new Date(r.createdAt).toLocaleString("ko-KR", {
                       timeZone: "Asia/Seoul",
                     })}
@@ -111,7 +111,7 @@ export default function HistoryPanel({
                           e.stopPropagation();
                           onDownload(r.fileName!);
                         }}
-                        className="px-3 py-1 text-xs border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                        className="px-3 py-1 text-xs border border-input rounded-md hover:bg-muted/50 transition-colors"
                       >
                         Excel
                       </button>
@@ -123,10 +123,10 @@ export default function HistoryPanel({
           </table>
 
           {expandedId && (
-            <div className="border-t border-gray-200 p-4">
+            <div className="border-t border-border p-4">
               {detailLoading ? (
-                <div role="status" className="py-8 flex flex-col items-center gap-3 text-gray-500 text-sm">
-                  <LoadingIcon className="h-20 w-20 text-indigo-600" decorative />
+                <div role="status" className="py-8 flex flex-col items-center gap-3 text-muted-foreground text-sm">
+                  <LoadingIcon className="h-20 w-20 text-primary" decorative />
                   <span className="sr-only">종목 데이터 불러오는 중...</span>
                 </div>
               ) : (

@@ -48,11 +48,11 @@ export function addCandleSeries(
   candles: DailyCandle[]
 ): ISeriesApi<"Candlestick"> {
   const series = chart.addSeries(CandlestickSeries, {
-    upColor: "#dc2626",
-    downColor: "#2563eb",
+    upColor: "#b43e3c",
+    downColor: "#1065cc",
     borderVisible: false,
-    wickUpColor: "#dc2626",
-    wickDownColor: "#2563eb",
+    wickUpColor: "#b43e3c",
+    wickDownColor: "#1065cc",
     priceFormat: { type: "custom", formatter: formatPrice, minMove: 1 },
   });
   series.priceScale().applyOptions({ scaleMargins: { top: 0.1, bottom: 0.28 } });
