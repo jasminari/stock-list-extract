@@ -37,6 +37,8 @@ function HistoryContent() {
   const { codes: watchlistCodes, toggle: toggleWatchlist } = useWatchlist();
   // 미리보기: 테마별 묶음. 분류는 lib/themePreview.ts의 임시 규칙을 쓴다
   const [themeGrouped, setThemeGrouped] = useState(false);
+  // 미리보기: 직접 정리하던 엑셀 시트를 닮은 보기
+  const [sheetView, setSheetView] = useState(false);
   const shownStocks = useMemo(
     () => (themeGrouped ? withPreviewThemes(stocks) : stocks),
     [themeGrouped, stocks]
@@ -223,6 +225,25 @@ function HistoryContent() {
               미리보기
             </span>
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              // 엑셀 보기는 묶음 색과 소계가 있어야 원래 시트와 닮는다
+              if (!sheetView) setThemeGrouped(true);
+              setSheetView((v) => !v);
+            }}
+            aria-pressed={sheetView}
+            className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[13px] font-medium transition-colors ${
+              sheetView
+                ? "border-primary bg-accent text-primary"
+                : "border-border bg-background text-foreground/80 hover:bg-muted"
+            }`}
+          >
+            엑셀처럼 보기
+            <span className="rounded bg-warning-surface px-1 py-px text-[10px] font-semibold text-warning">
+              미리보기
+            </span>
+          </button>
         </div>
       </div>
 
@@ -252,6 +273,7 @@ function HistoryContent() {
             highlightedEntryId={selectedResult.id === Number(resultIdParam) ? entryIdParam : undefined}
             stocks={shownStocks}
             grouped={themeGrouped}
+            variant={sheetView ? "sheet" : "default"}
             conditionName={selectedResult.conditionName}
             date={selectedResult.date}
             title={selectedResult.conditionName}

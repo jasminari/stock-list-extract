@@ -6,6 +6,7 @@ import type { ProcessedStock } from "@/lib/types";
 import ArticleModal from "./ArticleModal";
 import StockChartModal from "./StockChartModal";
 import WatchlistStar from "./WatchlistStar";
+import { WEEKDAYS, parseDate } from "@/lib/date";
 
 /** 정렬 가능한 숫자 컬럼 */
 type SortKey =
@@ -24,6 +25,8 @@ interface ProcessedResultTableProps {
   title?: string;
   /** 종목의 theme 값으로 묶어 묶음별 거래대금 합계를 보여준다 */
   grouped?: boolean;
+  /** "sheet"는 직접 정리하던 엑셀 시트를 닮은 모양 */
+  variant?: "default" | "sheet";
   onAnnotationUpdate?: (
     entryId: number,
     field: "keyword" | "reason",
@@ -64,12 +67,15 @@ function EditableCell({
   field,
   onSave,
   placeholder = "",
+  plain = false,
 }: {
   value: string;
   entryId: number | null;
   field: "keyword" | "reason";
   /** 값이 비어 있을 때 보여줄 문구 */
   placeholder?: string;
+  /** 엑셀 보기처럼 꾸밈 없는 글자로 그린다 */
+  plain?: boolean;
   onSave?: (entryId: number, field: "keyword" | "reason", value: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -102,7 +108,7 @@ function EditableCell({
   }, [text, value, entryId, field, onSave]);
 
   if (!entryId || !onSave) {
-    return <span className={`whitespace-pre-line ${!value || value === "미확인" ? "text-muted-foreground/80" : field === "keyword" ? "break-keep text-[13px] font-medium leading-snug text-primary" : "break-keep leading-relaxed text-foreground/90"}`}>{field === "reason" && value ? <ReasonText text={value} /> : value || placeholder}</span>;
+    return <span className={`whitespace-pre-line ${!value || value === "미확인" ? "text-muted-foreground/80" : field === "keyword" ? (plain ? "break-keep" : "break-keep text-[13px] font-medium leading-snug text-primary") : plain ? "break-keep" : "break-keep leading-relaxed text-foreground/90"}`}>{field === "reason" && value ? <ReasonText text={value} /> : value || placeholder}</span>;
   }
 
   if (editing) {
@@ -127,9 +133,9 @@ function EditableCell({
   return (
     <span
       onClick={() => setEditing(true)}
-      className={`-mx-1 inline-block min-h-[20px] min-w-[40px] cursor-pointer rounded-md px-1 py-0.5 transition-colors hover:bg-muted ${
+      className={`cursor-pointer rounded-md transition-colors hover:bg-muted ${plain ? "inline" : "-mx-1 inline-block min-h-[20px] min-w-[40px] px-1 py-0.5"} ${
         saving ? "opacity-50" : ""
-      } ${!text || text === "미확인" ? "text-muted-foreground/80" : field === "keyword" ? "whitespace-pre-line break-keep text-[13px] font-medium leading-snug text-primary" : "whitespace-pre-line break-keep leading-relaxed text-foreground/90"}`}
+      } ${!text || text === "미확인" ? "text-muted-foreground/80" : field === "keyword" ? (plain ? "whitespace-pre-line break-keep" : "whitespace-pre-line break-keep text-[13px] font-medium leading-snug text-primary") : plain ? "whitespace-pre-line break-keep" : "whitespace-pre-line break-keep leading-relaxed text-foreground/90"}`}
     >
       {field === "keyword" ? (
         (text || "").replace(/\s*·\s*/, "\n")
@@ -155,6 +161,20 @@ const GROUP_COLORS = [
   "bg-amber-500",
   "bg-teal-500",
 ];
+
+/** 엑셀 보기에서 묶음을 칠하는 파스텔 색 (구글 시트 기본 팔레트) */
+const SHEET_GROUP_TINTS = [
+  "#f4cccc",
+  "#fce5cd",
+  "#fff2cc",
+  "#d9ead3",
+  "#c9daf8",
+  "#d9d2e9",
+  "#d0e0e3",
+  "#ead1dc",
+];
+const SHEET_OTHER_TINT = "#efefef";
+const SHEET_HEADER = "#93c47d";
 
 const SORT_OPTIONS: { key: SortKey; label: string; title?: string }[] = [
   { key: "tradingAmountBil", label: "거래대금" },
@@ -224,6 +244,7 @@ export default function ProcessedResultTable({
   date,
   title,
   grouped = false,
+  variant = "default",
   onAnnotationUpdate,
   watchlistCodes,
   onToggleWatchlist,
@@ -603,6 +624,175 @@ export default function ProcessedResultTable({
     </>
   );
 
+  const dialogs = (
+    <>
+      {viewArticle && (
+        <ArticleModal
+          url={viewArticle.url}
+          fallbackTitle={viewArticle.title}
+          onClose={() => setViewArticle(null)}
+        />
+      )}
+      {chartTarget && (
+        <StockChartModal
+          code={chartTarget.code}
+          name={chartTarget.name}
+          onClose={() => setChartTarget(null)}
+        />
+      )}
+    </>
+  );
+
+  if (variant === "sheet") {
+    const weekday = date ? WEEKDAYS[parseDate(date).getDay()] : "";
+    const sheetTitle = date
+      ? `${date.slice(0, 4)}년 ${parseInt(date.slice(4, 6))}월 ${parseInt(date.slice(6, 8))}일 (${weekday}) ${heading}`
+      : heading;
+    const cell = "border border-[#d9d9d9] px-2 py-1.5 align-middle";
+    const tintOf = (i: number, name: string | null) =>
+      name === null
+        ? undefined
+        : name === OTHER_GROUP
+          ? SHEET_OTHER_TINT
+          : SHEET_GROUP_TINTS[i % SHEET_GROUP_TINTS.length];
+
+    return (
+      <section className="animate-in fade-in-0 duration-300">
+        <div className="overflow-x-auto px-4 sm:px-3">
+          <table className="w-full min-w-[980px] border-collapse bg-background text-[13px] text-foreground">
+            <caption className="border border-b-0 border-[#d9d9d9] py-2 text-center text-lg font-bold tracking-tight">
+              {sheetTitle}
+            </caption>
+            <thead>
+              <tr style={{ backgroundColor: SHEET_HEADER }} className="text-center font-bold">
+                <th className={`${cell} w-12`}>번호</th>
+                <th className={`${cell} w-40`}>종목명</th>
+                <th className={`${cell} w-44`}>키워드</th>
+                {SORT_OPTIONS.map((o) => {
+                  const activeDir = sort?.key === o.key ? sort.dir : null;
+                  const Icon = activeDir === "asc" ? ArrowUp : ArrowDown;
+                  return (
+                    <th
+                      key={o.key}
+                      className={`${cell} w-24`}
+                      aria-sort={activeDir === "asc" ? "ascending" : activeDir === "desc" ? "descending" : undefined}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleSort(o.key)}
+                        title={o.title}
+                        aria-label={`${o.label} 정렬`}
+                        className="inline-flex items-center gap-0.5 font-bold"
+                      >
+                        {o.key === "tradingAmountBil" ? "거래대금(억)" : o.label}
+                        {activeDir && <Icon className="h-3 w-3" aria-hidden="true" />}
+                      </button>
+                    </th>
+                  );
+                })}
+                <th className={cell}>상승이유</th>
+              </tr>
+            </thead>
+            {groups.map((g, i) => {
+              const tint = tintOf(i, g.name);
+              // 시트처럼 화면에 놓인 순서대로 1번부터 매긴다
+              const offset = groups.slice(0, i).reduce((n, prev) => n + prev.rows.length, 0);
+              return (
+                <tbody key={g.name ?? "all"}>
+                  {g.rows.map((r, rowIndex) => {
+                    const { s } = r;
+                    const editable = r.business || r.related ? undefined : onAnnotationUpdate;
+                    return (
+                      <tr
+                        key={s.index}
+                        ref={r.highlighted ? highlightedRowRef : undefined}
+                        tabIndex={r.highlighted ? -1 : undefined}
+                        aria-label={r.highlighted ? `${s.name} 원본 데이터` : undefined}
+                        className={r.highlighted ? "outline outline-2 -outline-offset-2 outline-ring" : ""}
+                      >
+                        <td className={`${cell} text-right tabular-nums`} title={`거래대금 ${r.rank}위`}>
+                          {offset + rowIndex + 1}
+                        </td>
+                        <td className={`${cell} whitespace-nowrap`}>
+                          <div className="flex items-center gap-1.5">
+                            {onToggleWatchlist && (
+                              <WatchlistStar
+                                active={!!watchlistCodes?.has(s.code)}
+                                onClick={() => onToggleWatchlist(s.code, s.name)}
+                              />
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setChartTarget({ code: s.code, name: s.name })}
+                              className="text-left hover:underline"
+                            >
+                              {s.name}
+                            </button>
+                          </div>
+                        </td>
+                        <td className={cell} style={tint ? { backgroundColor: tint } : undefined}>
+                          {/* 템플릿처럼 거래대금 1,000억마다 별표 하나 */}
+                          {r.volumeLevel > 0 && (
+                            <span title={`거래대금 ${r.volumeLevel},000억대`}>{"*".repeat(r.volumeLevel)}</span>
+                          )}
+                          <EditableCell
+                            value={r.keyword}
+                            entryId={s.entryId}
+                            field="keyword"
+                            onSave={editable}
+                            placeholder={r.hasThread ? "" : "이유모름"}
+                            plain
+                          />
+                        </td>
+                        <td className={`${cell} whitespace-nowrap text-right tabular-nums`}>
+                          {s.tradingAmountBil.toLocaleString()}억
+                        </td>
+                        <td className={`${cell} whitespace-nowrap text-right tabular-nums`} title={r.turnoverTitle}>
+                          {r.turnoverText}
+                        </td>
+                        <td className={`${cell} whitespace-nowrap text-right tabular-nums`}>
+                          {s.closingPrice.toLocaleString()}
+                        </td>
+                        <td className={`${cell} whitespace-nowrap text-right tabular-nums ${r.isHighRate ? "font-bold text-rise" : s.changeRate < 0 ? "text-fall" : ""}`}>
+                          {s.changeRate.toFixed(2)}%
+                        </td>
+                        <td className={`${cell} text-xs leading-relaxed text-foreground/70`}>
+                          {r.label && <span className="mr-1.5">{badgeOf(r)}</span>}
+                          <EditableCell
+                            value={r.reason}
+                            entryId={s.entryId}
+                            field="reason"
+                            onSave={editable}
+                            plain
+                          />
+                          {sourcesOf(r)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {g.name && (
+                    <tr style={{ backgroundColor: tint }}>
+                      <td className={cell} />
+                      <td className={cell} />
+                      <th scope="row" className={`${cell} text-left font-bold`}>
+                        {g.name}
+                      </th>
+                      <td className={`${cell} whitespace-nowrap text-right text-base font-bold tabular-nums`}>
+                        {g.total.toLocaleString()}억
+                      </td>
+                      <td className={cell} colSpan={4} />
+                    </tr>
+                  )}
+                </tbody>
+              );
+            })}
+          </table>
+        </div>
+        {dialogs}
+      </section>
+    );
+  }
+
   return (
     <section className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
       <header className="flex items-baseline justify-between gap-3 px-4 pb-3 sm:px-3">
@@ -690,20 +880,7 @@ export default function ProcessedResultTable({
         </table>
       </div>
 
-      {viewArticle && (
-        <ArticleModal
-          url={viewArticle.url}
-          fallbackTitle={viewArticle.title}
-          onClose={() => setViewArticle(null)}
-        />
-      )}
-      {chartTarget && (
-        <StockChartModal
-          code={chartTarget.code}
-          name={chartTarget.name}
-          onClose={() => setChartTarget(null)}
-        />
-      )}
+      {dialogs}
     </section>
   );
 }
