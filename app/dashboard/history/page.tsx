@@ -170,55 +170,61 @@ function HistoryContent() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="border-b border-border px-3 md:px-6 py-2 md:py-3 flex-shrink-0">
-        <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground mb-3">
-          <span>내 검색</span>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          <span className="text-foreground font-medium">시장 공부하기</span>
-        </div>
+      {/* 머리 영역: 날짜가 곧 화면 제목 */}
+      <div className="flex-shrink-0 border-b border-border/60 px-4 pb-3 pt-3 md:px-8 md:pb-4 md:pt-6">
+        <Calendar
+          selectedDate={selectedDate}
+          datesWithData={datesWithData}
+          dateCountMap={dateCountMap}
+          years={years}
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+          onSelectDate={handleSelectDate}
+          onSelectYear={handleSelectYear}
+          onSelectMonth={setSelectedMonth}
+        />
 
-        <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-          <Calendar
-            selectedDate={selectedDate}
-            datesWithData={datesWithData}
-            dateCountMap={dateCountMap}
-            years={years}
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
-            onSelectDate={handleSelectDate}
-            onSelectYear={handleSelectYear}
-            onSelectMonth={setSelectedMonth}
-          />
-
-          {dateResults.length > 1 && (
-            <div className="flex gap-1.5 md:gap-2 overflow-x-auto hide-scrollbar">
-              {dateResults.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => setSelectedResult(r)}
-                  className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg text-[11px] md:text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                    selectedResult?.id === r.id
-                      ? "bg-primary text-white"
-                      : "bg-background border border-border text-foreground/80 hover:bg-muted/50"
-                  }`}
-                >
-                  {r.conditionName}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        {dateResults.length > 1 && (
+          <div className="hide-scrollbar mt-3 flex gap-1.5 overflow-x-auto">
+            {dateResults.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => setSelectedResult(r)}
+                aria-pressed={selectedResult?.id === r.id}
+                className={`h-8 shrink-0 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors ${
+                  selectedResult?.id === r.id
+                    ? "bg-foreground text-background"
+                    : "bg-muted text-foreground/80 hover:bg-border"
+                }`}
+              >
+                {r.conditionName}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Stock Table */}
-      <div className="flex-1 overflow-auto px-2 md:px-6 py-2 md:py-4">
+      {/* 종목 */}
+      <div className="flex-1 overflow-auto pb-24 pt-4 sm:px-5 md:pb-8 md:pt-5">
         {stocksLoading ? (
-          <div role="status" className="flex flex-col items-center justify-center py-16">
-            <LoadingIcon className="h-20 w-20 text-primary" decorative />
+          <div role="status" className="px-4 sm:px-3">
             <span className="sr-only">종목 데이터 불러오는 중...</span>
+            <div className="h-5 w-32 animate-pulse rounded-md bg-muted" />
+            <div className="mt-5 divide-y divide-border/60">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-start justify-between gap-6 py-4">
+                  <div className="flex-1 space-y-2.5">
+                    <div className="h-4 w-28 animate-pulse rounded-md bg-muted" />
+                    <div className="h-3 w-3/4 max-w-md animate-pulse rounded-md bg-muted" />
+                  </div>
+                  <div className="space-y-2.5">
+                    <div className="ml-auto h-4 w-16 animate-pulse rounded-md bg-muted" />
+                    <div className="ml-auto h-3 w-12 animate-pulse rounded-md bg-muted" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : stocks.length > 0 && selectedResult ? (
           <ProcessedResultTable
@@ -226,18 +232,20 @@ function HistoryContent() {
             stocks={stocks}
             conditionName={selectedResult.conditionName}
             date={selectedResult.date}
+            title={selectedResult.conditionName}
             onAnnotationUpdate={handleAnnotationUpdate}
             watchlistCodes={watchlistCodes}
             onToggleWatchlist={toggleWatchlist}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-muted-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+              <svg className="h-7 w-7 text-muted-foreground/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <p className="text-sm text-muted-foreground">해당 날짜에 저장된 데이터가 없습니다</p>
+            <p className="text-[15px] font-semibold text-foreground">이 날은 저장된 종목이 없어요</p>
+            <p className="mt-1 text-sm text-muted-foreground">위 날짜를 눌러 숫자가 표시된 날을 골라보세요.</p>
           </div>
         )}
       </div>

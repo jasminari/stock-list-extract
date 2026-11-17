@@ -274,6 +274,22 @@ Used by `ArticleModal`, `StockChartModal`, `WatchlistChartModal`, `FeedbackButto
 
 The arch motif pulse. Colour it with `text-primary`. Pair it with screen-reader text inside a `role="status"` region.
 
+### Screen pattern — market study (`/dashboard/history`)
+
+This is the reference screen. New product screens follow its patterns.
+
+- **Title is the main control.** The date picker is the page title (20px mobile, 24px desktop, bold). There is no breadcrumb and no repeated date; the sidebar or tab bar already says where the user is.
+- **No card around the main content.** Lists and tables sit directly on the page and separate with 1px `border/60` hairlines and spacing.
+- **Mobile is a list, desktop is a table.** Below `sm`, each stock is a list item: name (16px semibold) with trading value and turnover beneath in 12px muted text on the left, price (15px semibold) with the signed rate beneath on the right. From `sm`, the same data is the 7-column table. Both come from one component and one data mapping (`components/ProcessedResultTable.tsx`).
+- **Sorting.** Desktop sorts from column headers; an arrow appears on the active column. Mobile sorts from a row of pill chips; the active chip is filled with `foreground`.
+- **Supporting content sits in a quiet block.** On mobile, the record (badge, keyword, text, source links) is a `bg-muted/60` block with 12px radius under the item, not a bordered card.
+- **Emphasis is a pill, not a cell fill.** High trading value (orange), high turnover (purple), and a rate of 15% or more (`rise-surface`) are shown as small rounded pills behind the number.
+- **Rates always carry a sign and a direction colour**, and all numbers use `tabular-nums`.
+- **Korean text uses `break-keep`** so lines do not break inside a word.
+- **Loading is a skeleton** shaped like the content (`animate-pulse` blocks in `bg-muted`), not a spinner, when the layout is known in advance.
+- **Empty states say what happened and what to do next**: a soft icon tile, one 15px semibold line, one muted hint.
+- **Filter and segment controls are pills**: 32px high, fully rounded, `bg-muted` at rest and `bg-foreground text-background` when selected.
+
 ### Not yet shared
 
 Inputs, tabs, badges, tables, the calendar, and toasts are still written per screen. Add them to `components/ui/` using these tokens as each is next worked on.

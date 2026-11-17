@@ -78,44 +78,44 @@ export default function Calendar({
 
   return (
     <div className="relative" ref={containerRef}>
-      {/* Date button */}
+      {/* 날짜 버튼 — 화면 제목 역할을 겸한다 */}
       <button
+        type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        className="group -ml-2 flex items-center gap-1 rounded-xl px-2 py-1 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <svg className="w-4 h-4 text-muted-foreground/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <span className="font-semibold text-foreground">
+        <span className="text-xl font-bold tracking-tight text-foreground md:text-2xl">
           {selectedDate
             ? `${selectedDate.slice(0, 4)}년 ${parseInt(selectedDate.slice(4, 6))}월 ${parseInt(selectedDate.slice(6, 8))}일 ${WEEKDAYS[parseDate(selectedDate).getDay()]}요일`
             : "날짜를 선택하세요"
           }
         </span>
-        <svg className={`w-4 h-4 text-muted-foreground/80 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        <svg className={`h-5 w-5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {/* Dropdown calendar */}
       {open && (
-        <div className="absolute top-full left-0 mt-2 z-50 bg-background border border-border rounded-xl shadow-lg p-5 w-[320px]">
+        <div className="absolute left-0 top-full z-50 mt-2 w-[320px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border/60 bg-background p-4 shadow-xl animate-in fade-in-0 zoom-in-95 duration-150">
           {/* Month/Year header with navigation */}
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={handlePrevMonth}
-              className="p-1 rounded-md hover:bg-muted transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-muted"
             >
               <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <span className="text-sm font-semibold text-foreground">
+            <span className="text-[15px] font-semibold text-foreground">
               {selectedYear}년 {selectedMonth + 1}월
             </span>
             <button
               onClick={handleNextMonth}
-              className="p-1 rounded-md hover:bg-muted transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-muted"
             >
               <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -157,7 +157,7 @@ export default function Calendar({
                 <button
                   key={dateStr}
                   onClick={() => handleSelectDate(dateStr)}
-                  className={`relative flex flex-col items-center justify-center h-10 rounded-lg text-sm transition-colors ${
+                  className={`relative flex h-10 flex-col items-center justify-center rounded-xl text-sm tabular-nums transition-colors ${
                     isSelected
                       ? "bg-primary text-white"
                       : hasData
@@ -183,7 +183,7 @@ export default function Calendar({
                     {day.getDate()}
                   </span>
                   {hasData && (
-                    <span className={`absolute bottom-0.5 text-[8px] leading-none ${
+                    <span className={`absolute bottom-0.5 text-[9px] leading-none ${
                       isSelected ? "text-primary-foreground/80" : "text-primary"
                     }`}>
                       {count}

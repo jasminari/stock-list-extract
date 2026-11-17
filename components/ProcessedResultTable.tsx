@@ -1,7 +1,7 @@
 "use client";
 
-import { Fragment, useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { ArrowDown, ArrowUp, ArrowUpRight } from "lucide-react";
 import type { ProcessedStock } from "@/lib/types";
 import ArticleModal from "./ArticleModal";
 import StockChartModal from "./StockChartModal";
@@ -20,6 +20,8 @@ interface ProcessedResultTableProps {
   stocks: ProcessedStock[];
   conditionName: string;
   date: string;
+  /** 머리줄 제목. 생략하면 "가공 데이터" */
+  title?: string;
   onAnnotationUpdate?: (
     entryId: number,
     field: "keyword" | "reason",
@@ -70,7 +72,7 @@ function EditableCell({
   }, [text, value, entryId, field, onSave]);
 
   if (!entryId || !onSave) {
-    return <span className={`whitespace-pre-line ${!value || value === "미확인" ? "text-muted-foreground/80" : field === "keyword" ? "text-primary font-semibold" : "text-foreground/90"}`}>{value || ""}</span>;
+    return <span className={`whitespace-pre-line ${!value || value === "미확인" ? "text-muted-foreground/80" : field === "keyword" ? "break-keep text-[13px] font-medium leading-snug text-primary" : "break-keep leading-relaxed text-foreground/90"}`}>{value || ""}</span>;
   }
 
   if (editing) {
@@ -87,7 +89,7 @@ function EditableCell({
             setEditing(false);
           }
         }}
-        className="w-full px-1 py-0.5 text-sm border border-primary/60 rounded outline-none bg-accent"
+        className="w-full rounded-lg border border-primary/60 bg-accent px-2 py-1 text-sm outline-none"
       />
     );
   }
@@ -95,14 +97,25 @@ function EditableCell({
   return (
     <span
       onClick={() => setEditing(true)}
-      className={`cursor-pointer hover:bg-muted rounded px-1 py-0.5 inline-block min-w-[40px] min-h-[20px] ${
+      className={`-mx-1 inline-block min-h-[20px] min-w-[40px] cursor-pointer rounded-md px-1 py-0.5 transition-colors hover:bg-muted ${
         saving ? "opacity-50" : ""
-      } ${!text || text === "미확인" ? "text-muted-foreground/80" : field === "keyword" ? "text-primary font-semibold whitespace-pre-line" : "text-foreground/90 whitespace-pre-line leading-relaxed"}`}
+      } ${!text || text === "미확인" ? "text-muted-foreground/80" : field === "keyword" ? "whitespace-pre-line break-keep text-[13px] font-medium leading-snug text-primary" : "whitespace-pre-line break-keep leading-relaxed text-foreground/90"}`}
     >
       {field === "keyword" ? (text || "").replace(/\s*·\s*/, "\n") : text || ""}
     </span>
   );
 }
+
+const SORT_OPTIONS: { key: SortKey; label: string; title?: string }[] = [
+  { key: "tradingAmountBil", label: "거래대금" },
+  {
+    key: "turnoverRate",
+    label: "회전율",
+    title: "거래대금 ÷ 시가총액 (그날 상장주식의 손바뀜 비율)",
+  },
+  { key: "closingPrice", label: "종가" },
+  { key: "changeRate", label: "등락률" },
+];
 
 function SortHeader({
   label,
@@ -118,30 +131,40 @@ function SortHeader({
   title?: string;
 }) {
   const activeDir = sort?.key === sortKey ? sort.dir : null;
+  const Icon = activeDir === "asc" ? ArrowUp : ArrowDown;
 
   return (
-    <th className="px-2 md:px-3 py-2 md:py-3 text-right font-medium whitespace-nowrap">
+    <th
+      className="whitespace-nowrap px-3 py-2.5 text-right font-medium"
+      aria-sort={activeDir === "asc" ? "ascending" : activeDir === "desc" ? "descending" : undefined}
+    >
       <button
         type="button"
         onClick={() => onSort(sortKey)}
         title={title}
         aria-label={`${label} 정렬`}
-        className={`inline-flex items-center gap-1 hover:text-foreground/90 transition-colors ${
-          activeDir ? "text-primary" : ""
+        className={`group -mr-1 inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 transition-colors hover:text-foreground ${
+          activeDir ? "font-semibold text-foreground" : ""
         }`}
       >
         {label}
-        <span className="flex flex-col leading-[0.6] text-[7px] md:text-[8px]">
-          <span className={activeDir === "asc" ? "text-primary" : "text-muted-foreground/50"}>
-            ▲
-          </span>
-          <span className={activeDir === "desc" ? "text-primary" : "text-muted-foreground/50"}>
-            ▼
-          </span>
-        </span>
+        <Icon
+          aria-hidden="true"
+          className={`h-3 w-3 transition-opacity ${
+            activeDir ? "text-primary opacity-100" : "opacity-0 group-hover:opacity-40"
+          }`}
+        />
       </button>
     </th>
   );
+}
+
+/** 등락률: 방향을 색과 부호로 함께 보여준다 */
+function rateText(rate: number) {
+  return `${rate > 0 ? "+" : ""}${rate.toFixed(2)}%`;
+}
+function rateTone(rate: number) {
+  return rate > 0 ? "text-rise" : rate < 0 ? "text-fall" : "text-muted-foreground";
 }
 
 export default function ProcessedResultTable({
@@ -149,6 +172,7 @@ export default function ProcessedResultTable({
   highlightedEntryId,
   conditionName,
   date,
+  title,
   onAnnotationUpdate,
   watchlistCodes,
   onToggleWatchlist,
@@ -186,13 +210,18 @@ export default function ProcessedResultTable({
     });
   }, [stocks, sort]);
 
+  // 같은 종목이 넓은 화면용 표와 좁은 화면용 목록에 한 번씩 그려진다. 보이는 쪽으로 이동한다.
   const highlightedRowRef = useRef<HTMLTableRowElement>(null);
+  const highlightedItemRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
-    if (!highlightedEntryId || !highlightedRowRef.current) return;
-    const row = highlightedRowRef.current;
+    if (!highlightedEntryId) return;
     const frame = requestAnimationFrame(() => {
-      row.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
-      row.focus({ preventScroll: true });
+      const target = [highlightedRowRef.current, highlightedItemRef.current].find(
+        (el) => el && el.offsetParent !== null
+      );
+      if (!target) return;
+      target.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
+      target.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
   }, [highlightedEntryId, stocks]);
@@ -202,91 +231,248 @@ export default function ProcessedResultTable({
   const formattedDate = date
     ? `${date.slice(0, 4)}년 ${date.slice(4, 6)}월 ${date.slice(6, 8)}일`
     : "";
+  const heading = title ?? "가공 데이터";
+
+  const rows = sortedStocks.map((s) => {
+    const unconfirmed = !s.reason.trim() || s.reason === "미확인";
+    const related = unconfirmed ? s.relatedMaterial : undefined;
+    const business = unconfirmed && !related ? s.businessProfile : undefined;
+    const label = related ? "관련 재료" : business ? "사업 소개" : !unconfirmed ? "상승 배경" : "";
+    const badgeClass = related
+      ? "bg-news-surface text-news"
+      : business
+        ? "bg-muted text-muted-foreground"
+        : "bg-reason-surface text-reason";
+    const keyword =
+      related?.keyword || business?.keyword || (unconfirmed ? "" : s.keyword === "미확인" ? "" : s.keyword);
+    const reason = related?.summary || business?.summary || (unconfirmed ? "" : s.reason);
+    return {
+      s,
+      unconfirmed,
+      related,
+      business,
+      label,
+      badgeClass,
+      keyword,
+      reason,
+      sourceUrl: related?.sourceUrl || s.sourceUrl,
+      sourceTitle: related?.sourceTitle || s.sourceTitle,
+      dates: related
+        ? `${related.eventDate.slice(4, 6)}.${related.eventDate.slice(6)} 자료 기준 · ${related.articleDate.slice(4, 6)}.${related.articleDate.slice(6)} 보도`
+        : "",
+      hasThread: !!related || !!business || (!unconfirmed && !!(keyword || reason || s.sourceUrl)),
+      isHighVolume: s.tradingAmountBil >= 2000,
+      isHighRate: s.changeRate >= 15,
+      // 하루에 상장주식의 20% 이상 손바뀜 = 단기 과열 신호
+      isHighTurnover: (s.turnoverRate ?? 0) >= 20,
+      highlighted: s.entryId === highlightedEntryId,
+      turnoverText:
+        s.turnoverRate === null ? "-" : `${s.turnoverRate.toFixed(s.turnoverRate < 1 ? 2 : 1)}%`,
+      turnoverTitle: s.marketCapBil ? `시가총액 ${s.marketCapBil.toLocaleString()}억` : "상장주식수 미수집",
+    };
+  });
+  type Row = (typeof rows)[number];
+
+  const badgeOf = (r: Row) =>
+    r.label ? (
+      <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${r.badgeClass}`}>
+        {r.label}
+      </span>
+    ) : null;
+
+  /** 근거 링크 묶음 — 표와 목록이 같이 쓴다 */
+  const sourcesOf = (r: Row) => (
+    <>
+      {r.related && (
+        <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+          {r.dates} · 당일 상승과의 연결은 확인되지 않음
+        </p>
+      )}
+      {(r.business || ((!r.unconfirmed || r.related) && r.sourceUrl)) && (
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+          {r.business && (
+            <a
+              href={r.business.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`${r.business.reportName} · ${r.business.filingDate}`}
+              className="inline-flex items-center gap-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              DART · {r.business.reportName}
+              <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
+            </a>
+          )}
+          {(!r.unconfirmed || r.related) && r.sourceUrl && (
+            <button
+              type="button"
+              onClick={() => setViewArticle({ url: r.sourceUrl, title: r.sourceTitle })}
+              title={r.sourceTitle || r.sourceUrl}
+              className="inline-flex items-center gap-0.5 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
+            >
+              {r.related ? "관련 기사" : "근거 기사"}
+              <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      )}
+    </>
+  );
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-background rounded-xl border border-border overflow-hidden"
-    >
-      <div className="px-4 md:px-6 py-3 md:py-4 border-b border-border/60">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm md:text-base font-semibold text-foreground">
-            가공 데이터{" "}
-            <span className="text-primary font-bold">{stocks.length}</span>
-            종목
-          </h2>
-          <span className="text-[10px] md:text-xs text-muted-foreground/80">{conditionName}</span>
+    <section className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+      <header className="flex items-baseline justify-between gap-3 px-4 pb-3 sm:px-3">
+        <h2 className="flex items-baseline gap-2 text-base font-semibold text-foreground">
+          {heading}
+          <span className="text-sm font-medium tabular-nums text-muted-foreground">
+            {stocks.length}종목
+          </span>
+        </h2>
+        <p className="truncate text-xs text-muted-foreground">
+          {[heading === conditionName ? "" : conditionName, title ? "" : formattedDate]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      </header>
+
+      {/* 좁은 화면: 정렬 칩 + 종목 목록 */}
+      <div className="sm:hidden">
+        <div className="hide-scrollbar flex gap-1.5 overflow-x-auto px-4 pb-2">
+          {SORT_OPTIONS.map((o) => {
+            const activeDir = sort?.key === o.key ? sort.dir : null;
+            const Icon = activeDir === "asc" ? ArrowUp : ArrowDown;
+            return (
+              <button
+                key={o.key}
+                type="button"
+                onClick={() => toggleSort(o.key)}
+                aria-label={`${o.label} 정렬`}
+                aria-pressed={!!activeDir}
+                className={`inline-flex h-8 shrink-0 items-center gap-0.5 rounded-full px-3 text-[13px] font-medium transition-colors ${
+                  activeDir ? "bg-foreground text-background" : "bg-muted text-foreground/80"
+                }`}
+              >
+                {o.label}
+                {activeDir && <Icon className="h-3.5 w-3.5" aria-hidden="true" />}
+              </button>
+            );
+          })}
         </div>
-        {formattedDate && (
-          <p className="text-[10px] md:text-xs text-muted-foreground/80 mt-0.5 md:mt-1">{formattedDate}</p>
-        )}
+
+        <ul className="divide-y divide-border/60">
+          {rows.map((r) => {
+            const { s } = r;
+            return (
+              <li
+                key={s.index}
+                ref={r.highlighted ? highlightedItemRef : undefined}
+                tabIndex={r.highlighted ? -1 : undefined}
+                aria-label={r.highlighted ? `${s.name} 원본 데이터` : undefined}
+                className={`px-4 py-4 outline-none ${r.highlighted ? "bg-accent ring-2 ring-inset ring-ring" : ""}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      {onToggleWatchlist && (
+                        <WatchlistStar
+                          active={!!watchlistCodes?.has(s.code)}
+                          onClick={() => onToggleWatchlist(s.code, s.name)}
+                          className="-ml-1 h-7 w-7"
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setChartTarget({ code: s.code, name: s.name })}
+                        className="truncate text-left text-base font-semibold text-foreground"
+                      >
+                        {s.name}
+                      </button>
+                    </div>
+                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs tabular-nums text-muted-foreground">
+                      <span className={r.isHighVolume ? "rounded-md bg-orange-100 px-1.5 py-0.5 font-semibold text-orange-800" : ""}>
+                        거래대금 {s.tradingAmountBil.toLocaleString()}억
+                      </span>
+                      <span
+                        title={r.turnoverTitle}
+                        className={r.isHighTurnover ? "rounded-md bg-purple-100 px-1.5 py-0.5 font-semibold text-purple-800" : ""}
+                      >
+                        회전율 {r.turnoverText}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right tabular-nums">
+                    <p className="text-[15px] font-semibold text-foreground">
+                      {s.closingPrice.toLocaleString()}
+                      <span className="ml-0.5 text-xs font-normal text-muted-foreground">원</span>
+                    </p>
+                    <p className={`mt-1 text-[13px] font-medium ${rateTone(s.changeRate)}`}>
+                      <span className={r.isHighRate ? "rounded-md bg-rise-surface px-1.5 py-0.5 font-semibold" : ""}>
+                        {rateText(s.changeRate)}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                {r.hasThread && (
+                  <div className={`mt-3 rounded-xl p-3 ${r.highlighted ? "bg-background/70" : "bg-muted/60"}`}>
+                    {(r.keyword || r.label) && (
+                      <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                        {badgeOf(r)}
+                        {r.keyword && (
+                          <span className="break-keep text-[13px] font-semibold text-foreground">{r.keyword}</span>
+                        )}
+                      </div>
+                    )}
+                    {r.reason && (
+                      <p className="whitespace-pre-line break-keep text-[13px] leading-relaxed text-foreground/80">
+                        {r.reason}
+                      </p>
+                    )}
+                    {sourcesOf(r)}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs md:text-sm">
+      {/* 넓은 화면: 7열 표 */}
+      <div className="hidden overflow-x-auto sm:block">
+        <table className="w-full text-sm">
           <thead>
-            <tr className="bg-muted/50 text-muted-foreground text-[10px] md:text-xs">
-              <th className="px-2 md:px-3 py-2 md:py-3 text-left font-medium">종목명</th>
-              <th className="px-2 md:px-3 py-2 md:py-3 text-left font-medium w-20 md:w-28 hidden sm:table-cell">키워드</th>
-              <SortHeader
-                label="거래대금"
-                sortKey="tradingAmountBil"
-                sort={sort}
-                onSort={toggleSort}
-              />
-              <SortHeader
-                label="회전율"
-                sortKey="turnoverRate"
-                sort={sort}
-                onSort={toggleSort}
-                title="거래대금 ÷ 시가총액 (그날 상장주식의 손바뀜 비율)"
-              />
-              <SortHeader
-                label="종가"
-                sortKey="closingPrice"
-                sort={sort}
-                onSort={toggleSort}
-              />
-              <SortHeader
-                label="등락률"
-                sortKey="changeRate"
-                sort={sort}
-                onSort={toggleSort}
-              />
-              <th className="px-2 md:px-3 py-2 md:py-3 text-left font-medium min-w-[120px] md:min-w-[200px] hidden sm:table-cell">
-                상승이유
-              </th>
+            <tr className="border-y border-border/60 text-xs text-muted-foreground">
+              <th className="px-3 py-2.5 text-left font-medium">종목명</th>
+              <th className="w-40 px-3 py-2.5 text-left font-medium">키워드</th>
+              {SORT_OPTIONS.map((o) => (
+                <SortHeader
+                  key={o.key}
+                  label={o.label}
+                  sortKey={o.key}
+                  sort={sort}
+                  onSort={toggleSort}
+                  title={o.title}
+                />
+              ))}
+              <th className="min-w-[220px] px-3 py-2.5 pl-6 text-left font-medium">상승이유</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/40">
-            {sortedStocks.map((s) => {
-              const isHighVolume = s.tradingAmountBil >= 2000;
-              const isHighRate = s.changeRate >= 15;
-              // 하루에 상장주식의 20% 이상 손바뀜 = 단기 과열 신호
-              const isHighTurnover = (s.turnoverRate ?? 0) >= 20;
-              const unconfirmed = !s.reason.trim() || s.reason === "미확인";
-              const related = unconfirmed ? s.relatedMaterial : undefined;
-              const business = unconfirmed && !related ? s.businessProfile : undefined;
-              const sourceUrl = related?.sourceUrl || s.sourceUrl;
-              const sourceTitle = related?.sourceTitle || s.sourceTitle;
-              const label = related ? "관련 재료" : business ? "사업 소개" : !unconfirmed ? "상승 배경" : "";
-              const badgeClass = related ? "bg-news-surface text-news" : business ? "bg-muted text-muted-foreground" : "bg-reason-surface text-reason";
-              const badge = label ? <span className={`inline-block rounded px-2 py-0.5 text-[10px] md:text-xs font-medium mb-1 ${badgeClass}`}>{label}</span> : null;
-              const dates = related ? `${related.eventDate.slice(4,6)}.${related.eventDate.slice(6)} 자료 기준 · ${related.articleDate.slice(4,6)}.${related.articleDate.slice(6)} 보도` : "";
-              const keyword = related?.keyword || business?.keyword || (unconfirmed ? "" : s.keyword === "미확인" ? "" : s.keyword);
-              const reason = related?.summary || business?.summary || (unconfirmed ? "" : s.reason);
-              const hasThread = !!related || !!business || (!unconfirmed && !!(keyword || reason || s.sourceUrl));
-
+          <tbody className="divide-y divide-border/60">
+            {rows.map((r) => {
+              const { s } = r;
+              const editable = r.business || r.related ? undefined : onAnnotationUpdate;
               return (
-                <Fragment key={s.index}>
                 <tr
-                  ref={s.entryId === highlightedEntryId ? highlightedRowRef : undefined}
-                  tabIndex={s.entryId === highlightedEntryId ? -1 : undefined}
-                  aria-label={s.entryId === highlightedEntryId ? `${s.name} 원본 데이터` : undefined}
-                  className={s.entryId === highlightedEntryId ? "bg-accent outline outline-2 -outline-offset-2 outline-ring" : "hover:bg-muted/50 transition-colors"}
+                  key={s.index}
+                  ref={r.highlighted ? highlightedRowRef : undefined}
+                  tabIndex={r.highlighted ? -1 : undefined}
+                  aria-label={r.highlighted ? `${s.name} 원본 데이터` : undefined}
+                  className={
+                    r.highlighted
+                      ? "bg-accent outline outline-2 -outline-offset-2 outline-ring"
+                      : "transition-colors hover:bg-muted/40"
+                  }
                 >
-                  <td className="px-2 md:px-3 py-1.5 md:py-3 font-medium whitespace-nowrap">
+                  <td className="whitespace-nowrap px-3 py-4 align-top">
                     <div className="flex items-center gap-1.5">
                       {onToggleWatchlist && (
                         <WatchlistStar
@@ -297,117 +483,51 @@ export default function ProcessedResultTable({
                       <button
                         type="button"
                         onClick={() => setChartTarget({ code: s.code, name: s.name })}
-                        className="text-foreground hover:text-primary hover:underline"
+                        className="text-[15px] font-semibold text-foreground transition-colors hover:text-primary"
                       >
                         {s.name}
                       </button>
                     </div>
                   </td>
-                  <td className="px-2 md:px-3 py-1.5 md:py-3 hidden sm:table-cell">
-                    <EditableCell
-                      value={keyword}
-                      entryId={s.entryId}
-                      field="keyword"
-                      onSave={business || related ? undefined : onAnnotationUpdate}
-                    />
+                  <td className="px-3 py-4 align-top">
+                    <EditableCell value={r.keyword} entryId={s.entryId} field="keyword" onSave={editable} />
                   </td>
-                  <td
-                    className={`px-2 md:px-3 py-1.5 md:py-3 text-right font-medium whitespace-nowrap ${
-                      isHighVolume
-                        ? "bg-orange-100 text-orange-800"
-                        : "text-foreground/90"
-                    }`}
-                  >
-                    {s.tradingAmountBil.toLocaleString()}억
+                  <td className="whitespace-nowrap px-3 py-4 text-right align-top tabular-nums">
+                    <span
+                      className={
+                        r.isHighVolume
+                          ? "-mr-1.5 rounded-md bg-orange-100 px-1.5 py-0.5 font-semibold text-orange-800"
+                          : "font-medium text-foreground"
+                      }
+                    >
+                      {s.tradingAmountBil.toLocaleString()}억
+                    </span>
                   </td>
-                  <td
-                    className={`px-2 md:px-3 py-1.5 md:py-3 text-right whitespace-nowrap ${
-                      isHighTurnover
-                        ? "bg-purple-100 text-purple-800 font-medium"
-                        : "text-foreground/90"
-                    }`}
-                    title={
-                      s.marketCapBil
-                        ? `시가총액 ${s.marketCapBil.toLocaleString()}억`
-                        : "상장주식수 미수집"
-                    }
-                  >
-                    {s.turnoverRate === null
-                      ? "-"
-                      : `${s.turnoverRate.toFixed(s.turnoverRate < 1 ? 2 : 1)}%`}
+                  <td className="whitespace-nowrap px-3 py-4 text-right align-top tabular-nums" title={r.turnoverTitle}>
+                    <span
+                      className={
+                        r.isHighTurnover
+                          ? "-mr-1.5 rounded-md bg-purple-100 px-1.5 py-0.5 font-semibold text-purple-800"
+                          : "text-foreground/80"
+                      }
+                    >
+                      {r.turnoverText}
+                    </span>
                   </td>
-                  <td className="px-2 md:px-3 py-1.5 md:py-3 text-right text-foreground/90 whitespace-nowrap">
+                  <td className="whitespace-nowrap px-3 py-4 text-right align-top tabular-nums text-foreground/80">
                     {s.closingPrice.toLocaleString()}
                   </td>
-                  <td
-                    className={`px-2 md:px-3 py-1.5 md:py-3 text-right font-medium whitespace-nowrap ${
-                      isHighRate ? "text-rise" : "text-foreground/90"
-                    }`}
-                  >
-                    {s.changeRate.toFixed(2)}%
+                  <td className={`whitespace-nowrap px-3 py-4 text-right align-top font-medium tabular-nums ${rateTone(s.changeRate)}`}>
+                    <span className={r.isHighRate ? "-mr-1.5 rounded-md bg-rise-surface px-1.5 py-0.5 font-semibold" : ""}>
+                      {rateText(s.changeRate)}
+                    </span>
                   </td>
-                  <td className="px-2 md:px-3 py-1.5 md:py-3 hidden sm:table-cell">
-                    <div>{badge}</div>
-                    <EditableCell
-                      value={reason}
-                      entryId={s.entryId}
-                      field="reason"
-                      onSave={business || related ? undefined : onAnnotationUpdate}
-                    />
-                    {business && <a href={business.sourceUrl} target="_blank" rel="noopener noreferrer" title={`${business.reportName} · ${business.filingDate}`} className="block text-xs text-muted-foreground hover:text-primary hover:underline mt-1">↗ DART · {business.reportName}</a>}
-                    {related && <p className="text-[10px] md:text-xs text-muted-foreground/80 mt-1">{dates} · 당일 상승과의 연결은 확인되지 않음</p>}
-                    {(!unconfirmed || related) && sourceUrl && (
-                      <button
-                        onClick={() =>
-                          setViewArticle({
-                            url: sourceUrl,
-                            title: sourceTitle,
-                          })
-                        }
-                        title={sourceTitle || sourceUrl}
-                        className="block text-left text-[10px] md:text-xs text-primary hover:underline truncate max-w-[200px] md:max-w-[280px] mt-0.5"
-                      >
-                        ↗ {related ? "관련 기사" : "근거 기사"}
-                      </button>
-                    )}
+                  <td className="px-3 py-4 pl-6 align-top">
+                    {r.label && <div className="mb-1.5">{badgeOf(r)}</div>}
+                    <EditableCell value={r.reason} entryId={s.entryId} field="reason" onSave={editable} />
+                    {sourcesOf(r)}
                   </td>
                 </tr>
-                {/* 모바일 전용: 종목 아래 스레드형 서브 행 (키워드/상승이유/기사 링크) */}
-                {hasThread && (
-                  <tr className={`sm:hidden !border-t-0 ${s.entryId === highlightedEntryId ? "bg-accent" : ""}`}>
-                    <td colSpan={7} className="px-2 pb-2 pt-0">
-                      <div className="ml-1 pl-2.5 border-l-2 border-primary/25 space-y-1">
-                        {keyword && (
-                          <span className={`inline-block text-[10px] font-medium rounded-full px-2 py-0.5 ${unconfirmed ? "text-muted-foreground/80 bg-muted/50" : "bg-accent text-primary"}`}>
-                            {keyword}
-                          </span>
-                        )}
-                        {badge}
-                        {reason && (
-                          <p className="text-[11px] text-foreground/80 leading-snug whitespace-pre-line">
-                            {reason}
-                          </p>
-                        )}
-                        {business && <a href={business.sourceUrl} target="_blank" rel="noopener noreferrer" title={business.filingDate} className="block text-[11px] text-muted-foreground hover:underline">↗ DART · {business.reportName}</a>}
-                        {related && <p className="text-[10px] md:text-xs text-muted-foreground/80 mt-1">{dates} · 당일 상승과의 연결은 확인되지 않음</p>}
-                    {(!unconfirmed || related) && sourceUrl && (
-                          <button
-                            onClick={() =>
-                              setViewArticle({
-                                url: sourceUrl,
-                                title: sourceTitle,
-                              })
-                            }
-                            className="block w-full text-left text-[11px] text-primary hover:underline truncate"
-                          >
-                            ↗ {related ? "관련 기사" : "근거 기사"}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )}
-                </Fragment>
               );
             })}
           </tbody>
@@ -428,6 +548,6 @@ export default function ProcessedResultTable({
           onClose={() => setChartTarget(null)}
         />
       )}
-    </motion.div>
+    </section>
   );
 }
