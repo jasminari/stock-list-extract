@@ -284,6 +284,10 @@ This is the reference screen. New product screens follow its patterns.
 - **Sorting.** Desktop sorts from column headers; an arrow appears on the active column. Mobile sorts from a row of pill chips; the active chip is filled with `foreground`.
 - **Supporting content sits in a quiet block.** On mobile, the record (badge, keyword, text, source links) is a `bg-muted/60` block with 12px radius under the item, not a bordered card.
 - **Emphasis is a pill, not a cell fill.** High trading value (orange), high turnover (purple), and a rate of 15% or more (`rise-surface`) are shown as small rounded pills behind the number.
+- **Trading-value level is a row of orange dots**, one per 1,000억 up to five, beside the trading value. It replaces the old single 2,000억 highlight.
+- **Key lines stand out.** A line in a rise reason that starts with `★` is the author's own highlight; it renders as a soft amber block with one star.
+- **Missing reasons are stated.** A stock with no reason, related news, or business profile shows a muted "이유 미확인" instead of a blank.
+- **Theme grouping (preview).** When grouped, each theme gets a `bg-muted/60` band with a colour dot, the stock count, and the trading-value subtotal; groups are ordered by subtotal. The classification currently comes from `lib/themePreview.ts`, a temporary keyword rule, and the control is labelled "미리보기".
 - **Rates always carry a sign and a direction colour**, and all numbers use `tabular-nums`.
 - **Korean text uses `break-keep`** so lines do not break inside a word.
 - **Loading is a skeleton** shaped like the content (`animate-pulse` blocks in `bg-muted`), not a spinner, when the layout is known in advance.

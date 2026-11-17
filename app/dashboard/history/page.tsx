@@ -9,6 +9,7 @@ import Calendar from "@/components/Calendar";
 import type { ResultMeta, ProcessedStock } from "@/lib/types";
 import { useWatchlist } from "@/lib/useWatchlist";
 import { LoadingIcon } from "@/components/ui/loading-icon";
+import { withPreviewThemes } from "@/lib/themePreview";
 
 export default function HistoryPage() {
   return (
@@ -34,6 +35,12 @@ function HistoryContent() {
   const [stocks, setStocks] = useState<ProcessedStock[]>([]);
   const [stocksLoading, setStocksLoading] = useState(false);
   const { codes: watchlistCodes, toggle: toggleWatchlist } = useWatchlist();
+  // 미리보기: 테마별 묶음. 분류는 lib/themePreview.ts의 임시 규칙을 쓴다
+  const [themeGrouped, setThemeGrouped] = useState(false);
+  const shownStocks = useMemo(
+    () => (themeGrouped ? withPreviewThemes(stocks) : stocks),
+    [themeGrouped, stocks]
+  );
 
   const now = useMemo(() => new Date(), []);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -184,9 +191,9 @@ function HistoryContent() {
           onSelectMonth={setSelectedMonth}
         />
 
-        {dateResults.length > 1 && (
-          <div className="hide-scrollbar mt-3 flex gap-1.5 overflow-x-auto">
-            {dateResults.map((r) => (
+        <div className="hide-scrollbar mt-3 flex items-center gap-1.5 overflow-x-auto">
+          {dateResults.length > 1 &&
+            dateResults.map((r) => (
               <button
                 key={r.id}
                 type="button"
@@ -201,8 +208,22 @@ function HistoryContent() {
                 {r.conditionName}
               </button>
             ))}
-          </div>
-        )}
+          <button
+            type="button"
+            onClick={() => setThemeGrouped((v) => !v)}
+            aria-pressed={themeGrouped}
+            className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[13px] font-medium transition-colors ${
+              themeGrouped
+                ? "border-primary bg-accent text-primary"
+                : "border-border bg-background text-foreground/80 hover:bg-muted"
+            }`}
+          >
+            테마별로 묶기
+            <span className="rounded bg-warning-surface px-1 py-px text-[10px] font-semibold text-warning">
+              미리보기
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* 종목 */}
@@ -229,7 +250,8 @@ function HistoryContent() {
         ) : stocks.length > 0 && selectedResult ? (
           <ProcessedResultTable
             highlightedEntryId={selectedResult.id === Number(resultIdParam) ? entryIdParam : undefined}
-            stocks={stocks}
+            stocks={shownStocks}
+            grouped={themeGrouped}
             conditionName={selectedResult.conditionName}
             date={selectedResult.date}
             title={selectedResult.conditionName}

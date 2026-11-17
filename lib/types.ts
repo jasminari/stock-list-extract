@@ -73,6 +73,8 @@ export interface ProcessedStock {
   reason: string;
   sourceUrl: string;
   sourceTitle: string;
+  /** 테마별 묶음용 분류. 없으면 묶지 않는다 */
+  theme?: string;
 }
 
 // === 검색 결과 메타 ===

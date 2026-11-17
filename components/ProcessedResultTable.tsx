@@ -22,6 +22,8 @@ interface ProcessedResultTableProps {
   date: string;
   /** 머리줄 제목. 생략하면 "가공 데이터" */
   title?: string;
+  /** 종목의 theme 값으로 묶어 묶음별 거래대금 합계를 보여준다 */
+  grouped?: boolean;
   onAnnotationUpdate?: (
     entryId: number,
     field: "keyword" | "reason",
@@ -31,15 +33,43 @@ interface ProcessedResultTableProps {
   onToggleWatchlist?: (code: string, name: string) => void;
 }
 
+/** ★로 시작하는 줄은 직접 표시해 둔 핵심 문장이다. 눈에 띄게 그린다 */
+function ReasonText({ text }: { text: string }) {
+  const lines = text.split("\n");
+  if (!lines.some((line) => /^\s*★/.test(line))) return <>{text}</>;
+  return (
+    <>
+      {lines.map((line, i) => {
+        const key = line.match(/^\s*★+\s*(.*)$/);
+        return key ? (
+          <span
+            key={i}
+            className="my-1 block rounded-lg bg-memo-surface/70 px-2 py-1 font-semibold text-foreground"
+          >
+            <span aria-hidden="true" className="mr-1 text-amber-500">★</span>
+            <span className="sr-only">핵심: </span>
+            {key[1]}
+          </span>
+        ) : (
+          <span key={i} className="block min-h-[1em]">{line}</span>
+        );
+      })}
+    </>
+  );
+}
+
 function EditableCell({
   value,
   entryId,
   field,
   onSave,
+  placeholder = "",
 }: {
   value: string;
   entryId: number | null;
   field: "keyword" | "reason";
+  /** 값이 비어 있을 때 보여줄 문구 */
+  placeholder?: string;
   onSave?: (entryId: number, field: "keyword" | "reason", value: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -72,7 +102,7 @@ function EditableCell({
   }, [text, value, entryId, field, onSave]);
 
   if (!entryId || !onSave) {
-    return <span className={`whitespace-pre-line ${!value || value === "미확인" ? "text-muted-foreground/80" : field === "keyword" ? "break-keep text-[13px] font-medium leading-snug text-primary" : "break-keep leading-relaxed text-foreground/90"}`}>{value || ""}</span>;
+    return <span className={`whitespace-pre-line ${!value || value === "미확인" ? "text-muted-foreground/80" : field === "keyword" ? "break-keep text-[13px] font-medium leading-snug text-primary" : "break-keep leading-relaxed text-foreground/90"}`}>{field === "reason" && value ? <ReasonText text={value} /> : value || placeholder}</span>;
   }
 
   if (editing) {
@@ -101,10 +131,30 @@ function EditableCell({
         saving ? "opacity-50" : ""
       } ${!text || text === "미확인" ? "text-muted-foreground/80" : field === "keyword" ? "whitespace-pre-line break-keep text-[13px] font-medium leading-snug text-primary" : "whitespace-pre-line break-keep leading-relaxed text-foreground/90"}`}
     >
-      {field === "keyword" ? (text || "").replace(/\s*·\s*/, "\n") : text || ""}
+      {field === "keyword" ? (
+        (text || "").replace(/\s*·\s*/, "\n")
+      ) : text && text !== "미확인" ? (
+        <ReasonText text={text} />
+      ) : (
+        placeholder
+      )}
     </span>
   );
 }
+
+/** 분류되지 않은 종목을 모으는 묶음 이름 */
+const OTHER_GROUP = "기타";
+/** 테마 묶음을 구분하는 점 색. 의미가 없는 순서 색이다 */
+const GROUP_COLORS = [
+  "bg-indigo-500",
+  "bg-orange-500",
+  "bg-emerald-500",
+  "bg-sky-500",
+  "bg-rose-500",
+  "bg-violet-500",
+  "bg-amber-500",
+  "bg-teal-500",
+];
 
 const SORT_OPTIONS: { key: SortKey; label: string; title?: string }[] = [
   { key: "tradingAmountBil", label: "거래대금" },
@@ -173,6 +223,7 @@ export default function ProcessedResultTable({
   conditionName,
   date,
   title,
+  grouped = false,
   onAnnotationUpdate,
   watchlistCodes,
   onToggleWatchlist,
@@ -271,7 +322,8 @@ export default function ProcessedResultTable({
         ? `${related.eventDate.slice(4, 6)}.${related.eventDate.slice(6)} 자료 기준 · ${related.articleDate.slice(4, 6)}.${related.articleDate.slice(6)} 보도`
         : "",
       hasThread: !!related || !!business || (!unconfirmed && !!(keyword || reason || s.sourceUrl)),
-      isHighVolume: s.tradingAmountBil >= 2000,
+      // 거래대금 1,000억마다 한 단계 (최대 5단계)
+      volumeLevel: Math.min(5, Math.floor(s.tradingAmountBil / 1000)),
       isHighRate: s.changeRate >= 15,
       // 하루에 상장주식의 20% 이상 손바뀜 = 단기 과열 신호
       isHighTurnover: (s.turnoverRate ?? 0) >= 20,
@@ -284,6 +336,28 @@ export default function ProcessedResultTable({
   });
   type Row = (typeof rows)[number];
 
+  // 테마별 묶음: 합계가 큰 묶음부터, 분류되지 않은 종목은 맨 뒤
+  const groups: { name: string | null; total: number; rows: Row[] }[] = (() => {
+    if (!grouped || !rows.some((r) => r.s.theme)) return [{ name: null, total: 0, rows }];
+    const map = new Map<string, Row[]>();
+    for (const r of rows) {
+      const name = r.s.theme || OTHER_GROUP;
+      map.set(name, [...(map.get(name) ?? []), r]);
+    }
+    return [...map.entries()]
+      .map(([name, list]) => ({
+        name,
+        total: list.reduce((sum, r) => sum + r.s.tradingAmountBil, 0),
+        // 따로 정렬하지 않았으면 묶음 안에서도 거래대금이 큰 순서
+        rows: sort ? list : [...list].sort((a, b) => b.s.tradingAmountBil - a.s.tradingAmountBil),
+      }))
+      .sort((a, b) =>
+        a.name === OTHER_GROUP ? 1 : b.name === OTHER_GROUP ? -1 : b.total - a.total
+      );
+  })();
+  const groupColor = (i: number, name: string | null) =>
+    name === OTHER_GROUP ? "bg-muted-foreground/40" : GROUP_COLORS[i % GROUP_COLORS.length];
+
   const rankOf = (r: Row) => (
     <span
       title={`거래대금 ${r.rank}위`}
@@ -294,6 +368,22 @@ export default function ProcessedResultTable({
       <span className="sr-only">위</span>
     </span>
   );
+
+  /** 거래대금 단계 점 — 1,000억마다 하나 */
+  const volumeDotsOf = (r: Row) =>
+    r.volumeLevel > 0 ? (
+      <span
+        className="inline-flex items-center gap-[3px]"
+        title={`거래대금 ${r.volumeLevel >= 5 ? "5,000억 이상" : `${r.volumeLevel},000억대`}`}
+      >
+        <span className="sr-only">
+          거래대금 {r.volumeLevel >= 5 ? "5,000억 이상" : `${r.volumeLevel},000억대`}
+        </span>
+        {Array.from({ length: r.volumeLevel }).map((_, i) => (
+          <span key={i} aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+        ))}
+      </span>
+    ) : null;
 
   const badgeOf = (r: Row) =>
     r.label ? (
@@ -340,6 +430,179 @@ export default function ProcessedResultTable({
     </>
   );
 
+  const mobileItem = (r: Row) => {
+    const { s } = r;
+    return (
+      <li
+        key={s.index}
+        ref={r.highlighted ? highlightedItemRef : undefined}
+        tabIndex={r.highlighted ? -1 : undefined}
+        aria-label={r.highlighted ? `${s.name} 원본 데이터` : undefined}
+        className={`px-4 py-4 outline-none ${r.highlighted ? "bg-accent ring-2 ring-inset ring-ring" : ""}`}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              {rankOf(r)}
+              {onToggleWatchlist && (
+                <WatchlistStar
+                  active={!!watchlistCodes?.has(s.code)}
+                  onClick={() => onToggleWatchlist(s.code, s.name)}
+                  className="h-7 w-6"
+                />
+              )}
+              <button
+                type="button"
+                onClick={() => setChartTarget({ code: s.code, name: s.name })}
+                className="truncate text-left text-base font-semibold text-foreground"
+              >
+                {s.name}
+              </button>
+            </div>
+            {/* 등락률은 가격의 변화이므로 종가 바로 옆에 둔다 */}
+            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 pl-[26px] text-xs tabular-nums text-muted-foreground">
+              <span>
+                {s.closingPrice.toLocaleString()}원{" "}
+                <span className={`font-medium ${rateTone(s.changeRate)} ${r.isHighRate ? "rounded-md bg-rise-surface px-1.5 py-0.5 font-semibold" : ""}`}>
+                  {rateText(s.changeRate)}
+                </span>
+              </span>
+              <span
+                title={r.turnoverTitle}
+                className={r.isHighTurnover ? "rounded-md bg-purple-100 px-1.5 py-0.5 font-semibold text-purple-800" : ""}
+              >
+                회전율 {r.turnoverText}
+              </span>
+              {!r.hasThread && <span className="text-muted-foreground/80">· 이유 미확인</span>}
+            </p>
+          </div>
+          {/* 이 화면에서 가장 중요한 숫자는 거래대금이다. 다른 숫자와 섞이지 않게 혼자 두고 이름을 붙인다 */}
+          <div className="shrink-0 text-right tabular-nums">
+            <p className="text-base font-semibold text-foreground">
+              {s.tradingAmountBil.toLocaleString()}
+              <span className="ml-0.5 text-xs font-normal text-muted-foreground">억</span>
+            </p>
+            <p className="mt-1 flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
+              {volumeDotsOf(r)}
+              거래대금
+            </p>
+          </div>
+        </div>
+
+        {r.hasThread && (
+          <div className={`mt-3 rounded-xl p-3 ${r.highlighted ? "bg-background/70" : "bg-muted/60"}`}>
+            {(r.keyword || r.label) && (
+              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                {badgeOf(r)}
+                {r.keyword && (
+                  <span className="break-keep text-[13px] font-semibold text-foreground">{r.keyword}</span>
+                )}
+              </div>
+            )}
+            {r.reason && (
+              <p className="whitespace-pre-line break-keep text-[13px] leading-relaxed text-foreground/80">
+                <ReasonText text={r.reason} />
+              </p>
+            )}
+            {sourcesOf(r)}
+          </div>
+        )}
+      </li>
+    );
+  };
+
+  const desktopRow = (r: Row) => {
+    const { s } = r;
+    const editable = r.business || r.related ? undefined : onAnnotationUpdate;
+    return (
+      <tr
+        key={s.index}
+        ref={r.highlighted ? highlightedRowRef : undefined}
+        tabIndex={r.highlighted ? -1 : undefined}
+        aria-label={r.highlighted ? `${s.name} 원본 데이터` : undefined}
+        className={
+          r.highlighted
+            ? "bg-accent outline outline-2 -outline-offset-2 outline-ring"
+            : "transition-colors hover:bg-muted/40"
+        }
+      >
+        <td className="whitespace-nowrap px-3 py-4 align-top">
+          <div className="flex items-center gap-1.5">
+            {rankOf(r)}
+            {onToggleWatchlist && (
+              <WatchlistStar
+                active={!!watchlistCodes?.has(s.code)}
+                onClick={() => onToggleWatchlist(s.code, s.name)}
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => setChartTarget({ code: s.code, name: s.name })}
+              className="text-[15px] font-semibold text-foreground transition-colors hover:text-primary"
+            >
+              {s.name}
+            </button>
+          </div>
+        </td>
+        <td className="px-3 py-4 align-top">
+          <EditableCell value={r.keyword} entryId={s.entryId} field="keyword" onSave={editable} />
+        </td>
+        <td className="whitespace-nowrap px-3 py-4 text-right align-top tabular-nums">
+          <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
+            {volumeDotsOf(r)}
+            {s.tradingAmountBil.toLocaleString()}억
+          </span>
+        </td>
+        <td className="whitespace-nowrap px-3 py-4 text-right align-top tabular-nums" title={r.turnoverTitle}>
+          <span
+            className={
+              r.isHighTurnover
+                ? "-mr-1.5 rounded-md bg-purple-100 px-1.5 py-0.5 font-semibold text-purple-800"
+                : "text-foreground/80"
+            }
+          >
+            {r.turnoverText}
+          </span>
+        </td>
+        <td className="whitespace-nowrap px-3 py-4 text-right align-top tabular-nums text-foreground/80">
+          {s.closingPrice.toLocaleString()}
+        </td>
+        <td className={`whitespace-nowrap px-3 py-4 text-right align-top font-medium tabular-nums ${rateTone(s.changeRate)}`}>
+          <span className={r.isHighRate ? "-mr-1.5 rounded-md bg-rise-surface px-1.5 py-0.5 font-semibold" : ""}>
+            {rateText(s.changeRate)}
+          </span>
+        </td>
+        <td className="px-3 py-4 pl-6 align-top">
+          {r.label && <div className="mb-1.5">{badgeOf(r)}</div>}
+          <EditableCell
+            value={r.reason}
+            entryId={s.entryId}
+            field="reason"
+            onSave={editable}
+            placeholder="이유 미확인"
+          />
+          {sourcesOf(r)}
+        </td>
+      </tr>
+    );
+  };
+
+  const groupSummary = (g: (typeof groups)[number], i: number) => (
+    <>
+      <span className="flex min-w-0 items-center gap-2">
+        <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-full ${groupColor(i, g.name)}`} />
+        <span className="truncate text-[15px] font-bold text-foreground">{g.name}</span>
+        <span className="shrink-0 text-xs text-muted-foreground">{g.rows.length}종목</span>
+      </span>
+      <span className="shrink-0 text-xs text-muted-foreground">
+        거래대금 합계{" "}
+        <span className="ml-1 text-[15px] font-bold tabular-nums text-foreground">
+          {g.total.toLocaleString()}억
+        </span>
+      </span>
+    </>
+  );
+
   return (
     <section className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
       <header className="flex items-baseline justify-between gap-3 px-4 pb-3 sm:px-3">
@@ -380,86 +643,16 @@ export default function ProcessedResultTable({
           })}
         </div>
 
-        <ul className="divide-y divide-border/60">
-          {rows.map((r) => {
-            const { s } = r;
-            return (
-              <li
-                key={s.index}
-                ref={r.highlighted ? highlightedItemRef : undefined}
-                tabIndex={r.highlighted ? -1 : undefined}
-                aria-label={r.highlighted ? `${s.name} 원본 데이터` : undefined}
-                className={`px-4 py-4 outline-none ${r.highlighted ? "bg-accent ring-2 ring-inset ring-ring" : ""}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      {rankOf(r)}
-                      {onToggleWatchlist && (
-                        <WatchlistStar
-                          active={!!watchlistCodes?.has(s.code)}
-                          onClick={() => onToggleWatchlist(s.code, s.name)}
-                          className="h-7 w-6"
-                        />
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setChartTarget({ code: s.code, name: s.name })}
-                        className="truncate text-left text-base font-semibold text-foreground"
-                      >
-                        {s.name}
-                      </button>
-                    </div>
-                    {/* 등락률은 가격의 변화이므로 종가 바로 옆에 둔다 */}
-                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 pl-[26px] text-xs tabular-nums text-muted-foreground">
-                      <span>
-                        {s.closingPrice.toLocaleString()}원{" "}
-                        <span className={`font-medium ${rateTone(s.changeRate)} ${r.isHighRate ? "rounded-md bg-rise-surface px-1.5 py-0.5 font-semibold" : ""}`}>
-                          {rateText(s.changeRate)}
-                        </span>
-                      </span>
-                      <span
-                        title={r.turnoverTitle}
-                        className={r.isHighTurnover ? "rounded-md bg-purple-100 px-1.5 py-0.5 font-semibold text-purple-800" : ""}
-                      >
-                        회전율 {r.turnoverText}
-                      </span>
-                    </p>
-                  </div>
-                  {/* 이 화면에서 가장 중요한 숫자는 거래대금이다. 다른 숫자와 섞이지 않게 혼자 두고 이름을 붙인다 */}
-                  <div className="shrink-0 text-right tabular-nums">
-                    <p className="text-base font-semibold text-foreground">
-                      <span className={r.isHighVolume ? "-mr-1.5 rounded-md bg-orange-100 px-1.5 py-0.5 text-orange-800" : ""}>
-                        {s.tradingAmountBil.toLocaleString()}
-                        <span className={`ml-0.5 text-xs font-normal ${r.isHighVolume ? "" : "text-muted-foreground"}`}>억</span>
-                      </span>
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">거래대금</p>
-                  </div>
-                </div>
-
-                {r.hasThread && (
-                  <div className={`mt-3 rounded-xl p-3 ${r.highlighted ? "bg-background/70" : "bg-muted/60"}`}>
-                    {(r.keyword || r.label) && (
-                      <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                        {badgeOf(r)}
-                        {r.keyword && (
-                          <span className="break-keep text-[13px] font-semibold text-foreground">{r.keyword}</span>
-                        )}
-                      </div>
-                    )}
-                    {r.reason && (
-                      <p className="whitespace-pre-line break-keep text-[13px] leading-relaxed text-foreground/80">
-                        {r.reason}
-                      </p>
-                    )}
-                    {sourcesOf(r)}
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        {groups.map((g, i) => (
+          <div key={g.name ?? "all"}>
+            {g.name && (
+              <h3 className="mt-2 flex items-center justify-between gap-3 bg-muted/60 px-4 py-2.5 font-normal">
+                {groupSummary(g, i)}
+              </h3>
+            )}
+            <ul className="divide-y divide-border/60">{g.rows.map(mobileItem)}</ul>
+          </div>
+        ))}
       </div>
 
       {/* 넓은 화면: 7열 표 */}
@@ -482,82 +675,18 @@ export default function ProcessedResultTable({
               <th className="min-w-[220px] px-3 py-2.5 pl-6 text-left font-medium">상승이유</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/60">
-            {rows.map((r) => {
-              const { s } = r;
-              const editable = r.business || r.related ? undefined : onAnnotationUpdate;
-              return (
-                <tr
-                  key={s.index}
-                  ref={r.highlighted ? highlightedRowRef : undefined}
-                  tabIndex={r.highlighted ? -1 : undefined}
-                  aria-label={r.highlighted ? `${s.name} 원본 데이터` : undefined}
-                  className={
-                    r.highlighted
-                      ? "bg-accent outline outline-2 -outline-offset-2 outline-ring"
-                      : "transition-colors hover:bg-muted/40"
-                  }
-                >
-                  <td className="whitespace-nowrap px-3 py-4 align-top">
-                    <div className="flex items-center gap-1.5">
-                      {rankOf(r)}
-                      {onToggleWatchlist && (
-                        <WatchlistStar
-                          active={!!watchlistCodes?.has(s.code)}
-                          onClick={() => onToggleWatchlist(s.code, s.name)}
-                        />
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setChartTarget({ code: s.code, name: s.name })}
-                        className="text-[15px] font-semibold text-foreground transition-colors hover:text-primary"
-                      >
-                        {s.name}
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-3 py-4 align-top">
-                    <EditableCell value={r.keyword} entryId={s.entryId} field="keyword" onSave={editable} />
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-4 text-right align-top tabular-nums">
-                    <span
-                      className={
-                        r.isHighVolume
-                          ? "-mr-1.5 rounded-md bg-orange-100 px-1.5 py-0.5 font-semibold text-orange-800"
-                          : "font-medium text-foreground"
-                      }
-                    >
-                      {s.tradingAmountBil.toLocaleString()}억
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-4 text-right align-top tabular-nums" title={r.turnoverTitle}>
-                    <span
-                      className={
-                        r.isHighTurnover
-                          ? "-mr-1.5 rounded-md bg-purple-100 px-1.5 py-0.5 font-semibold text-purple-800"
-                          : "text-foreground/80"
-                      }
-                    >
-                      {r.turnoverText}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-4 text-right align-top tabular-nums text-foreground/80">
-                    {s.closingPrice.toLocaleString()}
-                  </td>
-                  <td className={`whitespace-nowrap px-3 py-4 text-right align-top font-medium tabular-nums ${rateTone(s.changeRate)}`}>
-                    <span className={r.isHighRate ? "-mr-1.5 rounded-md bg-rise-surface px-1.5 py-0.5 font-semibold" : ""}>
-                      {rateText(s.changeRate)}
-                    </span>
-                  </td>
-                  <td className="px-3 py-4 pl-6 align-top">
-                    {r.label && <div className="mb-1.5">{badgeOf(r)}</div>}
-                    <EditableCell value={r.reason} entryId={s.entryId} field="reason" onSave={editable} />
-                    {sourcesOf(r)}
-                  </td>
+          {groups.map((g, i) => (
+            <tbody key={g.name ?? "all"} className="divide-y divide-border/60 border-b border-border/60">
+              {g.name && (
+                <tr className="bg-muted/60">
+                  <th colSpan={7} scope="rowgroup" className="px-3 py-2.5 font-normal">
+                    <div className="flex items-center justify-between gap-3">{groupSummary(g, i)}</div>
+                  </th>
                 </tr>
-              );
-            })}
-          </tbody>
+              )}
+              {g.rows.map(desktopRow)}
+            </tbody>
+          ))}
         </table>
       </div>
 
