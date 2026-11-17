@@ -1,0 +1,354 @@
+---
+name: StockExtract
+description: One system for the public landing and the authenticated product. The landing sets the brand (white, airy, indigo, bold Korean copy); the product keeps that brand at a denser, data-first scale.
+colors:
+  primary: "#4f46df"
+  primary-hover: "#3c34ba"
+  on-primary: "#ffffff"
+  link-hover: "#332baf"
+  ink: "#20242b"
+  muted: "#666b75"
+  paper: "#ffffff"
+  stage: "#f4f4f6"
+  border: "#e5e7eb"
+  focus: "#8e87ef"
+  keyword-ink: "#594cc0"
+  keyword-surface: "#f1efff"
+  destructive: "#d12d3a"
+  rise: "#b43e3c"
+  rise-surface: "#fbeeee"
+  fall: "#1065cc"
+  fall-surface: "#e8f3ff"
+  reason: "#007738"
+  reason-surface: "#e8f5ee"
+  news: "#666b75"
+  news-surface: "#f4f4f6"
+  memo: "#594cc0"
+  memo-surface: "#f1efff"
+  positive-rate: "#b43e3c"
+typography:
+  display:
+    fontFamily: '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif'
+    fontSize: "43px"
+    fontWeight: 780
+    lineHeight: 1.44
+    letterSpacing: "-0.04em"
+  headline:
+    fontSize: "29px"
+    fontWeight: 750
+    lineHeight: 1.45
+    letterSpacing: "-0.035em"
+  body:
+    fontSize: "17px"
+    lineHeight: 1.85
+  label:
+    fontSize: "14px"
+    fontWeight: 650
+  product-title:
+    fontSize: "16px"
+    fontWeight: 600
+    lineHeight: 1.375
+  product-body:
+    fontSize: "14px"
+    fontWeight: 400
+    lineHeight: 1.6
+  product-label:
+    fontSize: "14px"
+    fontWeight: 500
+  product-caption:
+    fontSize: "12px"
+    fontWeight: 400
+  product-micro:
+    fontSize: "11px"
+    fontWeight: 500
+rounded:
+  keyword: "5px"
+  small: "8px"
+  control: "11px"
+  product-control: "12px"
+  screen: "13px"
+  stock-card: "15px"
+  reason-sheet: "16px"
+  sheet: "16px"
+  stage: "24px"
+spacing:
+  small: "14px"
+  medium: "20px"
+  large: "24px"
+  desktop-column: "72px"
+  section: "140px"
+  product-gutter: "16px"
+  product-gutter-wide: "24px"
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.paper}"
+    rounded: "{rounded.control}"
+    padding: "15px 25px"
+    typography: "{typography.label}"
+  button-primary-hover:
+    backgroundColor: "{colors.primary-hover}"
+  text-link:
+    textColor: "{colors.primary}"
+    typography: "{typography.label}"
+  keyword:
+    backgroundColor: "{colors.keyword-surface}"
+    textColor: "{colors.keyword-ink}"
+    rounded: "{rounded.keyword}"
+    padding: "4px 7px"
+  stock-card:
+    backgroundColor: "{colors.paper}"
+    rounded: "{rounded.stock-card}"
+    padding: "14px 16px"
+    height: "73px"
+  preview-stage:
+    backgroundColor: "{colors.stage}"
+    rounded: "{rounded.stage}"
+  product-button:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.on-primary}"
+    rounded: "{rounded.product-control}"
+    height: "40px"
+    padding: "0 16px"
+    typography: "{typography.product-label}"
+  product-button-hover:
+    backgroundColor: "{colors.primary-hover}"
+  product-dialog:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.sheet}"
+---
+
+# Design System: StockExtract
+
+## Overview
+
+This document is the single design reference for StockExtract. It has two layers.
+
+- **Brand layer** — shared by every route: StockExtract indigo, white surfaces, dark ink, the Pretendard typeface, soft corners, and plain Korean phrasing. It was established by the public landing and is now the basis for the whole product.
+- **Scale layer** — differs by surface. The landing (`/`) uses large marketing type and generous section spacing. The product (`/login`, `/register`, `/dashboard/**`) uses a compact, data-first scale for tables, charts, and sheets.
+
+Take colour, typeface, corner softness, and tone from the brand layer everywhere. Never carry the landing's type sizes or section spacing into the product.
+
+Where the tokens live in code:
+
+- `app/globals.css` — CSS variables (HSL). The source of truth at runtime.
+- `tailwind.config.ts` — exposes them as Tailwind classes (`bg-primary`, `text-muted-foreground`, `text-rise`, …).
+- `components/ui/` — shadcn-style components built on those classes.
+- `components/landing/NotifoldLanding.module.css` — the landing keeps its own CSS module with the same brand values.
+
+When a value changes, change it in `app/globals.css` and in this file's frontmatter together.
+
+Dark mode is not supported. The product hardcodes light surfaces, so no dark token set is defined.
+
+## Colors
+
+### Brand and neutral
+
+| Role | Token | Tailwind class | Value |
+|---|---|---|---|
+| Primary action, links, selection | `primary` | `bg-primary`, `text-primary` | `#4f46df` |
+| Primary hover / strong brand text | `primary-hover` | `bg-primary-hover`, `text-primary-hover` | `#3c34ba` |
+| Soft brand surface (selected, keyword, hover) | `keyword-surface` | `bg-accent` | `#f1efff` |
+| Text on soft brand surface | `keyword-ink` | `text-accent-foreground` | `#594cc0` |
+| Headings and body text | `ink` | `text-foreground` | `#20242b` |
+| Supporting text | `muted` | `text-muted-foreground` | `#666b75` |
+| Page and card surface | `paper` | `bg-background`, `bg-card` | `#ffffff` |
+| Quiet fill (inputs, stages, hover) | `stage` | `bg-muted` | `#f4f4f6` |
+| Lines | `border` | `border-border`, `border-input` | `#e5e7eb` |
+| Focus ring | `focus` | `ring-ring` | `#8e87ef` |
+| Errors, destructive actions | `destructive` | `text-destructive`, `bg-destructive` | `#d12d3a` |
+
+Supporting text must be `muted` or darker. Lighter greys (Tailwind `gray-400`) fail contrast on white for body-size text; use them only for decorative marks.
+
+### Market colours
+
+Korean market convention: **rise is red, fall is blue**. Never swap them, and never use green for a rising price.
+
+| Role | Tailwind class | Value |
+|---|---|---|
+| Rising price / rate | `text-rise`, `bg-rise-surface` | `#b43e3c` on `#fbeeee` |
+| Falling price / rate | `text-fall`, `bg-fall-surface` | `#1065cc` on `#e8f3ff` |
+| Unchanged | `text-muted-foreground` | `#666b75` |
+
+Always pair the colour with a sign or arrow (`+`, `−`, ▲, ▼). Numbers use `tabular-nums`.
+
+### Record types
+
+The product distinguishes three kinds of record. They must stay visually and verbally separate, and colour alone is never the only cue: each carries an icon and a text label.
+
+| Record | Meaning | Tailwind class | Value |
+|---|---|---|---|
+| Confirmed rise reason (상승 배경) | An article explicitly ties the company-specific event to that day's rise | `text-reason`, `bg-reason-surface` | `#007738` on `#e8f5ee` |
+| Related news (관련 재료) | A concrete company event near the date; link to the rise is not confirmed | `text-news`, `bg-news-surface` | `#666b75` on `#f4f4f6` |
+| My note (내 메모) | Written by the user | `text-memo`, `bg-memo-surface` | `#594cc0` on `#f1efff` |
+
+DART business profiles (사업 소개) are company information, not events. Show them in a separate context, never as a record on a date. Theme co-movement is excluded. Do not present a news item's timing as the cause of a price move.
+
+### Legacy Tailwind colours
+
+Most product screens still use raw Tailwind palette classes. They are visually equivalent to the tokens and should be migrated when a file is touched, not in bulk:
+
+| Legacy class | Use instead |
+|---|---|
+| `indigo-600` | `primary` |
+| `indigo-700` | `primary-hover` |
+| `indigo-50`, `indigo-100` | `accent` |
+| `gray-900`, `gray-800` | `foreground` |
+| `gray-700`, `gray-600` | `foreground/80` |
+| `gray-500`, `gray-400` | `muted-foreground` |
+| `gray-50`, `gray-100` | `muted` |
+| `gray-200`, `gray-300` | `border` |
+| `red-600` (errors) | `destructive` |
+| `bg-white` | `background` |
+
+## Typography
+
+One typeface everywhere: **Pretendard** (variable, weights 45–920), loaded from the `pretendard` package as a dynamic subset in `app/layout.tsx`. The stack is `"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif`. Do not add another typeface. Korean text uses `word-break: keep-all` in headings.
+
+### Product scale
+
+| Role | Size / weight | Tailwind | Use |
+|---|---|---|---|
+| Page title | 18–20px / 600–700 | `text-lg`–`text-xl font-semibold` | One per screen |
+| Title | 16px / 600 | `text-base font-semibold` | Dialog titles, card titles |
+| Body | 14px / 400, line height 1.6 | `text-sm` | Default text, table cells |
+| Label | 14px / 500 | `text-sm font-medium` | Buttons, tabs, field labels |
+| Caption | 12px / 400 | `text-xs` | Helper text, timestamps |
+| Micro | 11px / 500 | `text-[11px]` | Eyebrows, chart legends. The smallest size allowed |
+
+Existing `text-[10px]` usages are below the minimum; raise them to 11px when the file is touched.
+
+### Landing scale
+
+The landing uses the `display`, `headline`, `body`, and `label` roles in the frontmatter. See the Landing section.
+
+## Layout
+
+Product screens use a 16px side gutter on mobile and 24px from `sm`. The dashboard has a sidebar on desktop and a bottom tab bar on mobile; the tab bar sits at `z-50`, so overlays use `z-[60]`. Interactive targets are at least 32px, and 40px or more for primary actions. Respect the iPhone home indicator with `safe-area-bottom` on anything pinned to the bottom edge.
+
+## Shapes
+
+| Role | Radius | Tailwind |
+|---|---|---|
+| Small controls, icon buttons, chips | 8px | `rounded-lg` |
+| Buttons, inputs, cards | 12px | `rounded-xl` |
+| Dialogs and sheets | 16px | `rounded-2xl` |
+| Pills, avatars | full | `rounded-full` |
+
+The landing keeps its own slightly different measured radii (see frontmatter `control`, `screen`, `stock-card`, `stage`).
+
+## Elevation & Depth
+
+The product is flat. Cards separate with a 1px `border`, not shadow. Only floating layers get a shadow: dialogs and sheets use `shadow-xl` over a `black/40` scrim; the floating feedback button uses `shadow-lg`.
+
+## Components
+
+Shared components live in `components/ui/`. They follow the shadcn pattern: the source is in the repository and styled with the tokens above. Prefer them over hand-written equivalents.
+
+### Buttons — `components/ui/button.tsx`
+
+| Variant | Look | Use |
+|---|---|---|
+| `default` | Indigo fill, white text | The one main action in a view |
+| `secondary` | Lavender fill, indigo text | Supporting action such as "원문 보기" |
+| `outline` | White with border | Neutral or cancelling action |
+| `ghost` | No fill until hover | Low-emphasis and toolbar actions |
+| `destructive` | Red fill | Irreversible actions |
+| `link` | Text only | Inline navigation |
+
+Sizes: `default` 40px, `sm` 32px, `lg` 48px, `icon` 32px square. Disabled buttons drop to 40% opacity. Every button shows a 2px focus ring. Use one `default` button per view.
+
+### Dialogs and sheets — `components/ui/dialog.tsx`
+
+There is one overlay pattern: a **bottom sheet on mobile that becomes a centred dialog from `sm`**. It is built on Radix Dialog, which provides focus trapping, Escape to close, scrim click to close, and background scroll lock; do not re-implement those by hand.
+
+- `DialogContent` takes `size`: `sm` (384px), `md` (448px), `lg` (672px, default). Maximum height is 85dvh on mobile.
+- `DialogHeader` renders the title with a close button, plus an optional `eyebrow` above and `description` below. Every dialog needs a title.
+- `DialogBody` is the scrolling region. `DialogFooter` holds actions and stays visible.
+
+Used by `ArticleModal`, `StockChartModal`, `WatchlistChartModal`, `FeedbackButton`, and the landing's `PwaInstallButton`. The quiz confirmation and `QuizArticleSheet` still use the native `<dialog>` element and are due to move to this component.
+
+### Loading — `components/ui/loading-icon.tsx`
+
+The arch motif pulse. Colour it with `text-primary`. Pair it with screen-reader text inside a `role="status"` region.
+
+### Not yet shared
+
+Inputs, tabs, badges, tables, the calendar, and toasts are still written per screen. Add them to `components/ui/` using these tokens as each is next worked on.
+
+## Landing
+
+This section applies only to the public landing route (`/`) implemented by `components/landing/NotifoldLanding.tsx` and its CSS module.
+
+The direction follows the user's Notifold reference: a white, airy page with animated UI on the left and bold Korean explanatory copy on the right. StockExtract keeps its own indigo identity, content, and product examples.
+
+Key characteristics:
+- Generous whitespace and a repeated preview-plus-copy composition.
+- Dark Korean headings, quiet supporting text, and focused indigo actions.
+- Resolution-independent HTML/CSS demonstrations based on actual service screens.
+
+### Colors
+
+#### Primary
+
+StockExtract indigo anchors the brand, links, final action, and confirmation icon. Darker indigo provides hover feedback. The lavender focus outline remains visible against the white page.
+
+#### Neutral
+
+White is the page and inner-card surface. Ink carries headings. Muted grays carry supporting copy and provenance labels. Pale gray stages separate demonstrations from the page without enclosing the surrounding copy. Keyword lavender is a local information treatment. The individual stock icons retain their observed blue, purple, green, and orange identities; these are illustrative accents rather than additional brand colors.
+
+### Typography
+
+The landing uses Pretendard like the rest of the product. Bold Korean headlines use tight tracking and `word-break: keep-all` to keep phrases readable.
+
+The display role belongs to the hero, the headline role to feature headings, the body role to feature explanations, and the label role to action links. Final CTA headings use (36px), weight (750), line height (1.5), and tracking (-0.035em). Small provenance labels remain subordinate to the product story.
+
+### Layout
+
+Navigation, main content, and footer share a centered maximum width of (1000px). Desktop sections pair a (420px) preview column with flexible text, using the frontmatter column gap. The header is (74px) high; the hero has a (500px) minimum height. Feature sections use the frontmatter section spacing.
+
+At widths up to (1090px), side margins become (40px), the column gap becomes (48px), and hero type becomes (36px). At widths up to (760px), margins become (24px), sections stack in one column with copy first, and section spacing becomes (90px). The mobile hero uses (34px) type and (1.4) line height; feature headings use (27px). The first navigation link is hidden on mobile. At widths from (1400px), non-hero section margins increase to (160px).
+
+### Elevation & Depth
+
+The page is flat; soft shadows belong to simulated UI and captured-screen frames. Stock cards use `0 10px 24px -12px #32374742`. Screen frames use `0 14px 30px -20px #32374740`. The reason sheet uses `0 15px 35px -22px #32374745`. The completion pill uses `0 7px 18px -8px #373c4245`. Do not spread these shadows to surrounding marketing copy.
+
+### Shapes
+
+Soft stage corners contain tighter inner cards and screen windows. The frontmatter records the implemented radii. The hero stage reduces to (20px) corners on mobile. The brand icon uses (7px) corners, the final CTA icon uses (17px), and the confirmation pill uses (30px). Captured screens are clipped inside their windows; the page itself has no enclosing card.
+
+### Components
+
+#### Actions and navigation
+
+The final primary link has indigo fill, white text, and a small directional arrow. Hover darkens it and lifts it by (2px), with (0.2s) transitions. Text links use the brand accent with a darker hover. All landing anchors and buttons have a (3px) focus outline with (6px) offset. Preserve the skip-to-content link and the concise header links. Primary actions lead to `/login`.
+
+#### Preview cards and keyword
+
+Stock cards pair colored initial icons with compact names, reasons, and tabular percentage values. The reason sheet uses a compact keyword tag, two numeric facts, a summary, and a button that reveals the captured article title. This disclosure uses `aria-expanded`; it is a demonstration, not an external article link.
+
+#### Captures and provenance
+
+`public/landing/history.jpg`, `quiz.jpg`, and `quiz-selected.jpg` were captured from the actual locally running application on 2026-11-01. The displayed market data is dated 2026-10-30. Identity headers were cropped. These captures are provenance references only. History and quiz now render native HTML/CSS text and SVG icons to remain sharp on retina displays; the hero and reason sheet reconstruct UI from captured values. Preserve the on-page distinction between actual service screens and reconstructed interactive previews. These assets are dated examples, not live market output.
+
+#### Motion and interaction
+
+Stock organization and its confirmation loop over (12s); history scrolling loops over (16s); quiz selection border and fill animate over (9s). History scroll distance is derived from content height and the viewport (475px desktop, 435px mobile), keeping the last row reachable. The shared pause control pauses CSS animations. Clicking the quiz switches to manual selection; its reset control resumes automatic demonstration. The article disclosure transitions over (0.35s).
+
+Under `prefers-reduced-motion: reduce`, animations and transitions stop, stock cards are aligned, and the confirmation remains visible. The animation control is hidden in that mode; manual quiz and article controls remain usable. Do not make motion necessary to understand the product.
+
+## Do's and Don'ts
+
+- **Do** take colour, typeface, and tone from the brand layer on every route.
+- **Do** use the tokens and `components/ui/` components for new work; migrate legacy classes when a file is touched.
+- **Do** keep rise red and fall blue, with a sign or arrow beside the colour.
+- **Do** keep confirmed rise reasons, related news, and user notes distinct by icon, label, and colour.
+- **Do** preserve clear Korean phrasing, visible keyboard focus, and reduced-motion behaviour.
+- **Do** preserve the landing's white, spacious Notifold-style composition, its pause control, and accurate capture dates and reconstructed-preview disclosures.
+- **Don't** bring the landing's type sizes or 140px section spacing into the product.
+- **Don't** add a second typeface or a second accent colour.
+- **Don't** present a DART business profile as a dated event, or a news item's timing as the cause of a rise.
+- **Don't** describe dated screenshots or reconstructed UI as live data.
+- **Don't** imply that the mobile app is available; the current landing says it is in preparation.
+- **Don't** overwrite or restyle away user-written annotations, or remove the market-study table.

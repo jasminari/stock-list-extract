@@ -3,7 +3,14 @@
 import { LoadingIcon } from "@/components/ui/loading-icon";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { createChart, type IChartApi, type ISeriesApi } from "lightweight-charts";
 import {
   dailyChartOptions,
@@ -197,13 +204,6 @@ export default function WatchlistChartModal({
     dragRef.current = null;
   }, []);
 
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, []);
-
   const handleSave = async () => {
     if (!range) return;
     setSaving(true);
@@ -232,46 +232,20 @@ export default function WatchlistChartModal({
   };
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[60] bg-black/40 flex items-end sm:items-center sm:justify-center"
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ y: 60, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 60, opacity: 0 }}
-          transition={{ type: "spring", damping: 28, stiffness: 320 }}
-          className="bg-white w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[85vh] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-xl safe-area-bottom"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-start justify-between gap-3 px-4 sm:px-6 pt-4 pb-3 border-b border-gray-100">
-            <div className="min-w-0">
-              <p className="text-[10px] font-medium text-indigo-500 mb-1">가격 알림 범위 설정</p>
-              <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug">{name}</h3>
-            </div>
-            <button
-              onClick={onClose}
-              aria-label="닫기"
-              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 text-lg"
-            >
-              ✕
-            </button>
-          </div>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[90dvh] sm:max-h-[85vh]">
+        <DialogHeader eyebrow="가격 알림 범위 설정">{name}</DialogHeader>
 
-          <div className="px-4 sm:px-6 py-4 flex-1 min-h-0 overflow-y-auto">
-            {loading && <div role="status" className="py-16 flex flex-col items-center gap-3 text-gray-500 text-sm"><LoadingIcon className="h-20 w-20 text-indigo-600" decorative /><span className="sr-only">차트를 불러오는 중…</span></div>}
-            {error && <div className="py-16 text-center text-sm text-gray-500">{error}</div>}
+          <DialogBody>
+            {loading && <div role="status" className="flex flex-col items-center gap-3 py-16"><LoadingIcon className="h-20 w-20 text-primary" decorative /><span className="sr-only">차트를 불러오는 중…</span></div>}
+            {error && <div className="py-16 text-center text-sm text-muted-foreground">{error}</div>}
             {!loading && !error && candles?.length === 0 && (
-              <div className="py-16 text-center text-sm text-gray-500">표시할 차트 데이터가 없습니다</div>
+              <div className="py-16 text-center text-sm text-muted-foreground">표시할 차트 데이터가 없습니다</div>
             )}
 
             {!loading && !error && candles && candles.length > 0 && (
               <>
-                <p className="text-xs text-gray-500 mb-2">
+                <p className="mb-2 text-xs text-muted-foreground">
                   위/아래 선을 드래그해 알림 받을 가격대를 정하세요. 가운데를 드래그하면 범위를 통째로 옮길 수 있습니다.
                 </p>
                 <div
@@ -293,7 +267,7 @@ export default function WatchlistChartModal({
                       <div
                         onPointerDown={onPointerDown("band")}
                         aria-label="가격 알림 범위 이동"
-                        className="absolute left-0 right-0 pointer-events-auto touch-none bg-indigo-500/[0.15] border-2 border-indigo-500 cursor-move"
+                        className="absolute left-0 right-0 pointer-events-auto touch-none bg-primary/[0.15] border-2 border-primary cursor-move"
                         style={{
                           top: Math.min(pixels.lowY, pixels.highY),
                           height: Math.abs(pixels.lowY - pixels.highY),
@@ -306,9 +280,9 @@ export default function WatchlistChartModal({
                         className="absolute left-0 right-0 h-6 -mt-6 pointer-events-auto touch-none cursor-ns-resize flex items-end"
                         style={{ top: pixels.highY }}
                       >
-                        <div className="w-full h-0.5 bg-indigo-500" />
-                        <span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 h-2 w-8 rounded-full border-2 border-indigo-500 bg-white" />
-                        <span className="absolute right-1 bottom-2 text-[10px] font-semibold text-indigo-700 bg-white/90 px-1 rounded">
+                        <div className="w-full h-0.5 bg-primary" />
+                        <span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 h-2 w-8 rounded-full border-2 border-primary bg-background" />
+                        <span className="absolute right-1 bottom-2 text-[11px] font-semibold text-primary-hover bg-background/90 px-1 rounded">
                           상한 {range.high.toLocaleString("ko-KR")}
                         </span>
                       </div>
@@ -319,9 +293,9 @@ export default function WatchlistChartModal({
                         className="absolute left-0 right-0 h-6 pointer-events-auto touch-none cursor-ns-resize flex items-start"
                         style={{ top: pixels.lowY }}
                       >
-                        <div className="w-full h-0.5 bg-indigo-500" />
-                        <span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 h-2 w-8 rounded-full border-2 border-indigo-500 bg-white" />
-                        <span className="absolute right-1 top-2 text-[10px] font-semibold text-indigo-700 bg-white/90 px-1 rounded">
+                        <div className="w-full h-0.5 bg-primary" />
+                        <span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 h-2 w-8 rounded-full border-2 border-primary bg-background" />
+                        <span className="absolute right-1 top-2 text-[11px] font-semibold text-primary-hover bg-background/90 px-1 rounded">
                           하한 {range.low.toLocaleString("ko-KR")}
                         </span>
                       </div>
@@ -329,38 +303,33 @@ export default function WatchlistChartModal({
                   )}
                 </div>
                 {range && (
-                  <p className="mt-3 text-center text-sm font-semibold text-indigo-700">
+                  <p className="mt-3 text-center text-sm font-semibold tabular-nums text-primary-hover">
                     {range.low.toLocaleString("ko-KR")}원 ~ {range.high.toLocaleString("ko-KR")}원
                   </p>
                 )}
               </>
             )}
 
-            {saveError && <p className="text-xs text-red-600 mt-3">{saveError}</p>}
-          </div>
+            {saveError && <p className="mt-3 text-xs text-destructive">{saveError}</p>}
+          </DialogBody>
 
           {!loading && !error && candles && candles.length > 0 && (
-            <div className="px-4 sm:px-6 pb-4 pt-1 flex gap-2">
+            <DialogFooter>
               {(initialLow !== null || initialHigh !== null) && (
-                <button
-                  onClick={handleClear}
-                  disabled={saving}
-                  className="px-4 py-2.5 text-sm font-medium text-gray-500 border border-gray-300 rounded-xl hover:bg-gray-50 disabled:opacity-40 transition-colors"
-                >
+                <Button variant="outline" onClick={handleClear} disabled={saving}>
                   알림 끄기
-                </button>
+                </Button>
               )}
-              <button
+              <Button
+                className="flex-1"
                 onClick={handleSave}
                 disabled={saving || !range}
-                className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 disabled:opacity-40 transition-colors"
               >
                 {saving ? "저장 중..." : "이 범위로 알림 설정"}
-              </button>
-            </div>
+              </Button>
+            </DialogFooter>
           )}
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+      </DialogContent>
+    </Dialog>
   );
 }

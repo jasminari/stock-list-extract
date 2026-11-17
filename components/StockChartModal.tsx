@@ -3,7 +3,13 @@
 import { LoadingIcon } from "@/components/ui/loading-icon";
 
 import { useEffect, useRef, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogHeader,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { createChart, createSeriesMarkers, type IChartApi, type MouseEventParams, type ISeriesApi, type ISeriesMarkersPluginApi, type Time } from "lightweight-charts";
 import {
   dailyChartOptions,
@@ -151,65 +157,25 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
     return () => cancelAnimationFrame(frame);
   }, [activeDate, candles]);
 
-  // 모달 열려있는 동안 배경 스크롤 잠금
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, []);
-
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        /* 모바일 하단 탭바가 z-50이라 같은 값이면 DOM 순서상 탭바가 위로 덮인다 */
-        className="fixed inset-0 z-[60] bg-black/40 flex items-end sm:items-center sm:justify-center"
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ y: 60, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 60, opacity: 0 }}
-          transition={{ type: "spring", damping: 28, stiffness: 320 }}
-          className="bg-white w-full sm:max-w-2xl max-h-[85dvh] sm:max-h-[80vh] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-xl safe-area-bottom"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* 헤더 */}
-          <div className="flex items-start justify-between gap-3 px-4 sm:px-6 pt-4 pb-3 border-b border-gray-100">
-            <div className="min-w-0">
-              <p className="text-[10px] font-medium text-indigo-500 mb-1">
-                일봉 · 왼쪽으로 스크롤하면 최근 1년까지 볼 수 있어요
-              </p>
-              <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug">
-                {name}
-              </h3>
-            </div>
-            <button
-              onClick={onClose}
-              aria-label="닫기"
-              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 text-lg"
-            >
-              ✕
-            </button>
-          </div>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
+        <DialogHeader eyebrow="일봉 · 왼쪽으로 스크롤하면 최근 1년까지 볼 수 있어요">
+          {name}
+        </DialogHeader>
 
-          {/* 본문 */}
-          <div className="px-4 sm:px-6 py-4 flex-1 min-h-0 overflow-y-auto">
+          <DialogBody>
             {loading && (
-              <div role="status" className="py-16 flex flex-col items-center gap-3 text-gray-500 text-sm">
-                  <LoadingIcon className="h-20 w-20 text-indigo-600" decorative />
+              <div role="status" className="flex flex-col items-center gap-3 py-16">
+                  <LoadingIcon className="h-20 w-20 text-primary" decorative />
                 <span className="sr-only">차트를 불러오는 중…</span>
               </div>
             )}
             {error && (
-              <div className="py-16 text-center text-sm text-gray-500">{error}</div>
+              <div className="py-16 text-center text-sm text-muted-foreground">{error}</div>
             )}
             {!loading && !error && candles?.length === 0 && (
-              <div className="py-16 text-center text-sm text-gray-500">
+              <div className="py-16 text-center text-sm text-muted-foreground">
                 표시할 차트 데이터가 없습니다
               </div>
             )}
@@ -217,9 +183,9 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
               <section
                 aria-label="뉴스 요약"
                 aria-live="polite"
-                className="mb-4 rounded-xl border border-gray-200 bg-gray-50/60"
+                className="mb-4 rounded-xl border border-border bg-muted/50"
               >
-                <p className="px-4 py-6 text-center text-sm text-gray-500">
+                <p className="px-4 py-6 text-center text-sm text-muted-foreground">
                   표시할 뉴스 없음
                 </p>
               </section>
@@ -228,16 +194,16 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
               <section
                 aria-label={`${activeDate} 뉴스 요약`}
                 aria-live="polite"
-                className="mb-4 rounded-xl border border-gray-200 bg-gray-50/60"
+                className="mb-4 rounded-xl border border-border bg-muted/50"
               >
                 <div className="max-h-28 overflow-y-auto px-4 py-3 space-y-2">
                 {activeArticles.filter((article, index, all) => all.findIndex((a) => a.reason?.trim() === article.reason?.trim() && a.sourceUrl === article.sourceUrl) === index).map((article) => (
                   <div key={article.entryId} className="flex items-start gap-3">
                     <div className="min-w-0 flex-1 space-y-1 text-sm leading-relaxed">
-                      {article.reason?.trim() && <p className="whitespace-pre-line text-gray-700">{article.reason.trim()}</p>}
+                      {article.reason?.trim() && <p className="whitespace-pre-line text-foreground/80">{article.reason.trim()}</p>}
                       {article.sourceUrl && /^https?:\/\//i.test(article.sourceUrl) && (
                         <a href={article.sourceUrl} target="_blank" rel="noopener noreferrer"
-                          className="block text-indigo-600 hover:underline">
+                          className="block text-primary hover:underline">
                           {article.sourceTitle?.trim() || `${name} 관련 기사 원문`} ↗
                         </a>
                       )}
@@ -248,14 +214,14 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
                 </div>
                 <div className="flex items-center justify-between px-3 pb-3 pt-1">
                   <div className="flex items-center gap-1.5">
-                    <time dateTime={activeDate} className="pl-1 text-xs tabular-nums font-medium text-indigo-600">{activeDate.replaceAll("-", ". ")}</time>
+                    <time dateTime={activeDate} className="pl-1 text-xs tabular-nums font-medium text-primary">{activeDate.replaceAll("-", ". ")}</time>
                     {activeArticles.filter((article, index, all) => all.findIndex((a) => a.reason?.trim() === article.reason?.trim() && a.sourceUrl === article.sourceUrl) === index).map((article) => (
                       <a
                         key={article.entryId}
                         href={`/dashboard/history?resultId=${article.resultId}&entryId=${article.entryId}`}
                         aria-label={`${name} ${activeDate} 원본 데이터로 이동`}
                         title="원본 데이터로 이동"
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-indigo-400 transition-colors hover:bg-indigo-100/70 hover:text-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-primary/70 transition-colors hover:bg-accent hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
                       >
                         <svg aria-hidden="true" className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M4 5h16M4 10h10M4 15h6M4 20h6M14 17h7m-3-3 3 3-3 3" />
@@ -264,8 +230,8 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
                     ))}
                   </div>
                   <div className="flex items-center gap-2">
-                    <button type="button" aria-label="이전 뉴스 요약" disabled={activeIndex <= 0} onClick={() => navigateSummary(-1)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">&lt;</button>
-                    <button type="button" aria-label="다음 뉴스 요약" disabled={activeIndex >= summaryDates.length - 1} onClick={() => navigateSummary(1)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">&gt;</button>
+                    <Button variant="outline" size="icon" aria-label="이전 뉴스 요약" disabled={activeIndex <= 0} onClick={() => navigateSummary(-1)}>&lt;</Button>
+                    <Button variant="outline" size="icon" aria-label="다음 뉴스 요약" disabled={activeIndex >= summaryDates.length - 1} onClick={() => navigateSummary(1)}>&gt;</Button>
                   </div>
                 </div>
               </section>
@@ -284,7 +250,7 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
               )}
             </div>
             {articleDates.length > 0 && (
-              <p className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-gray-400">
+              <p className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
                 <span className="inline-block w-2 h-2 rounded-full bg-amber-500" />
                 기사 링크만 기록
                 <span className="ml-3 inline-block w-2 h-2 rounded-full bg-emerald-500" />
@@ -293,9 +259,8 @@ export default function StockChartModal({ code, name, onClose }: StockChartModal
                 선택한 요약
               </p>
             )}
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+          </DialogBody>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 
 /**
@@ -27,27 +35,6 @@ export default function FeedbackButton() {
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 모달 열려있는 동안 배경 스크롤 잠금
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [open]);
-
-  // ESC로 닫기
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
   function openModal() {
     setRating(null);
     setMessage("");
@@ -55,10 +42,6 @@ export default function FeedbackButton() {
     setDone(false);
     setOpen(true);
     track("Feedback Opened", { pagePath: pathname });
-  }
-
-  function close() {
-    setOpen(false);
   }
 
   const canSubmit = rating !== null || message.trim().length > 0;
@@ -107,125 +90,89 @@ export default function FeedbackButton() {
         <span className="text-xs font-medium">의견</span>
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            /* 모바일 하단 탭바가 z-50이라 같은 값이면 DOM 순서상 탭바가 위로 덮어
-               제출 버튼이 가려진다. 모달은 그보다 위에 있어야 한다 */
-            className="fixed inset-0 z-[60] bg-black/40 flex items-end sm:items-center sm:justify-center"
-            onClick={close}
-          >
-            <motion.div
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 60, opacity: 0 }}
-              transition={{ type: "spring", damping: 28, stiffness: 320 }}
-              /* 키보드가 올라오거나 화면이 짧으면 시트가 넘치므로 높이를 제한하고 안에서 스크롤한다.
-                 safe-area-bottom — 홈 인디케이터에 제출 버튼이 물리지 않게 */
-              className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[85dvh] overflow-y-auto safe-area-bottom"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {done ? (
-                <div className="px-6 py-10 text-center">
-                  <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center mx-auto">
-                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <p className="text-sm font-medium text-gray-900 mt-3">
-                    의견 감사합니다!
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    보내주신 내용은 개선에 참고하겠습니다.
+      <Dialog open={open} onOpenChange={setOpen}>
+        {/* 키보드가 올라오거나 화면이 짧으면 시트가 넘치므로 본문 안에서 스크롤한다 */}
+        <DialogContent size="md">
+          {done ? (
+            <div className="px-6 py-10 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+                <svg className="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <DialogTitle className="mt-3 text-sm font-medium text-foreground">
+                의견 감사합니다!
+              </DialogTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                보내주신 내용은 개선에 참고하겠습니다.
+              </p>
+            </div>
+          ) : (
+            <>
+              <DialogHeader description="짧은 의견도 큰 도움이 됩니다.">
+                서비스에 만족하시나요?
+              </DialogHeader>
+
+              <DialogBody>
+                {/* 만족도 */}
+                <div className="flex items-center justify-between gap-1">
+                  {RATINGS.map((r) => (
+                    <button
+                      key={r.value}
+                      type="button"
+                      onClick={() => setRating(rating === r.value ? null : r.value)}
+                      aria-pressed={rating === r.value}
+                      className={`flex flex-1 flex-col items-center gap-1 rounded-xl border py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                        rating === r.value
+                          ? "border-primary/60 bg-accent"
+                          : "border-transparent hover:bg-muted"
+                      }`}
+                    >
+                      <span className={`text-2xl transition-transform ${rating === r.value ? "scale-110" : ""}`}>
+                        {r.emoji}
+                      </span>
+                      <span
+                        className={`text-[11px] leading-tight ${
+                          rating === r.value ? "font-medium text-primary-hover" : "text-muted-foreground"
+                        }`}
+                      >
+                        {r.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* 자유 의견 */}
+                <div className="mt-4">
+                  <textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
+                    rows={4}
+                    aria-label="의견"
+                    placeholder="불편한 점, 있으면 좋겠는 기능을 자유롭게 적어주세요. (선택)"
+                    className="w-full resize-none rounded-xl border-0 bg-muted px-3 py-2.5 text-sm transition-colors focus:bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <p className="mt-1 text-right text-[11px] text-muted-foreground">
+                    {message.length}/{MAX_MESSAGE_LENGTH}
                   </p>
                 </div>
-              ) : (
-                <>
-                  <div className="px-5 py-4 border-b border-gray-100 flex items-start justify-between">
-                    <div>
-                      <h2 className="text-base font-semibold text-gray-900">
-                        서비스에 만족하시나요?
-                      </h2>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        짧은 의견도 큰 도움이 됩니다.
-                      </p>
-                    </div>
-                    <button
-                      onClick={close}
-                      aria-label="닫기"
-                      className="text-gray-400 hover:text-gray-600 -mr-1"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
 
-                  <div className="px-5 py-4">
-                    {/* 만족도 */}
-                    <div className="flex items-center justify-between gap-1">
-                      {RATINGS.map((r) => (
-                        <button
-                          key={r.value}
-                          onClick={() => setRating(rating === r.value ? null : r.value)}
-                          aria-pressed={rating === r.value}
-                          className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl border transition-colors ${
-                            rating === r.value
-                              ? "border-indigo-400 bg-indigo-50"
-                              : "border-transparent hover:bg-gray-50"
-                          }`}
-                        >
-                          <span className={`text-2xl transition-transform ${rating === r.value ? "scale-110" : ""}`}>
-                            {r.emoji}
-                          </span>
-                          <span
-                            className={`text-[10px] leading-tight ${
-                              rating === r.value ? "text-indigo-700 font-medium" : "text-gray-400"
-                            }`}
-                          >
-                            {r.label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+              </DialogBody>
 
-                    {/* 자유 의견 */}
-                    <div className="mt-4">
-                      <textarea
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
-                        rows={4}
-                        placeholder="불편한 점, 있으면 좋겠는 기능을 자유롭게 적어주세요. (선택)"
-                        className="w-full px-3 py-2.5 bg-gray-100 border-0 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-colors"
-                      />
-                      <p className="text-[11px] text-gray-400 text-right mt-1">
-                        {message.length}/{MAX_MESSAGE_LENGTH}
-                      </p>
-                    </div>
-
-                    {error && (
-                      <p className="text-xs text-red-600 mt-2">{error}</p>
-                    )}
-                  </div>
-
-                  <div className="px-5 pb-5 pt-1">
-                    <button
-                      onClick={handleSubmit}
-                      disabled={!canSubmit || submitting}
-                      className="w-full py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 disabled:opacity-40 disabled:hover:bg-indigo-600 transition-colors"
-                    >
-                      {submitting ? "보내는 중..." : "의견 보내기"}
-                    </button>
-                  </div>
-                </>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <DialogFooter className="pb-5">
+                <Button
+                  className="w-full"
+                  onClick={handleSubmit}
+                  disabled={!canSubmit || submitting}
+                >
+                  {submitting ? "보내는 중..." : "의견 보내기"}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

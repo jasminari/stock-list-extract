@@ -9,6 +9,19 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          '"Pretendard Variable"',
+          "Pretendard",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "system-ui",
+          '"Apple SD Gothic Neo"',
+          '"Noto Sans KR"',
+          '"Malgun Gothic"',
+          "sans-serif",
+        ],
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -22,6 +35,7 @@ const config: Config = {
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
+          hover: "hsl(var(--primary-hover))",
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
@@ -39,6 +53,26 @@ const config: Config = {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+        },
+        rise: {
+          DEFAULT: "hsl(var(--rise))",
+          surface: "hsl(var(--rise-surface))",
+        },
+        fall: {
+          DEFAULT: "hsl(var(--fall))",
+          surface: "hsl(var(--fall-surface))",
+        },
+        reason: {
+          DEFAULT: "hsl(var(--reason))",
+          surface: "hsl(var(--reason-surface))",
+        },
+        news: {
+          DEFAULT: "hsl(var(--news))",
+          surface: "hsl(var(--news-surface))",
+        },
+        memo: {
+          DEFAULT: "hsl(var(--memo))",
+          surface: "hsl(var(--memo-surface))",
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

@@ -1,10 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import Script from "next/script";
 import Providers from "@/components/Providers";
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
@@ -66,7 +64,7 @@ export default function RootLayout({
           </>
         )}
       </head>
-      <body className={`${inter.className} h-full`}>
+      <body className="h-full">
         <Providers>{children}</Providers>
       </body>
     </html>
