@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { formatDbStocks } from "@/lib/format";
 import { toDateStr, parseDate } from "@/lib/date";
 import ProcessedResultTable from "@/components/ProcessedResultTable";
@@ -43,10 +44,28 @@ function HistoryContent() {
   const [stocks, setStocks] = useState<ProcessedStock[]>([]);
   const [stocksLoading, setStocksLoading] = useState(false);
   const { codes: watchlistCodes, toggle: toggleWatchlist } = useWatchlist();
+  // 미리보기 기능(테마 묶기, 엑셀 보기, 시장 비중, 전일 대비)은 관리자 계정에만 보인다.
+  // 정식 데이터로 바꾸기 전까지 일반 사용자 화면은 기존과 같게 둔다.
+  // 관리자가 아니어도 주소에 ?preview=1을 한 번 붙이면 그 브라우저에서 켜지고, ?preview=0으로 끈다.
+  const { data: session } = useSession();
+  const previewParam = searchParams.get("preview");
+  const [previewOptIn, setPreviewOptIn] = useState(false);
+  useEffect(() => {
+    try {
+      if (previewParam === "1") localStorage.setItem("marketStudyPreview", "1");
+      if (previewParam === "0") localStorage.removeItem("marketStudyPreview");
+      setPreviewOptIn(localStorage.getItem("marketStudyPreview") === "1");
+    } catch {
+      setPreviewOptIn(previewParam === "1");
+    }
+  }, [previewParam]);
+  const previewEnabled = session?.user?.role === "admin" || previewOptIn;
   // 미리보기: 테마별 묶음. 분류는 lib/themePreview.ts의 임시 규칙을 쓴다
-  const [themeGrouped, setThemeGrouped] = useState(false);
+  const [themeGroupedState, setThemeGrouped] = useState(false);
   // 미리보기: 직접 정리하던 엑셀 시트를 닮은 보기
-  const [sheetView, setSheetView] = useState(false);
+  const [sheetViewState, setSheetView] = useState(false);
+  const themeGrouped = previewEnabled && themeGroupedState;
+  const sheetView = previewEnabled && sheetViewState;
   const shownStocks = useMemo(
     () => (themeGrouped ? withPreviewThemes(stocks) : stocks),
     [themeGrouped, stocks]
@@ -218,6 +237,8 @@ function HistoryContent() {
                 {r.conditionName}
               </button>
             ))}
+          {previewEnabled && (
+          <>
           <button
             type="button"
             onClick={() => setThemeGrouped((v) => !v)}
@@ -252,6 +273,8 @@ function HistoryContent() {
               미리보기
             </span>
           </button>
+          </>
+          )}
         </div>
       </div>
 
@@ -283,12 +306,12 @@ function HistoryContent() {
             grouped={themeGrouped}
             variant={sheetView ? "sheet" : "default"}
             marketTotal={(() => {
-              const row = MARKET_TOTALS[selectedResult.date];
+              const row = previewEnabled ? MARKET_TOTALS[selectedResult.date] : undefined;
               if (!row) return undefined;
               const prev = MARKET_TOTALS[MARKET_DATES[MARKET_DATES.indexOf(selectedResult.date) - 1]];
               return { kospi: row[0], kosdaq: row[1], prevSum: prev ? prev[0] + prev[1] : undefined };
             })()}
-            prevTradingValue={PREV_VALUES[selectedResult.date]}
+            prevTradingValue={previewEnabled ? PREV_VALUES[selectedResult.date] : undefined}
             conditionName={selectedResult.conditionName}
             date={selectedResult.date}
             title={selectedResult.conditionName}
