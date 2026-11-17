@@ -4,6 +4,9 @@ import { isDbConfigured } from "@/lib/db";
 import { getStockChartArticles } from "@/lib/storage-db";
 import type { DailyCandle } from "@/lib/types";
 
+/** 프록시는 키움을 여러 번 호출해 1년치를 모으므로 넉넉히 기다린다 */
+const PROXY_TIMEOUT_MS = 15000;
+
 /**
  * 배포 환경(Vercel)은 서버리스라 출발 IP가 매번 바뀌어 키움의 "지정단말기"
  * IP 등록을 통과하지 못한다. CHART_PROXY_URL이 설정돼 있으면 고정 IP를 가진
@@ -13,10 +16,20 @@ import type { DailyCandle } from "@/lib/types";
 async function fetchCandles(code: string): Promise<DailyCandle[]> {
   const proxyUrl = process.env.CHART_PROXY_URL;
   if (proxyUrl) {
-    const res = await fetch(`${proxyUrl.replace(/\/$/, "")}/chart/${code}`, {
-      headers: { authorization: `Bearer ${process.env.CHART_PROXY_SECRET}` },
-      cache: "no-store",
-    });
+    // 프록시 VM이 멈추면 연결만 되고 응답이 오지 않는다. 끝없이 기다리지 않고 실패로 처리한다.
+    let res: Response;
+    try {
+      res = await fetch(`${proxyUrl.replace(/\/$/, "")}/chart/${code}`, {
+        headers: { authorization: `Bearer ${process.env.CHART_PROXY_SECRET}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(PROXY_TIMEOUT_MS),
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "TimeoutError") {
+        throw new Error("차트 서버가 응답하지 않습니다. 잠시 후 다시 시도해주세요.");
+      }
+      throw new Error("차트 서버에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.");
+    }
     const data = await res.json();
     if (!res.ok || data.error) {
       throw new Error(data.error || "차트 프록시 조회 실패");
