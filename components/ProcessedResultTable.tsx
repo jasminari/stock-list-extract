@@ -210,6 +210,16 @@ export default function ProcessedResultTable({
     });
   }, [stocks, sort]);
 
+  // 거래대금 순위. 어떤 기준으로 정렬해도 번호는 거래대금 순위를 유지해
+  // "돈이 많이 몰린 순서"라는 이 화면의 기준을 계속 보여준다.
+  const volumeRank = useMemo(() => {
+    const map = new Map<number, number>();
+    [...stocks]
+      .sort((a, b) => b.tradingAmountBil - a.tradingAmountBil)
+      .forEach((s, i) => map.set(s.index, i + 1));
+    return map;
+  }, [stocks]);
+
   // 같은 종목이 넓은 화면용 표와 좁은 화면용 목록에 한 번씩 그려진다. 보이는 쪽으로 이동한다.
   const highlightedRowRef = useRef<HTMLTableRowElement>(null);
   const highlightedItemRef = useRef<HTMLLIElement>(null);
@@ -266,12 +276,24 @@ export default function ProcessedResultTable({
       // 하루에 상장주식의 20% 이상 손바뀜 = 단기 과열 신호
       isHighTurnover: (s.turnoverRate ?? 0) >= 20,
       highlighted: s.entryId === highlightedEntryId,
+      rank: volumeRank.get(s.index) ?? 0,
       turnoverText:
         s.turnoverRate === null ? "-" : `${s.turnoverRate.toFixed(s.turnoverRate < 1 ? 2 : 1)}%`,
       turnoverTitle: s.marketCapBil ? `시가총액 ${s.marketCapBil.toLocaleString()}억` : "상장주식수 미수집",
     };
   });
   type Row = (typeof rows)[number];
+
+  const rankOf = (r: Row) => (
+    <span
+      title={`거래대금 ${r.rank}위`}
+      className="w-5 shrink-0 text-center text-[13px] font-semibold tabular-nums text-primary"
+    >
+      <span className="sr-only">거래대금 </span>
+      {r.rank}
+      <span className="sr-only">위</span>
+    </span>
+  );
 
   const badgeOf = (r: Row) =>
     r.label ? (
@@ -372,11 +394,12 @@ export default function ProcessedResultTable({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
+                      {rankOf(r)}
                       {onToggleWatchlist && (
                         <WatchlistStar
                           active={!!watchlistCodes?.has(s.code)}
                           onClick={() => onToggleWatchlist(s.code, s.name)}
-                          className="-ml-1 h-7 w-7"
+                          className="h-7 w-6"
                         />
                       )}
                       <button
@@ -387,8 +410,14 @@ export default function ProcessedResultTable({
                         {s.name}
                       </button>
                     </div>
-                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs tabular-nums text-muted-foreground">
-                      <span>종가 {s.closingPrice.toLocaleString()}원</span>
+                    {/* 등락률은 가격의 변화이므로 종가 바로 옆에 둔다 */}
+                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 pl-[26px] text-xs tabular-nums text-muted-foreground">
+                      <span>
+                        {s.closingPrice.toLocaleString()}원{" "}
+                        <span className={`font-medium ${rateTone(s.changeRate)} ${r.isHighRate ? "rounded-md bg-rise-surface px-1.5 py-0.5 font-semibold" : ""}`}>
+                          {rateText(s.changeRate)}
+                        </span>
+                      </span>
                       <span
                         title={r.turnoverTitle}
                         className={r.isHighTurnover ? "rounded-md bg-purple-100 px-1.5 py-0.5 font-semibold text-purple-800" : ""}
@@ -397,20 +426,15 @@ export default function ProcessedResultTable({
                       </span>
                     </p>
                   </div>
-                  {/* 이 화면에서 가장 중요한 숫자는 거래대금이다 */}
+                  {/* 이 화면에서 가장 중요한 숫자는 거래대금이다. 다른 숫자와 섞이지 않게 혼자 두고 이름을 붙인다 */}
                   <div className="shrink-0 text-right tabular-nums">
-                    <p className="text-[15px] font-semibold text-foreground">
-                      <span className="sr-only">거래대금 </span>
+                    <p className="text-base font-semibold text-foreground">
                       <span className={r.isHighVolume ? "-mr-1.5 rounded-md bg-orange-100 px-1.5 py-0.5 text-orange-800" : ""}>
                         {s.tradingAmountBil.toLocaleString()}
                         <span className={`ml-0.5 text-xs font-normal ${r.isHighVolume ? "" : "text-muted-foreground"}`}>억</span>
                       </span>
                     </p>
-                    <p className={`mt-1 text-[13px] font-medium ${rateTone(s.changeRate)}`}>
-                      <span className={r.isHighRate ? "-mr-1.5 rounded-md bg-rise-surface px-1.5 py-0.5 font-semibold" : ""}>
-                        {rateText(s.changeRate)}
-                      </span>
-                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">거래대금</p>
                   </div>
                 </div>
 
@@ -476,6 +500,7 @@ export default function ProcessedResultTable({
                 >
                   <td className="whitespace-nowrap px-3 py-4 align-top">
                     <div className="flex items-center gap-1.5">
+                      {rankOf(r)}
                       {onToggleWatchlist && (
                         <WatchlistStar
                           active={!!watchlistCodes?.has(s.code)}
