@@ -388,9 +388,7 @@ export default function ProcessedResultTable({
                       </button>
                     </div>
                     <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs tabular-nums text-muted-foreground">
-                      <span className={r.isHighVolume ? "rounded-md bg-orange-100 px-1.5 py-0.5 font-semibold text-orange-800" : ""}>
-                        거래대금 {s.tradingAmountBil.toLocaleString()}억
-                      </span>
+                      <span>종가 {s.closingPrice.toLocaleString()}원</span>
                       <span
                         title={r.turnoverTitle}
                         className={r.isHighTurnover ? "rounded-md bg-purple-100 px-1.5 py-0.5 font-semibold text-purple-800" : ""}
@@ -399,13 +397,17 @@ export default function ProcessedResultTable({
                       </span>
                     </p>
                   </div>
+                  {/* 이 화면에서 가장 중요한 숫자는 거래대금이다 */}
                   <div className="shrink-0 text-right tabular-nums">
                     <p className="text-[15px] font-semibold text-foreground">
-                      {s.closingPrice.toLocaleString()}
-                      <span className="ml-0.5 text-xs font-normal text-muted-foreground">원</span>
+                      <span className="sr-only">거래대금 </span>
+                      <span className={r.isHighVolume ? "-mr-1.5 rounded-md bg-orange-100 px-1.5 py-0.5 text-orange-800" : ""}>
+                        {s.tradingAmountBil.toLocaleString()}
+                        <span className={`ml-0.5 text-xs font-normal ${r.isHighVolume ? "" : "text-muted-foreground"}`}>억</span>
+                      </span>
                     </p>
                     <p className={`mt-1 text-[13px] font-medium ${rateTone(s.changeRate)}`}>
-                      <span className={r.isHighRate ? "rounded-md bg-rise-surface px-1.5 py-0.5 font-semibold" : ""}>
+                      <span className={r.isHighRate ? "-mr-1.5 rounded-md bg-rise-surface px-1.5 py-0.5 font-semibold" : ""}>
                         {rateText(s.changeRate)}
                       </span>
                     </p>
