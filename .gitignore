@@ -13,6 +13,8 @@ tsconfig.tsbuildinfo
 # Public, read-only dev verification fixture
 !/data/
 /data/*
+# 공개 시장 통계 스냅샷 (시장 대비 비중 미리보기용)
+!/data/market-trading-value.json
 !/data/dev/
 /data/dev/*
 !/data/dev/market-20261030.json

@@ -25,6 +25,8 @@ interface ProcessedResultTableProps {
   title?: string;
   /** 종목의 theme 값으로 묶어 묶음별 거래대금 합계를 보여준다 */
   grouped?: boolean;
+  /** 그날 코스피·코스닥 총 거래대금(억). 있으면 시장 대비 비중을 보여준다 */
+  marketTotal?: { kospi: number; kosdaq: number };
   /** "sheet"는 직접 정리하던 엑셀 시트를 닮은 모양 */
   variant?: "default" | "sheet";
   onAnnotationUpdate?: (
@@ -229,6 +231,19 @@ function SortHeader({
   );
 }
 
+/** 억 단위를 "22조 5,093억"처럼 읽기 쉽게 */
+function formatBil(bil: number) {
+  const jo = Math.floor(bil / 10000);
+  const rest = Math.round(bil % 10000);
+  if (jo === 0) return `${rest.toLocaleString()}억`;
+  return rest === 0 ? `${jo}조` : `${jo}조 ${rest.toLocaleString()}억`;
+}
+/** 비중: 1% 미만은 소수 둘째 자리까지 */
+function formatShare(ratio: number) {
+  const pct = ratio * 100;
+  return `${pct.toFixed(pct < 1 ? 2 : 1)}%`;
+}
+
 /** 등락률: 방향을 색과 부호로 함께 보여준다 */
 function rateText(rate: number) {
   return `${rate > 0 ? "+" : ""}${rate.toFixed(2)}%`;
@@ -245,6 +260,7 @@ export default function ProcessedResultTable({
   title,
   grouped = false,
   variant = "default",
+  marketTotal,
   onAnnotationUpdate,
   watchlistCodes,
   onToggleWatchlist,
@@ -314,6 +330,27 @@ export default function ProcessedResultTable({
     ? `${date.slice(0, 4)}년 ${date.slice(4, 6)}월 ${date.slice(6, 8)}일`
     : "";
   const heading = title ?? "가공 데이터";
+
+  // 시장 대비 비중의 분모는 코스피와 코스닥을 합친 그날 전체 거래대금이다
+  const marketSum = marketTotal ? marketTotal.kospi + marketTotal.kosdaq : 0;
+  const listSum = stocks.reduce((sum, s) => sum + s.tradingAmountBil, 0);
+  const shareOf = (bil: number) => (marketSum > 0 ? formatShare(bil / marketSum) : "");
+  const marketSummary = marketTotal && marketSum > 0 && (
+    <div className="mx-4 mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-border/60 sm:mx-3 sm:max-w-xl">
+      <div className="bg-muted/60 px-4 py-3">
+        <p className="text-xs text-muted-foreground">이날 시장 전체 거래대금</p>
+        <p className="mt-0.5 text-lg font-bold tabular-nums text-foreground">{formatBil(marketSum)}</p>
+        <p className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
+          코스피 {(marketTotal.kospi / 10000).toFixed(1)}조 · 코스닥 {(marketTotal.kosdaq / 10000).toFixed(1)}조
+        </p>
+      </div>
+      <div className="bg-muted/60 px-4 py-3">
+        <p className="text-xs text-muted-foreground">이 목록 {stocks.length}종목의 비중</p>
+        <p className="mt-0.5 text-lg font-bold tabular-nums text-primary">{shareOf(listSum)}</p>
+        <p className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">합계 {formatBil(listSum)}</p>
+      </div>
+    </div>
+  );
 
   const rows = sortedStocks.map((s) => {
     const unconfirmed = !s.reason.trim() || s.reason === "미확인";
@@ -505,7 +542,7 @@ export default function ProcessedResultTable({
             </p>
             <p className="mt-1 flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
               {volumeDotsOf(r)}
-              거래대금
+              {marketSum > 0 ? `시장의 ${shareOf(s.tradingAmountBil)}` : "거래대금"}
             </p>
           </div>
         </div>
@@ -573,6 +610,11 @@ export default function ProcessedResultTable({
             {volumeDotsOf(r)}
             {s.tradingAmountBil.toLocaleString()}억
           </span>
+          {marketSum > 0 && (
+            <span className="mt-0.5 block text-xs text-muted-foreground" title="이날 시장 전체 거래대금 대비">
+              시장의 {shareOf(s.tradingAmountBil)}
+            </span>
+          )}
         </td>
         <td className="whitespace-nowrap px-3 py-4 text-right align-top tabular-nums" title={r.turnoverTitle}>
           <span
@@ -620,6 +662,9 @@ export default function ProcessedResultTable({
         <span className="ml-1 text-[15px] font-bold tabular-nums text-foreground">
           {g.total.toLocaleString()}억
         </span>
+        {marketSum > 0 && (
+          <span className="ml-2 font-semibold tabular-nums text-primary">시장의 {shareOf(g.total)}</span>
+        )}
       </span>
     </>
   );
@@ -662,6 +707,13 @@ export default function ProcessedResultTable({
           <table className="w-full min-w-[980px] border-collapse bg-background text-[13px] text-foreground">
             <caption className="border border-b-0 border-[#d9d9d9] py-2 text-center text-lg font-bold tracking-tight">
               {sheetTitle}
+              {marketSum > 0 && (
+                <span className="mt-0.5 block text-xs font-normal tabular-nums text-foreground/70">
+                  이날 시장 전체 거래대금 {formatBil(marketSum)} (코스피 {formatBil(marketTotal!.kospi)} · 코스닥{" "}
+                  {formatBil(marketTotal!.kosdaq)}) · 이 목록 {stocks.length}종목 {formatBil(listSum)} = 시장의{" "}
+                  <b>{shareOf(listSum)}</b>
+                </span>
+              )}
             </caption>
             <thead>
               <tr style={{ backgroundColor: SHEET_HEADER }} className="text-center font-bold">
@@ -746,6 +798,9 @@ export default function ProcessedResultTable({
                         </td>
                         <td className={`${cell} whitespace-nowrap text-right tabular-nums`}>
                           {s.tradingAmountBil.toLocaleString()}억
+                          {marketSum > 0 && (
+                            <span className="block text-[11px] text-foreground/60">{shareOf(s.tradingAmountBil)}</span>
+                          )}
                         </td>
                         <td className={`${cell} whitespace-nowrap text-right tabular-nums`} title={r.turnoverTitle}>
                           {r.turnoverText}
@@ -780,7 +835,9 @@ export default function ProcessedResultTable({
                       <td className={`${cell} whitespace-nowrap text-right text-base font-bold tabular-nums`}>
                         {g.total.toLocaleString()}억
                       </td>
-                      <td className={cell} colSpan={4} />
+                      <td className={`${cell} text-xs font-bold tabular-nums`} colSpan={4}>
+                        {marketSum > 0 && `시장 전체의 ${shareOf(g.total)}`}
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -808,6 +865,7 @@ export default function ProcessedResultTable({
             .join(" · ")}
         </p>
       </header>
+      {marketSummary}
 
       {/* 좁은 화면: 정렬 칩 + 종목 목록 */}
       <div className="sm:hidden">

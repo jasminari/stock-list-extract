@@ -10,6 +10,8 @@ import type { ResultMeta, ProcessedStock } from "@/lib/types";
 import { useWatchlist } from "@/lib/useWatchlist";
 import { LoadingIcon } from "@/components/ui/loading-icon";
 import { withPreviewThemes } from "@/lib/themePreview";
+// 미리보기: 코스피·코스닥 일별 총 거래대금 스냅샷 (scripts/fetch-market-trading-value.mjs로 받은 값)
+import marketTradingValue from "@/data/market-trading-value.json";
 
 export default function HistoryPage() {
   return (
@@ -274,6 +276,10 @@ function HistoryContent() {
             stocks={shownStocks}
             grouped={themeGrouped}
             variant={sheetView ? "sheet" : "default"}
+            marketTotal={(() => {
+              const row = (marketTradingValue as Record<string, number[]>)[selectedResult.date];
+              return row ? { kospi: row[0], kosdaq: row[1] } : undefined;
+            })()}
             conditionName={selectedResult.conditionName}
             date={selectedResult.date}
             title={selectedResult.conditionName}
