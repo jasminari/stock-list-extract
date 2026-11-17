@@ -26,7 +26,13 @@ interface ProcessedResultTableProps {
   /** 종목의 theme 값으로 묶어 묶음별 거래대금 합계를 보여준다 */
   grouped?: boolean;
   /** 그날 코스피·코스닥 총 거래대금(억). 있으면 시장 대비 비중을 보여준다 */
-  marketTotal?: { kospi: number; kosdaq: number };
+  marketTotal?: { kospi: number; kosdaq: number; prevSum?: number };
+  /**
+   * 종목코드 → [당일, 전일] 거래대금(억). 있으면 거래대금의 전일 대비 증감을 보여준다.
+   * 두 값 모두 일봉 확정치에서 온다. 목록의 거래대금은 수집 시각(15:40)의 값이라 확정치와
+   * 조금 다르므로, 증감은 같은 출처의 두 값끼리 비교한다.
+   */
+  prevTradingValue?: Record<string, number[]>;
   /** "sheet"는 직접 정리하던 엑셀 시트를 닮은 모양 */
   variant?: "default" | "sheet";
   onAnnotationUpdate?: (
@@ -244,6 +250,13 @@ function formatShare(ratio: number) {
   return `${pct.toFixed(pct < 1 ? 2 : 1)}%`;
 }
 
+/** 전일 대비 증감률. 큰 값은 소수점 없이 */
+function formatChange(now: number, prev: number) {
+  const pct = (now / prev - 1) * 100;
+  const abs = Math.abs(pct);
+  return `${pct > 0 ? "+" : pct < 0 ? "−" : ""}${abs >= 100 ? Math.round(abs).toLocaleString() : abs.toFixed(1)}%`;
+}
+
 /** 등락률: 방향을 색과 부호로 함께 보여준다 */
 function rateText(rate: number) {
   return `${rate > 0 ? "+" : ""}${rate.toFixed(2)}%`;
@@ -261,6 +274,7 @@ export default function ProcessedResultTable({
   grouped = false,
   variant = "default",
   marketTotal,
+  prevTradingValue,
   onAnnotationUpdate,
   watchlistCodes,
   onToggleWatchlist,
@@ -335,6 +349,17 @@ export default function ProcessedResultTable({
   const marketSum = marketTotal ? marketTotal.kospi + marketTotal.kosdaq : 0;
   const listSum = stocks.reduce((sum, s) => sum + s.tradingAmountBil, 0);
   const shareOf = (bil: number) => (marketSum > 0 ? formatShare(bil / marketSum) : "");
+  /** 거래대금 전일 대비 — 가격 등락률과 헷갈리지 않게 항상 "전일 대비"를 붙인다 */
+  const volumeChangeOf = (now: number, prev: number | undefined) =>
+    prev && prev > 0 ? (
+      <span className="whitespace-nowrap">
+        전일 대비{" "}
+        <span className={`font-semibold ${now > prev ? "text-rise" : now < prev ? "text-fall" : ""}`}>
+          {formatChange(now, prev)}
+        </span>
+      </span>
+    ) : null;
+
   const marketSummary = marketTotal && marketSum > 0 && (
     <div className="mx-4 mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-border/60 sm:mx-3 sm:max-w-xl">
       <div className="bg-muted/60 px-4 py-3">
@@ -343,6 +368,11 @@ export default function ProcessedResultTable({
         <p className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
           코스피 {(marketTotal.kospi / 10000).toFixed(1)}조 · 코스닥 {(marketTotal.kosdaq / 10000).toFixed(1)}조
         </p>
+        {marketTotal.prevSum ? (
+          <p className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
+            {volumeChangeOf(marketSum, marketTotal.prevSum)}
+          </p>
+        ) : null}
       </div>
       <div className="bg-muted/60 px-4 py-3">
         <p className="text-xs text-muted-foreground">이 목록 {stocks.length}종목의 비중</p>
@@ -544,6 +574,11 @@ export default function ProcessedResultTable({
               {volumeDotsOf(r)}
               {marketSum > 0 ? `시장의 ${shareOf(s.tradingAmountBil)}` : "거래대금"}
             </p>
+            {prevTradingValue?.[s.code] ? (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {volumeChangeOf(prevTradingValue[s.code][0], prevTradingValue[s.code][1])}
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -615,6 +650,14 @@ export default function ProcessedResultTable({
               시장의 {shareOf(s.tradingAmountBil)}
             </span>
           )}
+          {prevTradingValue?.[s.code] ? (
+            <span
+              className="mt-0.5 block text-xs text-muted-foreground"
+              title={`일봉 기준 당일 ${prevTradingValue[s.code][0].toLocaleString()}억 · 전일 ${prevTradingValue[s.code][1].toLocaleString()}억`}
+            >
+              {volumeChangeOf(prevTradingValue[s.code][0], prevTradingValue[s.code][1])}
+            </span>
+          ) : null}
         </td>
         <td className="whitespace-nowrap px-3 py-4 text-right align-top tabular-nums" title={r.turnoverTitle}>
           <span
@@ -801,6 +844,11 @@ export default function ProcessedResultTable({
                           {marketSum > 0 && (
                             <span className="block text-[11px] text-foreground/60">{shareOf(s.tradingAmountBil)}</span>
                           )}
+                          {prevTradingValue?.[s.code] ? (
+                            <span className="block text-[11px] text-foreground/60">
+                              {volumeChangeOf(prevTradingValue[s.code][0], prevTradingValue[s.code][1])}
+                            </span>
+                          ) : null}
                         </td>
                         <td className={`${cell} whitespace-nowrap text-right tabular-nums`} title={r.turnoverTitle}>
                           {r.turnoverText}

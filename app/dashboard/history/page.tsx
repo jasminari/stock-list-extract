@@ -12,6 +12,12 @@ import { LoadingIcon } from "@/components/ui/loading-icon";
 import { withPreviewThemes } from "@/lib/themePreview";
 // 미리보기: 코스피·코스닥 일별 총 거래대금 스냅샷 (scripts/fetch-market-trading-value.mjs로 받은 값)
 import marketTradingValue from "@/data/market-trading-value.json";
+// 미리보기: 최근 며칠치 종목별 [당일, 전일] 거래대금 스냅샷 (scripts/fetch-prev-trading-value.mjs)
+import prevTradingValue from "@/data/prev-trading-value.json";
+
+const MARKET_TOTALS = marketTradingValue as Record<string, number[]>;
+const MARKET_DATES = Object.keys(MARKET_TOTALS).sort();
+const PREV_VALUES = prevTradingValue as Record<string, Record<string, number[]>>;
 
 export default function HistoryPage() {
   return (
@@ -277,9 +283,12 @@ function HistoryContent() {
             grouped={themeGrouped}
             variant={sheetView ? "sheet" : "default"}
             marketTotal={(() => {
-              const row = (marketTradingValue as Record<string, number[]>)[selectedResult.date];
-              return row ? { kospi: row[0], kosdaq: row[1] } : undefined;
+              const row = MARKET_TOTALS[selectedResult.date];
+              if (!row) return undefined;
+              const prev = MARKET_TOTALS[MARKET_DATES[MARKET_DATES.indexOf(selectedResult.date) - 1]];
+              return { kospi: row[0], kosdaq: row[1], prevSum: prev ? prev[0] + prev[1] : undefined };
             })()}
+            prevTradingValue={PREV_VALUES[selectedResult.date]}
             conditionName={selectedResult.conditionName}
             date={selectedResult.date}
             title={selectedResult.conditionName}
