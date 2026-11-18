@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import OwnershipTable from "@/components/OwnershipTable";
 import { formatDateKorean, getCollectionDateStr } from "@/lib/date";
 import type { OwnershipRow } from "@/lib/types";
@@ -41,7 +43,21 @@ function shortMoney(won: number) {
   return `${sign}${abs.toLocaleString("ko-KR")}원`;
 }
 
+/** 아직 다듬는 중인 화면이라 관리자(개발자) 계정만 들어올 수 있다. */
 export default function DisclosurePage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const isAdmin = session?.user?.role === "admin";
+
+  useEffect(() => {
+    if (status !== "loading" && !isAdmin) router.replace("/dashboard");
+  }, [status, isAdmin, router]);
+
+  if (!isAdmin) return null;
+  return <DisclosureContent />;
+}
+
+function DisclosureContent() {
   const [date, setDate] = useState(getCollectionDateStr);
   const [rows, setRows] = useState<OwnershipRow[]>([]);
   const [failures, setFailures] = useState<Failure[]>([]);

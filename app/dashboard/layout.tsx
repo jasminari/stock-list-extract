@@ -51,7 +51,8 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
     id: "disclosure",
     label: "공시",
     href: "/dashboard/disclosure",
-    isNew: true,
+    // 아직 다듬는 중이라 관리자(개발자) 계정에만 보인다
+    adminOnly: true,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
