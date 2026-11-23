@@ -527,7 +527,7 @@ export default function DataPage() {
 
         {/* 안내 */}
         <p className="text-xs text-muted-foreground/80 mt-4 text-center">
-          데이터는 매일 평일 20:10(KST)에 자동 수집됩니다. 행을 클릭하면 시장 공부하기 탭에서 상세 종목을 확인할 수 있습니다.
+          데이터는 매일 평일 20:10(KST)에 자동 수집됩니다. 행을 클릭하면 홈 탭에서 상세 종목을 확인할 수 있습니다.
         </p>
       </div>
     </div>

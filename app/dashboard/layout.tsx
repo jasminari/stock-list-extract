@@ -13,23 +13,14 @@ import FeedbackButton from "@/components/FeedbackButton";
  */
 const NEW_BADGE_UNTIL = "20260930";
 
-type MenuId = "home" | "history" | "quiz" | "disclosure" | "data" | "watchlist" | "settings" | "admin";
+type MenuId = "home" | "quiz" | "chart" | "disclosure" | "data" | "watchlist" | "overview" | "settings" | "admin";
 
 const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNode; adminOnly?: boolean; isNew?: boolean }[] = [
   {
+    // 날짜별 종목 목록. 예전의 "시장 공부하기" 화면이 지금의 홈이다
     id: "home",
     label: "홈",
     href: "/dashboard",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-      </svg>
-    ),
-  },
-  {
-    id: "history",
-    label: "시장 공부하기",
-    href: "/dashboard/history",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
@@ -37,13 +28,23 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
     ),
   },
   {
+    // 예전의 "매일 퀴즈". 주소(/dashboard/quiz)는 그대로 둔다
     id: "quiz",
-    label: "매일 퀴즈",
+    label: "시장 공부하기",
     href: "/dashboard/quiz",
-    isNew: true,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+  {
+    id: "chart",
+    label: "차트",
+    href: "/dashboard/chart",
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 20h16M7 16V9m0 0V6m0 3h0M12 14V5m5 12v-6" />
       </svg>
     ),
   },
@@ -78,6 +79,18 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+      </svg>
+    ),
+  },
+  {
+    // 예전 홈(상승이유 기여 현황). 운영자용이라 관리자에게만 보인다
+    id: "overview",
+    label: "기여 현황",
+    href: "/dashboard/overview",
+    adminOnly: true,
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5h4v4H4zM10 5h4v4h-4zM16 5h4v4h-4zM4 11h4v4H4zM10 11h4v4h-4zM16 11h4v4h-4zM4 17h4v2H4zM10 17h4v2h-4z" />
       </svg>
     ),
   },
@@ -124,7 +137,8 @@ function NewFeatureTip({ align }: { align: "center" | "row" }) {
 }
 
 function getActiveMenu(pathname: string): MenuId {
-  if (pathname.startsWith("/dashboard/history")) return "history";
+  if (pathname.startsWith("/dashboard/chart")) return "chart";
+  if (pathname.startsWith("/dashboard/overview")) return "overview";
   if (pathname.startsWith("/dashboard/quiz")) return "quiz";
   if (pathname.startsWith("/dashboard/disclosure")) return "disclosure";
   if (pathname.startsWith("/dashboard/data")) return "data";
@@ -355,7 +369,7 @@ export default function DashboardLayout({
           </nav>
 
           <div className="p-4 border-t border-border/60">
-            <div className="text-xs text-muted-foreground/80 mb-1">시장 공부하기</div>
+            <div className="text-xs text-muted-foreground/80 mb-1">저장된 목록</div>
             <div className="text-sm text-foreground/80">{resultsCount}개 결과 저장됨</div>
           </div>
         </aside>

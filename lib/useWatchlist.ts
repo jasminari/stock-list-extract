@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-/** 공시·시장 공부하기 탭에서 관심종목 별표 상태를 공유하는 훅 */
+/** 공시·홈 탭에서 관심종목 별표 상태를 공유하는 훅 */
 export function useWatchlist() {
   const [codes, setCodes] = useState<Set<string>>(new Set());
 

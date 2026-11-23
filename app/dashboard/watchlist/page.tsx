@@ -105,7 +105,7 @@ export default function WatchlistPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">관심종목</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            시장 공부하기 탭에서 종목명 옆 별표를 눌러 등록할 수 있습니다.
+            홈 탭에서 종목명 옆 별표를 눌러 등록할 수 있습니다.
           </p>
         </div>
 
