@@ -82,7 +82,7 @@ export default function FeedbackButton() {
       <button
         onClick={openModal}
         aria-label="의견 보내기"
-        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 flex items-center gap-1.5 px-3 py-2 bg-background border border-border rounded-full shadow-lg shadow-foreground/10 text-foreground/80 hover:text-primary-hover hover:border-primary/40 hover:bg-accent transition-colors"
+        className={`fixed ${pathname?.startsWith("/dashboard/chart") ? "bottom-[13.25rem]" : "bottom-20"} right-4 md:bottom-6 md:right-6 z-40 flex items-center gap-1.5 px-3 py-2 bg-background border border-border rounded-full shadow-lg shadow-foreground/10 text-foreground/80 hover:text-primary-hover hover:border-primary/40 hover:bg-accent transition-colors`}
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4-.8L3 20l1.3-3.2A7.6 7.6 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
