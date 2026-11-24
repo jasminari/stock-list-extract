@@ -236,7 +236,7 @@ function ChartContent() {
                   key={active.code}
                   code={active.code}
                   name={active.name}
-                  chartHeight="clamp(220px, calc(100dvh - 500px), 900px)"
+                  chartHeight="clamp(220px, calc(100dvh - 525px), 900px)"
                 />
               </div>
             </section>
