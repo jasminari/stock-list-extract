@@ -6,6 +6,7 @@ import type { ProcessedStock } from "@/lib/types";
 import ArticleModal from "./ArticleModal";
 import StockChartModal from "./StockChartModal";
 import WatchlistStar from "./WatchlistStar";
+import SwipeableRow from "./SwipeableRow";
 import { WEEKDAYS, parseDate } from "@/lib/date";
 
 /** 정렬 가능한 숫자 컬럼 */
@@ -42,6 +43,12 @@ interface ProcessedResultTableProps {
   ) => void;
   watchlistCodes?: Set<string>;
   onToggleWatchlist?: (code: string, name: string) => void;
+  /** 좁은 화면 목록에서 종목을 왼쪽으로 밀면 부른다 (버리기) */
+  onSwipeDismiss?: (code: string, name: string) => void;
+  /** 좁은 화면 목록에서 종목을 오른쪽으로 밀면 부른다 (관심종목에 담기) */
+  onSwipeWatch?: (code: string, name: string) => void;
+  /** 버린 종목. 순위·합계·넓은 화면 표는 그대로 두고 좁은 화면 목록에서만 뺀다 */
+  hiddenCodes?: Set<string>;
   /** 있으면 종목을 눌렀을 때 차트 대화상자 대신 이 함수를 부른다 (차트 탭의 바텀시트) */
   onStockSelect?: (code: string, name: string) => void;
 }
@@ -280,6 +287,9 @@ export default function ProcessedResultTable({
   onAnnotationUpdate,
   watchlistCodes,
   onToggleWatchlist,
+  onSwipeDismiss,
+  onSwipeWatch,
+  hiddenCodes,
   onStockSelect,
 }: ProcessedResultTableProps) {
   const [viewArticle, setViewArticle] = useState<{
@@ -533,8 +543,14 @@ export default function ProcessedResultTable({
         ref={r.highlighted ? highlightedItemRef : undefined}
         tabIndex={r.highlighted ? -1 : undefined}
         aria-label={r.highlighted ? `${s.name} 원본 데이터` : undefined}
-        className={`px-4 py-4 outline-none ${r.highlighted ? "bg-accent ring-2 ring-inset ring-ring" : ""}`}
+        className="outline-none"
       >
+        <SwipeableRow
+          onSwipeLeft={onSwipeDismiss ? () => onSwipeDismiss(s.code, s.name) : undefined}
+          onSwipeRight={onSwipeWatch ? () => onSwipeWatch(s.code, s.name) : undefined}
+          rightDone={!!watchlistCodes?.has(s.code)}
+        >
+        <div className={`px-4 py-4 ${r.highlighted ? "bg-accent ring-2 ring-inset ring-ring" : ""}`}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
@@ -607,6 +623,8 @@ export default function ProcessedResultTable({
             {sourcesOf(r)}
           </div>
         )}
+        </div>
+        </SwipeableRow>
       </li>
     );
   };
@@ -953,7 +971,10 @@ export default function ProcessedResultTable({
                 {groupSummary(g, i)}
               </h3>
             )}
-            <ul className="divide-y divide-border/60">{g.rows.map(mobileItem)}</ul>
+            <ul className="divide-y divide-border/60">
+              {/* 알림 링크로 들어온 종목은 버렸어도 보여 준다 */}
+              {g.rows.filter((r) => r.highlighted || !hiddenCodes?.has(r.s.code)).map(mobileItem)}
+            </ul>
           </div>
         ))}
       </div>

@@ -38,13 +38,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { code, name } = await req.json();
+    const { code, name, listDate } = await req.json();
     if (!code || !name) {
       return NextResponse.json({ error: "code, name이 필요합니다." }, { status: 400 });
     }
 
     const userId = Number(session.user.id);
-    await addToWatchlist(userId, code, name);
+    const validDate = typeof listDate === "string" && /^\d{8}$/.test(listDate) ? listDate : null;
+    await addToWatchlist(userId, code, name, validDate);
     return NextResponse.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "알 수 없는 오류";

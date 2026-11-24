@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import WatchlistChartModal from "@/components/WatchlistChartModal";
 import { LoadingIcon } from "@/components/ui/loading-icon";
 import PushNotifications from "@/components/PushNotifications";
@@ -14,7 +14,35 @@ interface WatchlistItem {
   alertDirection?: "range" | "above" | "below";
   alertActive: boolean;
   alertTriggeredAt: string | null;
+  listDate?: string | null;
   createdAt: string;
+}
+
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+/** createdAt(ISO) → 한국 시간 기준 YYYY-MM-DD */
+function toSeoulDateKey(iso: string): string {
+  if (!iso) return "unknown";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "unknown";
+  return d.toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+}
+
+/** 담은 목록의 날짜로 묶고, 목록 밖에서 담은 종목은 등록일로 묶는다 */
+function folderKeyOf(item: { listDate?: string | null; createdAt: string }): string {
+  const d = item.listDate;
+  if (d && /^\d{8}$/.test(d)) return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+  return toSeoulDateKey(item.createdAt);
+}
+
+function formatFolderLabel(key: string, todayKey: string, yesterdayKey: string): string {
+  if (key === "unknown") return "날짜 미상";
+  const [y, m, d] = key.split("-").map(Number);
+  const weekday = WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  const base = `${y}년 ${m}월 ${d}일 (${weekday})`;
+  if (key === todayKey) return `오늘 · ${base}`;
+  if (key === yesterdayKey) return `어제 · ${base}`;
+  return base;
 }
 
 export default function WatchlistPage() {
@@ -26,6 +54,27 @@ export default function WatchlistPage() {
   const [directPrice, setDirectPrice] = useState<Record<string, string>>({});
   const [directDirection, setDirectDirection] = useState<Record<string, "above" | "below">>({});
   const [savingDirect, setSavingDirect] = useState<string | null>(null);
+  // 폴더별 열림 여부. 지정되지 않은 폴더는 가장 최근 날짜만 열린 상태로 시작
+  const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
+
+  const folders = useMemo(() => {
+    const map = new Map<string, WatchlistItem[]>();
+    for (const item of items) {
+      const key = folderKeyOf(item);
+      const list = map.get(key);
+      if (list) list.push(item);
+      else map.set(key, [item]);
+    }
+    return Array.from(map.entries())
+      .sort(([a], [b]) => (a === "unknown" ? 1 : b === "unknown" ? -1 : b.localeCompare(a)))
+      .map(([key, list]) => ({ key, items: list }));
+  }, [items]);
+
+  const todayKey = toSeoulDateKey(new Date().toISOString());
+  const yesterdayKey = toSeoulDateKey(new Date(Date.now() - 86_400_000).toISOString());
+  const isFolderOpen = (key: string, index: number) => openFolders[key] ?? index === 0;
+  const toggleFolder = (key: string, index: number) =>
+    setOpenFolders((current) => ({ ...current, [key]: !isFolderOpen(key, index) }));
 
   const load = useCallback(async () => {
     try {
@@ -105,7 +154,7 @@ export default function WatchlistPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">관심종목</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            홈 탭에서 종목명 옆 별표를 눌러 등록할 수 있습니다.
+            홈 탭에서 종목을 오른쪽으로 밀거나 별표를 누르면, 그 종목 목록의 날짜 폴더에 담깁니다.
           </p>
         </div>
 
@@ -133,7 +182,41 @@ export default function WatchlistPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {items.map((item) => (
+            {folders.map((folder, folderIndex) => {
+              const open = isFolderOpen(folder.key, folderIndex);
+              const alertCount = folder.items.filter((i) => i.alertActive).length;
+              return (
+                <section key={folder.key} className="border border-border rounded-xl bg-background overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => toggleFolder(folder.key, folderIndex)}
+                    aria-expanded={open}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors"
+                  >
+                    <svg className={`w-5 h-5 flex-shrink-0 ${open ? "text-primary" : "text-muted-foreground"}`} fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24" aria-hidden="true">
+                      {open ? (
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
+                      ) : (
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                      )}
+                    </svg>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">
+                        {formatFolderLabel(folder.key, todayKey, yesterdayKey)}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {folder.items.length}종목
+                        {alertCount > 0 && <span className="text-primary"> · 알림 {alertCount}개</span>}
+                        {!open && <> · {folder.items.map((i) => i.name).join(", ")}</>}
+                      </p>
+                    </div>
+                    <svg className={`w-4 h-4 flex-shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </button>
+                  {open && (
+                  <div className="border-t border-border bg-muted/20 p-3 space-y-2">
+            {folder.items.map((item) => (
               <div
                 key={item.id}
                 className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border border-border rounded-xl bg-background"
@@ -180,6 +263,11 @@ export default function WatchlistPage() {
                 </div>
               </div>
             ))}
+                  </div>
+                  )}
+                </section>
+              );
+            })}
           </div>
         )}
       </div>

@@ -752,6 +752,7 @@ export interface WatchlistItem {
   alertActive: boolean;
   alertDirection: string;
   alertTriggeredAt: string | null;
+  listDate: string | null;
   createdAt: string;
 }
 
@@ -772,6 +773,7 @@ export async function listWatchlist(userId: number): Promise<WatchlistItem[]> {
     alertActive: r.alertActive,
     alertDirection: r.alertDirection,
     alertTriggeredAt: r.alertTriggeredAt?.toISOString() ?? null,
+    listDate: r.listDate ?? null,
     createdAt: r.createdAt?.toISOString() ?? "",
   }));
 }
@@ -779,12 +781,13 @@ export async function listWatchlist(userId: number): Promise<WatchlistItem[]> {
 export async function addToWatchlist(
   userId: number,
   code: string,
-  name: string
+  name: string,
+  listDate: string | null = null
 ): Promise<void> {
   const db = getDb();
   await db
     .insert(watchlistItems)
-    .values({ userId, code, name })
+    .values({ userId, code, name, listDate })
     .onConflictDoNothing();
 }
 

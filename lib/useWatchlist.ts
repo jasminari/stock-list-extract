@@ -18,7 +18,7 @@ export function useWatchlist() {
   }, []);
 
   const toggle = useCallback(
-    (code: string, name: string) => {
+    (code: string, name: string, listDate?: string) => {
       const wasActive = codes.has(code);
       setCodes((prev) => {
         const next = new Set(prev);
@@ -30,8 +30,12 @@ export function useWatchlist() {
       fetch("/api/watchlist", {
         method: wasActive ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(wasActive ? { code } : { code, name }),
-      }).catch(() => {
+        body: JSON.stringify(wasActive ? { code } : { code, name, listDate }),
+      })
+        .then((r) => {
+          if (!r.ok) throw new Error();
+        })
+        .catch(() => {
         // 실패하면 되돌린다
         setCodes((prev) => {
           const reverted = new Set(prev);
@@ -44,5 +48,30 @@ export function useWatchlist() {
     [codes]
   );
 
-  return { codes, toggle };
+  /** 담기만 한다. 서버 응답까지 기다려 결과를 알려 준다 */
+  const add = useCallback(
+    async (code: string, name: string, listDate?: string): Promise<"added" | "already" | "failed"> => {
+      if (codes.has(code)) return "already";
+      setCodes((prev) => new Set(prev).add(code));
+      try {
+        const r = await fetch("/api/watchlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, name, listDate }),
+        });
+        if (!r.ok) throw new Error();
+        return "added";
+      } catch {
+        setCodes((prev) => {
+          const reverted = new Set(prev);
+          reverted.delete(code);
+          return reverted;
+        });
+        return "failed";
+      }
+    },
+    [codes]
+  );
+
+  return { codes, toggle, add };
 }

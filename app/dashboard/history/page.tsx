@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { formatDbStocks } from "@/lib/format";
 import { toDateStr, parseDate } from "@/lib/date";
@@ -43,7 +44,7 @@ function HistoryContent() {
   const [selectedResult, setSelectedResult] = useState<ResultMeta | null>(null);
   const [stocks, setStocks] = useState<ProcessedStock[]>([]);
   const [stocksLoading, setStocksLoading] = useState(false);
-  const { codes: watchlistCodes, toggle: toggleWatchlist } = useWatchlist();
+  const { codes: watchlistCodes, toggle: toggleWatchlist, add: addToWatchlist } = useWatchlist();
   // 미리보기 기능(테마 묶기, 엑셀 보기, 시장 비중, 전일 대비)은 관리자 계정에만 보인다.
   // 정식 데이터로 바꾸기 전까지 일반 사용자 화면은 기존과 같게 둔다.
   // 관리자가 아니어도 주소에 ?preview=1을 한 번 붙이면 그 브라우저에서 켜지고, ?preview=0으로 끈다.
@@ -70,6 +71,67 @@ function HistoryContent() {
     () => (themeGrouped ? withPreviewThemes(stocks) : stocks),
     [themeGrouped, stocks]
   );
+
+  // 홈 목록에서 왼쪽으로 밀어 버린 종목. 날짜·조건(결과)마다 이 브라우저에 기억한다
+  const dismissKey = selectedResult ? `homeDismissed:${selectedResult.id}` : null;
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!dismissKey) return setDismissed(new Set());
+    try {
+      setDismissed(new Set(JSON.parse(localStorage.getItem(dismissKey) ?? "[]")));
+    } catch {
+      setDismissed(new Set());
+    }
+  }, [dismissKey]);
+  // 스와이프 콜백은 밀어내는 애니메이션이 끝난 뒤에 불리므로, 그 사이 바뀐 값을 덮어쓰지 않게 이전 값에서 만든다
+  const updateDismissed = useCallback(
+    (change: (prev: Set<string>) => Set<string>) => {
+      setDismissed((prev) => {
+        const next = change(prev);
+        if (dismissKey) {
+          try {
+            if (next.size === 0) localStorage.removeItem(dismissKey);
+            else localStorage.setItem(dismissKey, JSON.stringify([...next]));
+          } catch {}
+        }
+        return next;
+      });
+    },
+    [dismissKey]
+  );
+
+  const [toast, setToast] = useState<
+    { kind: "dismiss"; code: string; name: string } | { kind: "watch"; name: string; status: "added" | "already" | "failed" } | null
+  >(null);
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(null), 3500);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  const handleSwipeDismiss = useCallback(
+    (code: string, name: string) => {
+      updateDismissed((prev) => new Set(prev).add(code));
+      setToast({ kind: "dismiss", code, name });
+    },
+    [updateDismissed]
+  );
+  const handleSwipeWatch = useCallback(
+    async (code: string, name: string) => {
+      const status = await addToWatchlist(code, name, selectedResult?.date);
+      setToast({ kind: "watch", name, status });
+    },
+    [addToWatchlist, selectedResult?.date]
+  );
+  const undoDismiss = (code: string) => {
+    updateDismissed((prev) => {
+      const next = new Set(prev);
+      next.delete(code);
+      return next;
+    });
+    setToast(null);
+  };
+  const dismissedInList = stocks.filter((s) => dismissed.has(s.code)).length;
 
   const now = useMemo(() => new Date(), []);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -300,6 +362,19 @@ function HistoryContent() {
             </div>
           </div>
         ) : stocks.length > 0 && selectedResult ? (
+          <>
+          <div className="mb-3 flex items-center justify-between gap-3 px-4 text-xs text-muted-foreground sm:hidden">
+            <span>종목을 오른쪽으로 밀면 관심종목, 왼쪽으로 밀면 버리기</span>
+            {dismissedInList > 0 && (
+              <button
+                type="button"
+                onClick={() => updateDismissed(() => new Set())}
+                className="shrink-0 font-medium text-primary"
+              >
+                버린 {dismissedInList}개 다시 보기
+              </button>
+            )}
+          </div>
           <ProcessedResultTable
             highlightedEntryId={selectedResult.id === Number(resultIdParam) ? entryIdParam : undefined}
             stocks={shownStocks}
@@ -317,8 +392,12 @@ function HistoryContent() {
             title={selectedResult.conditionName}
             onAnnotationUpdate={handleAnnotationUpdate}
             watchlistCodes={watchlistCodes}
-            onToggleWatchlist={toggleWatchlist}
+            onToggleWatchlist={(code, name) => toggleWatchlist(code, name, selectedResult.date)}
+            onSwipeDismiss={handleSwipeDismiss}
+            onSwipeWatch={handleSwipeWatch}
+            hiddenCodes={dismissed}
           />
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
@@ -331,6 +410,32 @@ function HistoryContent() {
           </div>
         )}
       </div>
+
+      {toast && (
+        <div
+          role="status"
+          className="fixed inset-x-4 bottom-28 z-50 mx-auto flex max-w-sm items-center justify-between gap-3 rounded-2xl bg-foreground px-4 py-3 text-sm text-background shadow-lg animate-in fade-in-0 slide-in-from-bottom-2 md:bottom-8"
+        >
+          <span className="min-w-0 truncate">
+            {toast.kind === "dismiss"
+              ? `${toast.name} 버렸어요`
+              : toast.status === "failed"
+                ? `${toast.name}을(를) 담지 못했어요. 잠시 후 다시 시도해 주세요`
+                : toast.status === "already"
+                  ? `${toast.name}은(는) 이미 관심종목에 있어요`
+                  : `${toast.name} 관심종목에 담았어요`}
+          </span>
+          {toast.kind === "dismiss" ? (
+            <button type="button" onClick={() => undoDismiss(toast.code)} className="shrink-0 font-semibold text-primary-foreground/90 underline underline-offset-2">
+              되돌리기
+            </button>
+          ) : toast.status === "failed" ? null : (
+            <Link href="/dashboard/watchlist" className="shrink-0 font-semibold underline underline-offset-2">
+              보러 가기
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   );
 }
