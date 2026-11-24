@@ -17,12 +17,13 @@ type MenuId = "home" | "quiz" | "chart" | "disclosure" | "data" | "watchlist" | 
 
 const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNode; adminOnly?: boolean; isNew?: boolean }[] = [
   {
-    id: "chart",
-    label: "차트",
-    href: "/dashboard/chart",
+    // 날짜별 종목 목록. 예전의 "시장 공부하기" 화면이 지금의 홈이다
+    id: "home",
+    label: "홈",
+    href: "/dashboard",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 20h16M7 16V9m0 0V6m0 3h0M12 14V5m5 12v-6" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
       </svg>
     ),
   },
@@ -38,13 +39,12 @@ const menuItems: { id: MenuId; label: string; href: string; icon: React.ReactNod
     ),
   },
   {
-    // 날짜별 종목 목록. 예전의 "시장 공부하기" 화면이 지금의 홈이다
-    id: "home",
-    label: "홈",
-    href: "/dashboard",
+    id: "chart",
+    label: "차트",
+    href: "/dashboard/chart",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 20h16M7 16V9m0 0V6m0 3h0M12 14V5m5 12v-6" />
       </svg>
     ),
   },
@@ -226,6 +226,24 @@ export default function DashboardLayout({
     (item) => !item.adminOnly || session?.user?.role === "admin"
   );
 
+  const [myOpen, setMyOpen] = useState(false);
+  const handleSignOut = async () => {
+                  // End this browser subscription before changing accounts.
+                  try {
+                    if ("serviceWorker" in navigator) {
+                      const registration = await navigator.serviceWorker.getRegistration("/");
+                      const subscription = await registration?.pushManager?.getSubscription();
+                      if (subscription) {
+                        await Promise.allSettled([
+                          fetch("/api/push", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: subscription.endpoint }), signal: AbortSignal.timeout(5000) }),
+                          subscription.unsubscribe(),
+                        ]);
+                      }
+                    }
+                  }
+                  finally { await signOut(); }
+                };
+
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Top Header */}
@@ -258,27 +276,12 @@ export default function DashboardLayout({
             <div className="flex items-center gap-2 md:gap-3">
               <span className="text-sm text-foreground/80 hidden md:block">{userName}</span>
               <button
-                onClick={async () => {
-                  // End this browser subscription before changing accounts.
-                  try {
-                    if ("serviceWorker" in navigator) {
-                      const registration = await navigator.serviceWorker.getRegistration("/");
-                      const subscription = await registration?.pushManager?.getSubscription();
-                      if (subscription) {
-                        await Promise.allSettled([
-                          fetch("/api/push", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: subscription.endpoint }), signal: AbortSignal.timeout(5000) }),
-                          subscription.unsubscribe(),
-                        ]);
-                      }
-                    }
-                  }
-                  finally { await signOut(); }
-                }}
-                className="px-2 md:px-3 py-1.5 text-xs border border-input rounded-lg text-foreground/80 hover:bg-muted/50 transition-colors"
+                onClick={handleSignOut}
+                className="hidden md:block px-2 md:px-3 py-1.5 text-xs border border-input rounded-lg text-foreground/80 hover:bg-muted/50 transition-colors"
               >
                 로그아웃
               </button>
-              <div className="relative" ref={profileMenuRef}>
+              <div className="relative hidden md:block" ref={profileMenuRef}>
                 <button
                   onClick={() => setProfileOpen((v) => !v)}
                   aria-label="프로필 메뉴"
@@ -375,7 +378,7 @@ export default function DashboardLayout({
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
+        <main className="flex-1 flex flex-col overflow-hidden pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))] md:pb-0">
           {children}
         </main>
       </div>
@@ -383,25 +386,101 @@ export default function DashboardLayout({
       {/* 의견 보내기 — 모든 대시보드 화면에 떠 있는 작은 버튼 */}
       {session?.user && <FeedbackButton />}
 
-      {/* Bottom Tab Bar — Mobile only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border flex items-center justify-around px-1 py-1 z-50 safe-area-bottom">
-        {visibleMenuItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => router.push(item.href)}
-            className={`relative flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[56px] transition-colors ${
-              activeMenu === item.id
-                ? "text-primary"
-                : "text-muted-foreground/80"
-            }`}
-          >
-            <span className={activeMenu === item.id ? "text-primary" : "text-muted-foreground/80"}>
+      {/* 하단 메뉴 — 모바일 전용. 화면 위에 떠 있는 알약 모양 */}
+      {myOpen && (
+        <button
+          type="button"
+          aria-label="내 메뉴 닫기"
+          className="md:hidden fixed inset-0 z-40 cursor-default"
+          onClick={() => setMyOpen(false)}
+        />
+      )}
+      <nav
+        aria-label="주 메뉴"
+        className="md:hidden fixed left-3 right-3 z-50 flex items-center gap-0.5 rounded-full border border-border/70 bg-background/85 p-1.5 shadow-[0_8px_28px_rgba(15,23,42,0.16)] backdrop-blur-xl"
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 0.625rem)" }}
+      >
+        {visibleMenuItems.map((item) => {
+          const on = activeMenu === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              aria-current={on ? "page" : undefined}
+              onClick={() => {
+                setMyOpen(false);
+                router.push(item.href);
+              }}
+              className={`relative flex h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full transition-colors ${
+                on ? "bg-primary/10 text-primary" : "text-foreground/70"
+              }`}
+            >
               {item.icon}
-            </span>
-            {newBadges.includes(item.id) && <NewFeatureTip align="center" />}
-            <span className="text-[10px] font-medium leading-tight">{item.label}</span>
-          </button>
-        ))}
+              {newBadges.includes(item.id) && <NewFeatureTip align="center" />}
+              <span className={`max-w-full truncate px-1 text-[10px] leading-tight ${on ? "font-bold" : "font-medium"}`}>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+        {session?.user && (
+          <div className="relative min-w-0 flex-1">
+            <button
+              type="button"
+              aria-label="내 메뉴"
+              aria-expanded={myOpen}
+              onClick={() => setMyOpen((v) => !v)}
+              className={`flex h-[52px] w-full flex-col items-center justify-center gap-0.5 rounded-full transition-colors ${
+                myOpen || activeMenu === "settings" ? "bg-primary/10 text-primary" : "text-foreground/70"
+              }`}
+            >
+              <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-white">
+                {userInitial}
+                {unreadCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-destructive" />
+                )}
+              </span>
+              <span className={`text-[10px] leading-tight ${myOpen || activeMenu === "settings" ? "font-bold" : "font-medium"}`}>MY</span>
+            </button>
+            {myOpen && (
+              <div className="absolute bottom-full right-0 mb-3 w-52 overflow-hidden rounded-2xl border border-border/60 bg-background shadow-lg">
+                <p className="truncate border-b border-border/60 px-4 py-3 text-sm font-medium text-foreground">{userName}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMyOpen(false);
+                    router.push("/dashboard/notifications");
+                  }}
+                  className="flex h-12 w-full items-center px-4 text-sm text-foreground/90 hover:bg-muted/50"
+                >
+                  알림
+                  {unreadCount > 0 && (
+                    <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMyOpen(false);
+                    router.push("/dashboard/settings");
+                  }}
+                  className="flex h-12 w-full items-center px-4 text-sm text-foreground/90 hover:bg-muted/50"
+                >
+                  설정
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="flex h-12 w-full items-center border-t border-border/60 px-4 text-sm text-muted-foreground hover:bg-muted/50"
+                >
+                  로그아웃
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </nav>
     </div>
   );

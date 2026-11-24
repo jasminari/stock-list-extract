@@ -42,6 +42,8 @@ interface ProcessedResultTableProps {
   ) => void;
   watchlistCodes?: Set<string>;
   onToggleWatchlist?: (code: string, name: string) => void;
+  /** 있으면 종목을 눌렀을 때 차트 대화상자 대신 이 함수를 부른다 (차트 탭의 바텀시트) */
+  onStockSelect?: (code: string, name: string) => void;
 }
 
 /** ★로 시작하는 줄은 직접 표시해 둔 핵심 문장이다. 눈에 띄게 그린다 */
@@ -278,15 +280,20 @@ export default function ProcessedResultTable({
   onAnnotationUpdate,
   watchlistCodes,
   onToggleWatchlist,
+  onStockSelect,
 }: ProcessedResultTableProps) {
   const [viewArticle, setViewArticle] = useState<{
     url: string;
     title: string;
   } | null>(null);
-  const [chartTarget, setChartTarget] = useState<{
+  const [chartTarget, setChartTargetState] = useState<{
     code: string;
     name: string;
   } | null>(null);
+  const setChartTarget = (target: { code: string; name: string } | null) => {
+    if (target && onStockSelect) onStockSelect(target.code, target.name);
+    else setChartTargetState(target);
+  };
   // null = 수집된 원본 순서 유지
   const [sort, setSort] = useState<SortState | null>(null);
 
