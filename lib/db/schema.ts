@@ -151,6 +151,8 @@ export const watchlistItems = pgTable(
       .notNull(),
     code: varchar("code", { length: 10 }).notNull(),
     name: varchar("name", { length: 100 }).notNull(),
+    /** 담은 종목 목록의 날짜(YYYYMMDD). 목록 밖(공시 등)에서 담았으면 null */
+    listDate: varchar("list_date", { length: 8 }),
     alertDirection: varchar("alert_direction", { length: 10 }).default("range").notNull(),
     alertVersion: integer("alert_version").default(0).notNull(),
     alertLow: integer("alert_low"),

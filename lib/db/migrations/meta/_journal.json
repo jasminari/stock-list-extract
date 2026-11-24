@@ -43,6 +43,13 @@
       "when": 1793508000000,
       "tag": "0008_add_related_materials",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795528800000,
+      "tag": "0009_add_watchlist_list_date",
+      "breakpoints": true
     }
   ]
 }

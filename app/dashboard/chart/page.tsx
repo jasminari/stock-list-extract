@@ -306,7 +306,7 @@ function ChartContent() {
               date={latest.date}
               title={latest.conditionName}
               watchlistCodes={watchlistCodes}
-              onToggleWatchlist={toggleWatchlist}
+              onToggleWatchlist={(code, name) => toggleWatchlist(code, name, latest.date)}
               onStockSelect={select}
             />
           ) : (
