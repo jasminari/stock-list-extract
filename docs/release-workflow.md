@@ -11,16 +11,16 @@
 ## 배포 순서
 
 1. 작업별 변경 파일과 최신 운영 커밋을 확인한다. 관계없는 미완료 파일을 릴리스에 포함하지 않는다.
-2. `npm run test:news`, `npm run test:push`, `npm run build`를 실행한다. 동일 검사를 실행할 GitHub Actions 정의는 `docs/ci-quality.yml`에 준비되어 있다. 현재 GitHub 계정의 workflow 권한이 없어 자동 실행은 아직 연결하지 않았다. 권한을 갖춘 계정에서 `.github/workflows/quality.yml`로 옮겨 등록한다. 그 전에는 아래 검사를 수동으로 실행한다.
+2. `npm run test:news`, `npm run test:push`, `npm run build`를 실행한다. 같은 검사가 GitHub Actions(`.github/workflows/quality.yml`)에서 모든 PR과 main·dev push마다 자동으로 실행된다. main에는 PR로만 합치고, 검사가 통과한 PR만 합친다.
 3. 일별 기사 처리는 `node scripts/enrich-reasons.mjs --date YYYYMMDD --dry --force --report <검증파일>`로 먼저 실행한다. 기사·자료 날짜, 동일 회사, 계획/완료, 테마 제외, DART 날짜를 확인한다.
 4. 개인 정보 없는 공개 종목 fixture만 dev에 갱신한다. dev 프로젝트로 명시적으로 link한 별도 릴리스 폴더에서 배포한다. `DEV_PREVIEW=1`이 dev에만 있는지 확인한다.
 5. dev 실제 화면에서 7열, 20종목, 우선순위, 원문 링크, 정렬, 모바일 표시를 확인하고 캡처를 남긴다. DB 변경은 트랜잭션 검증 후 rollback하여 기존 주석 불변을 확인한다.
 6. 추가형 migration을 먼저 적용한다. 검토한 일별 데이터는 별도 관련 재료 테이블에 반영하고 상승이유 주석을 덮어쓰지 않는다.
-7. 동일 소스를 운영 프로젝트에 `vercel deploy --prod --skip-domain`으로 배포한다. 준비된 빌드를 점검한 뒤 `vercel promote <검증한 배포 URL>`로 운영 도메인을 전환한다. DEV_PREVIEW를 운영에 설정하지 않는다.
+7. 검사를 통과한 PR을 main에 합치면 Vercel이 운영에 자동 배포한다. 운영에 나가면 안 되는 미완성 기능은 관리자 전용 또는 미리보기 스위치 뒤에 둔 채로 합친다. DEV_PREVIEW를 운영에 설정하지 않는다.
 8. 인증된 운영 화면과 20종목을 재확인한다. 실패 시 이전 Ready 배포로 rollback하고 additive 테이블은 보존한다.
 9. Oracle 수집 모듈은 기존 파일 백업 후 동일 검증본으로 교체한다. timer를 중복 실행하지 않고, 다음 자동수집 결과를 실제 화면까지 점검한다.
 
-main의 Git 자동 배포는 vercel.json에서 비활성화했다. 코드 push가 운영 도메인을 즉시 바꾸지 않도록 하고, 검증 완료 후 명시적으로 승격한다. dev 프로젝트의 production 환경은 dev 도메인을 뜻하며 실제 서비스 운영과는 별도다.
+main의 Git 자동 배포는 켜져 있다(2026-11-24부터). main에 합쳐진 코드는 곧바로 운영 도메인에 반영되므로, main에 직접 push하지 않고 PR과 자동 검사를 거친다. 문제가 생기면 Vercel에서 이전 Ready 배포로 rollback한다. dev 프로젝트의 production 환경은 dev 도메인을 뜻하며 실제 서비스 운영과는 별도다.
 
 ## 표시 규칙
 
