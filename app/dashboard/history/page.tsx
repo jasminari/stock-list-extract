@@ -72,7 +72,7 @@ function HistoryContent() {
     [themeGrouped, stocks]
   );
 
-  // 홈 목록에서 왼쪽으로 밀어 버린 종목. 날짜·조건(결과)마다 이 브라우저에 기억한다
+  // 홈 목록에서 좌우로 밀어 넘긴 종목(버린 것·관심종목에 담은 것). 날짜·조건(결과)마다 이 브라우저에 기억한다
   const dismissKey = selectedResult ? `homeDismissed:${selectedResult.id}` : null;
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   useEffect(() => {
@@ -118,10 +118,19 @@ function HistoryContent() {
   );
   const handleSwipeWatch = useCallback(
     async (code: string, name: string) => {
+      // 담은 종목도 홈 목록에서 바로 빼고, 저장에 실패하면 다시 보여 준다
+      updateDismissed((prev) => new Set(prev).add(code));
       const status = await addToWatchlist(code, name, selectedResult?.date);
+      if (status === "failed") {
+        updateDismissed((prev) => {
+          const next = new Set(prev);
+          next.delete(code);
+          return next;
+        });
+      }
       setToast({ kind: "watch", name, status });
     },
-    [addToWatchlist, selectedResult?.date]
+    [addToWatchlist, selectedResult?.date, updateDismissed]
   );
   const undoDismiss = (code: string) => {
     updateDismissed((prev) => {
@@ -371,7 +380,7 @@ function HistoryContent() {
                 onClick={() => updateDismissed(() => new Set())}
                 className="shrink-0 font-medium text-primary"
               >
-                버린 {dismissedInList}개 다시 보기
+                넘긴 {dismissedInList}개 다시 보기
               </button>
             )}
           </div>
