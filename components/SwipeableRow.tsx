@@ -108,13 +108,13 @@ export default function SwipeableRow({
     if (g.mode !== "drag") return;
 
     const dx = dxRef.current;
+    // 어느 쪽이든 넘기면 화면 밖으로 밀어낸 뒤 동작을 실행한다 (목록에서 빼는 건 부모가 한다)
     if (!cancelled && dx <= -threshold() && onSwipeLeft) {
-      // 버리기: 화면 밖으로 밀어낸 뒤 접는다
       setLeaving(true);
       settle(-width(), onSwipeLeft);
     } else if (!cancelled && dx >= threshold() && onSwipeRight) {
-      onSwipeRight();
-      settle(0);
+      setLeaving(true);
+      settle(width(), onSwipeRight);
     } else {
       settle(0);
     }
